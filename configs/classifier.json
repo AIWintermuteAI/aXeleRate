@@ -1,0 +1,25 @@
+{
+    "model" : {
+        "type":                 "Classifier",
+        "architecture":         "MobileNet",
+        "input_size":           224,
+        "fully-connected":      [100,50],
+        "labels":               [],
+        "dropout" : 		0.5
+    },
+    "pretrained" : {
+        "full":   				""
+    },
+    "train" : {
+        "actual_epoch":         5,
+        "train_image_folder":   "/home/ubuntu/datasets/domestic_animals",
+        "train_times":          4,
+        "valid_image_folder":   "/home/ubuntu/datasets/domestic_animals",
+        "valid_times":          1,
+        "batch_size":           6,
+        "learning_rate":        1e-4,
+        "saved_folder":   		"animals",
+        "first_trainable_layer": "65",
+        "jitter":				true
+    }
+}
