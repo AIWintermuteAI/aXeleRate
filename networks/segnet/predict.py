@@ -156,7 +156,8 @@ def predict(model=None, inp=None, out_fname=None, checkpoints_path=None,overlay_
 
     x = get_image_array(inp, input_width, input_height, ordering=IMAGE_ORDERING)
     pr = model.predict(np.array([x]))[0]
-    pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
+    #pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
+    pr = pr.argmax(axis=2)
 
     seg_img = visualize_segmentation( pr , inp ,n_classes=n_classes , colors=colors
         , overlay_img=overlay_img ,show_legends=show_legends ,class_names=class_names ,prediction_width=prediction_width , prediction_height=prediction_height   )

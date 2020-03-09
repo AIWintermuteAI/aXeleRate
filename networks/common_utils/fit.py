@@ -97,8 +97,7 @@ def train(model,
          valid_batch_gen,
          learning_rate = 1e-4,
          nb_epoch = 300,
-         saved_weights_name = 'best_weights.h5',
-         batch_size=8):
+         saved_weights_name = 'best_weights.h5'):
     """A function that performs training on a general keras model.
 
     # Args

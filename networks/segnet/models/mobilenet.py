@@ -73,7 +73,7 @@ def get_mobilenet_encoder(input_height=224, input_width=224,
     assert input_height % 32 == 0
     assert input_width % 32 == 0
 
-    alpha = 0.25
+    alpha = 0.75
     depth_multiplier = 1
     dropout = 1e-3
 
@@ -108,7 +108,7 @@ def get_mobilenet_encoder(input_height=224, input_width=224,
     f5 = x
 
     if pretrained == 'imagenet':
-        model_name = 'mobilenet_%s_%d_tf_no_top.h5' % ('2_5', 224)
+        model_name = 'mobilenet_%s_%d_tf_no_top.h5' % ('7_5', 224)
 
         weight_path = BASE_WEIGHT_PATH + model_name
         weights_path = keras.utils.get_file(model_name, weight_path,cache_subdir='models')
