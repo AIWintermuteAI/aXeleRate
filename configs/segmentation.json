@@ -17,10 +17,10 @@
         "valid_annot_folder":   "/home/ubuntu/datasets/segmentation/anns_validation",
         "valid_times":          4,
         "batch_size":           8,
-        "learning_rate":        1e-2,
+        "learning_rate":        1e-4,
         "saved_folder":   		"segment",
         "first_trainable_layer": "0",
         "ignore_zero_class":    false,
-        "augumentation":				false
+        "augumentation":				true
     }
 }

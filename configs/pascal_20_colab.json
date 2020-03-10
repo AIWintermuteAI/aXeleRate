@@ -17,7 +17,7 @@
         "valid_annot_folder":   "pascal_20_segmentation/anns_validation",
         "valid_times":          1,
         "batch_size":           32,
-        "learning_rate":        1e-5,
+        "learning_rate":        1e-4,
         "saved_folder":   		"pascal_20",
         "first_trainable_layer": "0",
         "ignore_zero_class":    false,
