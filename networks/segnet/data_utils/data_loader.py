@@ -169,12 +169,11 @@ def create_batch_generator(images_path, segs_path,
                            n_classes=51,
                            batch_size=8,
                            repeat_times=1,
-                           jitter=True, 
-                           norm=None):
+                           do_augment=False):
 
     worker = BatchGenerator(images_path, segs_path, batch_size,
                  n_classes, input_size, output_size, repeat_times, 
-                 do_augment=False ,augmentation_name="aug_all")
+                 do_augment)
     return worker
 
 
@@ -182,7 +181,7 @@ class BatchGenerator(Sequence):
     def __init__(self,
                  images_path, segs_path, batch_size,
                  n_classes,input_size, output_size, repeat_times,
-                 do_augment=False ,augmentation_name="aug_all"):
+                 do_augment=False,augmentation_name="aug_all"):
         self.augmentation_name = augmentation_name
         self.n_classes = n_classes
         self.input_size = input_size

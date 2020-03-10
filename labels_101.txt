@@ -1,0 +1,5 @@
+alligator
+cat
+dog
+elephant
+spider 

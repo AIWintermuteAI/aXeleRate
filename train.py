@@ -55,14 +55,13 @@ if __name__ == '__main__':
                                    int(config['train']['first_trainable_layer']))   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(config['pretrained']['full'], by_name=True)
-
         # 3. actual training 
         segnet.train(config['train']['train_image_folder'],
                config['train']['train_annot_folder'],
                config['train']['actual_epoch'],
                weight_file,
                config["train"]["batch_size"],
-               config["train"]["jitter"],
+               config["train"]["augumentation"],
                config['train']['learning_rate'], 
                config['train']['train_times'],
                config['train']['valid_times'],
@@ -74,7 +73,7 @@ if __name__ == '__main__':
     #  Classifier
     
     if config['model']['type']=='Classifier':
-        print('classifier')           
+        print('Classifier')           
         if config['model']['labels']:
             labels = config['model']['labels']
         else:

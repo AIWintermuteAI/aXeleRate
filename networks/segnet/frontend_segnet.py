@@ -54,7 +54,7 @@ class Segnet(object):
               nb_epoch,
               saved_weights_name,
               batch_size=8,
-              jitter=True,
+              do_augment=False,
               learning_rate=1e-4, 
               train_times=1,
               valid_times=1,
@@ -67,12 +67,10 @@ class Segnet(object):
             loss_k = masked_categorical_crossentropy
         else:
             loss_k = 'categorical_crossentropy'
-        
         train_generator = create_batch_generator(img_folder, ann_folder, self._input_size, self._output_size, self._n_classes,
-                                                     batch_size,train_times)
+                                                     batch_size,train_times,do_augment)
         if valid_img_folder:
-            validation_generator = create_batch_generator(valid_img_folder, valid_ann_folder, self._input_size,self._output_size, self._n_classes,
-                                                     batch_size,valid_times)
+            validation_generator = create_batch_generator(valid_img_folder, valid_ann_folder, self._input_size,self._output_size, self._n_classes,batch_size,valid_times)
         
         self._network.summary()
         train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch,saved_weights_name)

@@ -17,8 +17,10 @@ import numpy as np
 from networks.segnet.frontend_segnet import create_segnet
 from networks.segnet.predict import predict_multiple
 
-import os
+from networks.classifier.frontend_classifier import get_labels,create_classifier
 
+import os
+import glob
 
 import tensorflow as tf
 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
@@ -58,6 +60,7 @@ if __name__ == '__main__':
     with open(args.conf) as config_buffer:
         config = json.loads(config_buffer.read())
 
+
     if config['model']['type']=='SegNet':
         print('Segmentation')           
         # 1. Construct the model 
@@ -68,6 +71,35 @@ if __name__ == '__main__':
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(args.weights)
         predict_multiple(segnet._network, inp_dir=config['train']['valid_image_folder'], out_dir='detected',overlay_img=True)
+
+
+
+    if config['model']['type']=='Classifier':
+        print('Classifier')    
+        if config['model']['labels']:
+            labels = config['model']['labels']
+        else:
+            labels = get_labels(config['train']['train_image_folder'])
+        # 1.Construct the model 
+        classifier = create_classifier(config['model']['architecture'],
+                                       labels,
+                                       config['model']['input_size'],
+                                       config['model']['fully-connected'],
+                                       config['model']['dropout'],
+                                       int(config['train']['first_trainable_layer']))   
+        # 2. Load the pretrained weights (if any) 
+        classifier.load_weights(args.weights)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        valid_image_folder = config['train']['valid_image_folder']
+        image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
+
+        for filename in image_files_list:
+            output_path = os.path.join('detected', os.path.basename(filename))
+            image = cv2.imread(filename)
+            img_class, prob = classifier.predict(filename)
+            cv2.putText(image, "{}:{}".format(img_class[0], prob[0]), (0,20), font, image.shape[0]/400, (0, 0, 255), 2, True)
+            cv2.imwrite(output_path, image)
+            print("{}:{}".format(img_class[0], prob[0]))
 
 
     if config['model']['type']=='Detector':

@@ -10,6 +10,15 @@ from .data_gen import create_datagen
 from ..common_utils.fit import train
 from keras.models import Model
 from keras.layers import Dense, GlobalAveragePooling2D, Dropout
+from keras.preprocessing import image
+from keras.applications.mobilenet import preprocess_input
+
+def prepare_image(file, show=False, size=(224,224)):
+    print(file)
+    img = image.load_img(file, target_size=size)
+    img_array = image.img_to_array(img)
+    img_array_expanded_dims = np.expand_dims(img_array, axis=0)
+    return preprocess_input(img_array_expanded_dims)
 
 def get_labels(directory):
     labels = os.listdir(directory)
@@ -27,7 +36,6 @@ def create_classifier(architecture, labels, input_size, layers, dropout ,first_t
     model=Model(inputs=base_model.feature_extractor.input,outputs=preds)
     network = Classifier(model,input_size,labels)
 
-
     return network
 
 class Classifier(object):
@@ -42,16 +50,16 @@ class Classifier(object):
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):
             print("Loading pre-trained weights in", weight_path)
-            self._yolo_network.load_weights(weight_path, by_name=by_name)
+            self._network.load_weights(weight_path, by_name=by_name)
         else:
             print("Fail to load pre-trained weights. Make sure weight file path.")
 
     def predict(self, image):
-        preprocessed_image = prepare_image(image,show=False)
-        pred = model.predict(preprocessed_image)
+        preprocessed_image = prepare_image(image,show=False,size=(self._input_size,self._input_size))
+        pred = self._network.predict(preprocessed_image)
         predicted_class_indices=np.argmax(pred,axis=1)
-        predictions = [labels[k] for k in predicted_class_indices]
-        return predictions
+        predictions = [self._labels[k] for k in predicted_class_indices]
+        return predictions, pred[0][predicted_class_indices]
 
     def train(self,
               img_folder,
