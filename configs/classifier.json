@@ -1,7 +1,7 @@
 {
     "model" : {
         "type":                 "Classifier",
-        "architecture":         "MobileNet",
+        "architecture":         "VGG16",
         "input_size":           224,
         "fully-connected":      [100,50],
         "labels":               [],
@@ -11,13 +11,13 @@
         "full":   				""
     },
     "train" : {
-        "actual_epoch":         5,
+        "actual_epoch":         30,
         "train_image_folder":   "/home/ubuntu/datasets/classifier/imgs",
         "train_times":          4,
         "valid_image_folder":   "/home/ubuntu/datasets/classifier/imgs_validation",
         "valid_times":          4,
         "batch_size":           4,
-        "learning_rate":        1e-4,
+        "learning_rate":        1e-2,
         "saved_folder":   		"classifier",
         "first_trainable_layer": "65",
         "augumentation":				false

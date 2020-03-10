@@ -4,9 +4,7 @@ import time
 import tensorflow as tf
 import keras
 import numpy as np
-from keras import backend as K
-from tensorflow.python.framework import graph_util
-from tensorflow.python.framework import graph_io
+from .convert import save_tflite
 from keras.optimizers import Adam, SGD
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import matplotlib.pyplot as plt
@@ -75,8 +73,8 @@ class CheckpointPB(keras.callbacks.Callback):
                         if self.save_weights_only:
                             self.model.save_weights(filepath, overwrite=True)
                         else:
-                            self.model.save(os.path.join(self.filepath, self.date + '.h5'), overwrite=True)
-                            save_tflite(self.model, self.filepath, self.date)
+                            self.model.save(os.path.join(self.filepath, self.date + '.h5'), overwrite=True,include_optimizer=False)
+                            #save_tflite(self.model, self.filepath, self.date)
                     else:
                         if self.verbose > 0:
                             print('\nEpoch %05d: %s did not improve from %0.5f' %
@@ -88,9 +86,6 @@ class CheckpointPB(keras.callbacks.Callback):
                     self.model.save_weights(filepath, overwrite=True)
                 else:
                     self.model.save(filepath, overwrite=True)
-
-
-
 def train(model,
          loss_func,
          train_batch_gen,
@@ -122,6 +117,7 @@ def train(model,
     path = os.path.join(name,train_date)
     os.mkdir(path)
     saved_weights_name = os.path.join(path, train_date + '.h5')
+    saved_weights_name_ctrlc = os.path.join(path, train_date + '_ctrlc.h5')
     try:
         history = model.fit_generator(generator = train_batch_gen,
                         steps_per_epoch  = len(train_batch_gen), 
@@ -133,30 +129,19 @@ def train(model,
                         workers          = 2,
                         max_queue_size   = 4)
     except KeyboardInterrupt:
-        save_tflite(model,path,(train_date+"_ctrlc_"))
+        print("Saving model")
+        model.save(saved_weights_name_ctrlc,overwrite=True,include_optimizer=False)
+        save_tflite(path,(train_date+"_ctrlc"))
         raise
 
     _print_time(time.time()-train_start)
-    save_tflite(model,path,(train_date+"_end_"))
+    save_tflite(path,(train_date))
 
 def _print_time(process_time):
     if process_time < 60:
         print("{:d}-seconds to train".format(int(process_time)))
     else:
         print("{:d}-mins to train".format(int(process_time/60)))
-
-def save_tflite(model, path, train_date):
-        output_node_names = [node.op.name for node in model.outputs]
-        print(output_node_names)
-        input_node_names = [node.op.name for node in model.inputs]
-        output_layer = model.layers[-1].name+'/BiasAdd'
-        sess = K.get_session()
-        constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph.as_graph_def(), output_node_names)
-        graph_io.write_graph(constant_graph, "" , os.path.join (path, train_date + '.pb'), as_text=False)
-        model.save("tmp.h5",include_optimizer=False)
-        converter = tf.lite.TFLiteConverter.from_keras_model_file("tmp.h5",output_arrays=output_node_names)
-        tflite_model = converter.convert()
-        open(os.path.join (path, train_date + '.tflite'), "wb").write(tflite_model)
 
 def plot(acc,val_acc,path,train_date):
     plt.plot(acc)

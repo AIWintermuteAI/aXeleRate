@@ -74,6 +74,4 @@ class Segnet(object):
         
         self._network.summary()
         train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch,saved_weights_name)
-        print("Saving model")
-        self._network.save(saved_weights_name)
     
