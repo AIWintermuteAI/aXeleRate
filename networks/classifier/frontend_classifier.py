@@ -66,14 +66,14 @@ class Classifier(object):
               nb_epoch,
               saved_weights_name,
               batch_size=8,
-              jitter=True,
+              augumentation=False,
               learning_rate=1e-4, 
               train_times=1,
               valid_times=1,
               valid_img_folder="",
               first_trainable_layer=None):
         
-        train_generator, validation_generator = create_datagen(img_folder, valid_img_folder, batch_size, self._input_size, saved_weights_name)
+        train_generator, validation_generator = create_datagen(img_folder, valid_img_folder, batch_size, self._input_size, saved_weights_name, augumentation)
         self._network.summary()
         train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch,saved_weights_name)
         print("Saving model")

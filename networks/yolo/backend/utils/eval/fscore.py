@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from yolo.backend.utils.eval._box_match import BoxMatcher
+from ._box_match import BoxMatcher
 
 def count_true_positives(detect_boxes, true_boxes, detect_labels=None, true_labels=None):
     """
@@ -28,8 +28,11 @@ def calc_score(n_true_positives, n_truth, n_pred):
     """
     precision = n_true_positives / n_pred
     recall = n_true_positives / n_truth
-    fscore = 2* precision * recall / (precision + recall)
-    score = {"fscore": fscore, "precision": precision, "recall": recall}
+    if precision + recall > 0:
+        fscore = 2* precision * recall / (precision + recall)
+        score = {"fscore": fscore, "precision": precision, "recall": recall}
+    else:
+        score = 0
     return score
     
 

@@ -1,21 +1,17 @@
 # -*- coding: utf-8 -*-
 
-# This driver performs 2-functions for the validation images specified in configuration file:
-#     1) evaluate fscore of validation images.
-#     2) stores the prediction results of the validation images.
-
 import argparse
 import json
 import cv2
 import numpy as np
-#import yolo
-#from yolo.frontend import create_yolo
-#from yolo.backend.utils.box import draw_scaled_boxes
-#from yolo.backend.utils.annotation import parse_annotation
-#from yolo.backend.utils.eval.fscore import count_true_positives, calc_score
+
+from networks.yolo.frontend import create_yolo
+from networks.yolo.backend.utils.box import draw_scaled_boxes
+from networks.yolo.backend.utils.annotation import parse_annotation
+from networks.yolo.backend.utils.eval.fscore import count_true_positives, calc_score
 
 from networks.segnet.frontend_segnet import create_segnet
-from networks.segnet.predict import predict_multiple
+from networks.segnet.predict import predict_multiple, evaluate
 
 from networks.classifier.frontend_classifier import get_labels,create_classifier
 
@@ -71,7 +67,7 @@ if __name__ == '__main__':
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(args.weights)
         predict_multiple(segnet._network, inp_dir=config['train']['valid_image_folder'], out_dir='detected',overlay_img=True)
-
+        print(evaluate(segnet._network, inp_images_dir=config['train']['valid_image_folder'],annotations_dir=config['train']['valid_annot_folder']))
 
 
     if config['model']['type']=='Classifier':
@@ -97,23 +93,15 @@ if __name__ == '__main__':
             output_path = os.path.join('detected', os.path.basename(filename))
             image = cv2.imread(filename)
             img_class, prob = classifier.predict(filename)
-            cv2.putText(image, "{}:{}".format(img_class[0], prob[0]), (0,20), font, image.shape[0]/400, (0, 0, 255), 2, True)
+            cv2.putText(image, "{}:{:.2f}".format(img_class[0], prob[0]), (10,20), font, image.shape[0]/400, (0, 0, 255), 2, True)
             cv2.imwrite(output_path, image)
             print("{}:{}".format(img_class[0], prob[0]))
 
 
     if config['model']['type']=='Detector':
-        if config['train']['is_only_detect']:
-            labels = ['']
-        else:
-            if config['model']['labels']:
-                labels = config['model']['labels']
-            else:
-                labels = get_object_labels(config['train']['train_annot_folder'])
-        print(labels)
         # 2. create yolo instance & predict
         yolo = create_yolo(config['model']['architecture'],
-                           labels,
+                           config['model']['labels'],
                            config['model']['input_size'],
                            config['model']['anchors'])
         yolo.load_weights(args.weights)
@@ -126,33 +114,27 @@ if __name__ == '__main__':
                                        config['model']['labels'],
                                        is_only_detect=config['train']['is_only_detect'])
 
-        #n_true_positives = 0
-        #n_truth = 0
-        #n_pred = 0
-        #for i in range(len(annotations)):
-        for filename in os.listdir(args.path):
-            #img_path = annotations.fname(i)
-            img_path = os.path.join(args.path,filename)
-            #img_fname = os.path.basename(img_path)
-            img_fname = filename
+        n_true_positives = 0
+        n_truth = 0
+        n_pred = 0
+        for i in range(len(annotations)):
+            img_path = annotations.fname(i)
+            img_fname = os.path.basename(img_path)
             image = cv2.imread(img_path)
-            #true_boxes = annotations.boxes(i)
-            #true_labels = annotations.code_labels(i)
+            true_boxes = annotations.boxes(i)
+            true_labels = annotations.code_labels(i)
             
             boxes, probs = yolo.predict(image, float(args.threshold))
-
+            labels = np.argmax(probs, axis=1) if len(probs) > 0 else [] 
+          
             # 4. save detection result
-            image = draw_scaled_boxes(image, boxes, probs, labels)
+            image = draw_scaled_boxes(image, boxes, probs, config['model']['labels'])
             output_path = os.path.join(write_dname, os.path.split(img_fname)[-1])
-            label_list = config['model']['labels']
-            right_label = np.argmax(probs, axis=1) if len(probs) > 0 else [] 
-            #cv2.imwrite(output_path, image)
+            
+            cv2.imwrite(output_path, image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
-            if len(probs) > 0:
-                #create_ann(filename,image,boxes,right_label,label_list)
-                cv2.imwrite(output_path, image)
 
-            #n_true_positives += count_true_positives(boxes, true_boxes, labels, true_labels)
-            #n_truth += len(true_boxes)
-            #n_pred += len(boxes)
-        #print(calc_score(n_true_positives, n_truth, n_pred))
+            n_true_positives += count_true_positives(boxes, true_boxes, labels, true_labels)
+            n_truth += len(true_boxes)
+            n_pred += len(boxes)
+        print(calc_score(n_true_positives, n_truth, n_pred))

@@ -159,7 +159,6 @@ if __name__ == '__main__':
         
         for i in range(5):
             img_file =  os.path.join("imgs", fname)
-            #boxes = np.array([[1616,803,2771,1862]])
             
             desired_w = 224
             desired_h = 224

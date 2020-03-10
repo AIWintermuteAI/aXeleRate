@@ -8,8 +8,10 @@ import json
 from networks.yolo.frontend import create_yolo, get_object_labels
 from networks.classifier.frontend_classifier import create_classifier, get_labels
 from networks.segnet.frontend_segnet import create_segnet
-
 import tensorflow as tf
+
+tf.get_logger().setLevel('WARNING')
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
 config = tf.ConfigProto(gpu_options=gpu_options)
 config.gpu_options.allow_growth = True
@@ -93,7 +95,7 @@ if __name__ == '__main__':
                    config['train']['actual_epoch'],
                    weight_file,
                    config["train"]["batch_size"],
-                   config["train"]["jitter"],
+                   config["train"]["augumentation"],
                    config['train']['learning_rate'], 
                    config['train']['train_times'],
                    config['train']['valid_times'],

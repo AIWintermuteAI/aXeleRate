@@ -230,8 +230,8 @@ def evaluate( model=None , inp_images=None , annotations=None,inp_images_dir=Non
         pr = predict(model , inp )
         gt = get_segmentation_array( ann , model.n_classes ,  model.output_width , model.output_height , no_reshape=True  )
         gt = gt.argmax(-1)
-        pr = pr.flatten()
-        gt = gt.flatten()
+        #pr = pr.flatten()
+        #gt = gt.flatten()
                 
         for cl_i in range(model.n_classes ):
             
