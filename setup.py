@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-setup(name='aXeleRate',
+setup(name='axelerate',
       version=0.5,
       description='object detection algorithm',
       author='Dmitry Maslov',
