@@ -5,4 +5,5 @@ tmp.h5
 classifier/
 detector/
 segment/
-networks/common_utils/ncc_linux_x86_64
+networks/common_utils/ncc
+networks/common_utils/ncc_linux_x86_64.tar.xz

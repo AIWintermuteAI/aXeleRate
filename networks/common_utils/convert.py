@@ -7,8 +7,8 @@ from tensorflow.python.framework import graph_util
 from tensorflow.python.framework import graph_io
 from keras.utils import get_file
 
-k210_converter_path=os.path.join(os.getcwd(),'networks','common_utils',"ncc_linux_x86_64","ncc","ncc")
-k210_converter_download_path=os.path.join(os.getcwd(),'networks','common_utils',"ncc_linux_x86_64.tar.xz")
+k210_converter_path=os.path.join(os.getcwd(),'networks','common_utils',"ncc","ncc")
+k210_converter_download_path=os.path.join(os.getcwd(),'networks','common_utils','ncc_linux_x86_64.tar.xz')
 nncase_download_url="https://github.com/kendryte/nncase/releases/download/v0.2.0-beta2/ncc_linux_x86_64.tar.xz"
 
 class Converter(object):
@@ -21,9 +21,9 @@ class Converter(object):
                 print('K210 Converter ready')
             else:
                 print('Downloading K210 Converter')
-                get_file(k210_converter_download_path,nncase_download_url,extract=True,archive_format='tar')         
+                get_file(k210_converter_download_path,nncase_download_url)         
                 tar_file = tarfile.open(k210_converter_download_path)
-                tar_file.extractall(k210_converter_path)
+                tar_file.extractall(os.path.join(os.getcwd(),'networks','common_utils','ncc'))
                 tar_file.close()
                 os.chmod(k210_converter_path, 0o775)
         self._converter_type = converter_type
