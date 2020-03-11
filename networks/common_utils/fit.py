@@ -4,7 +4,7 @@ import time
 import tensorflow as tf
 import keras
 import numpy as np
-from .convert import save_tflite
+
 from keras.optimizers import Adam, SGD
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import matplotlib.pyplot as plt
@@ -119,7 +119,7 @@ def train(model,
     saved_weights_name = os.path.join(path, train_date + '.h5')
     saved_weights_name_ctrlc = os.path.join(path, train_date + '_ctrlc.h5')
     try:
-        history = model.fit_generator(generator = train_batch_gen,
+        model.fit_generator(generator = train_batch_gen,
                         steps_per_epoch  = len(train_batch_gen), 
                         epochs           = nb_epoch,
                         validation_data  = valid_batch_gen,
@@ -129,13 +129,11 @@ def train(model,
                         workers          = 2,
                         max_queue_size   = 4)
     except KeyboardInterrupt:
-        print("Saving model")
         model.save(saved_weights_name_ctrlc,overwrite=True,include_optimizer=False)
-        save_tflite(path,(train_date+"_ctrlc"))
-        raise
+        return model.layers, saved_weights_name_ctrlc 
 
     _print_time(time.time()-train_start)
-    save_tflite(path,(train_date))
+    return model.layers, saved_weights_name
 
 def _print_time(process_time):
     if process_time < 60:

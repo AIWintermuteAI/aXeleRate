@@ -8,10 +8,13 @@ import json
 from networks.yolo.frontend import create_yolo, get_object_labels
 from networks.classifier.frontend_classifier import create_classifier, get_labels
 from networks.segnet.frontend_segnet import create_segnet
+from networks.common_utils.convert import Converter
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '4'
 import tensorflow as tf
 
-tf.get_logger().setLevel('WARNING')
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+tf.get_logger().setLevel('ERROR')
+
 gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
 config = tf.ConfigProto(gpu_options=gpu_options)
 config.gpu_options.allow_growth = True
@@ -45,9 +48,10 @@ def setup_training(config_file):
 if __name__ == '__main__':
     args = argparser.parse_args()
     config, weight_file = setup_training(args.conf)
-  
+    # Create the converter
+    converter = Converter(config['converter']['type'])
+
     #  Segmentation network
-  
     if config['model']['type']=='SegNet':
         print('Segmentation')           
         # 1. Construct the model 
@@ -58,22 +62,21 @@ if __name__ == '__main__':
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(config['pretrained']['full'], by_name=True)
         # 3. actual training 
-        segnet.train(config['train']['train_image_folder'],
-               config['train']['train_annot_folder'],
-               config['train']['actual_epoch'],
-               weight_file,
-               config["train"]["batch_size"],
-               config["train"]["augumentation"],
-               config['train']['learning_rate'], 
-               config['train']['train_times'],
-               config['train']['valid_times'],
-               config['train']['valid_image_folder'],
-               config['train']['valid_annot_folder'],
-               config['train']['first_trainable_layer'],
-               config['train']['ignore_zero_class'])
+        model_layers, model_path = segnet.train(config['train']['train_image_folder'],
+                                           config['train']['train_annot_folder'],
+                                           config['train']['actual_epoch'],
+                                           weight_file,
+                                           config["train"]["batch_size"],
+                                           config["train"]["augumentation"],
+                                           config['train']['learning_rate'], 
+                                           config['train']['train_times'],
+                                           config['train']['valid_times'],
+                                           config['train']['valid_image_folder'],
+                                           config['train']['valid_annot_folder'],
+                                           config['train']['first_trainable_layer'],
+                                           config['train']['ignore_zero_class'])
                
     #  Classifier
-    
     if config['model']['type']=='Classifier':
         print('Classifier')           
         if config['model']['labels']:
@@ -91,21 +94,20 @@ if __name__ == '__main__':
         classifier.load_weights(config['pretrained']['full'], by_name=True)
 
         # 3. actual training 
-        classifier.train(config['train']['train_image_folder'],
-                   config['train']['actual_epoch'],
-                   weight_file,
-                   config["train"]["batch_size"],
-                   config["train"]["augumentation"],
-                   config['train']['learning_rate'], 
-                   config['train']['train_times'],
-                   config['train']['valid_times'],
-                   config['train']['valid_image_folder'],
-                   config['train']['first_trainable_layer'])
+        model_layers, model_path = classifier.train(config['train']['train_image_folder'],
+                                               config['train']['actual_epoch'],
+                                               weight_file,
+                                               config["train"]["batch_size"],
+                                               config["train"]["augumentation"],
+                                               config['train']['learning_rate'], 
+                                               config['train']['train_times'],
+                                               config['train']['valid_times'],
+                                               config['train']['valid_image_folder'],
+                                               config['train']['first_trainable_layer'])
 
 
 
     #  Detector
-
     if config['model']['type']=='Detector':
         if config['train']['is_only_detect']:
             labels = ["object"]
@@ -130,17 +132,17 @@ if __name__ == '__main__':
         yolo.load_weights(config['pretrained']['full'], by_name=True)
 
         # 3. actual training 
-        yolo.train(config['train']['train_image_folder'],
-                   config['train']['train_annot_folder'],
-                   config['train']['actual_epoch'],
-                   weight_file,
-                   config["train"]["batch_size"],
-                   config["train"]["jitter"],
-                   config['train']['learning_rate'], 
-                   config['train']['train_times'],
-                   config['train']['valid_times'],
-                   config['train']['valid_image_folder'],
-                   config['train']['valid_annot_folder'],
-                   config['train']['first_trainable_layer'],
-                   config['train']['is_only_detect'])
-
+        model_layers, model_path = yolo.train(config['train']['train_image_folder'],
+                                           config['train']['train_annot_folder'],
+                                           config['train']['actual_epoch'],
+                                           weight_file,
+                                           config["train"]["batch_size"],
+                                           config["train"]["augumentation"],
+                                           config['train']['learning_rate'], 
+                                           config['train']['train_times'],
+                                           config['train']['valid_times'],
+                                           config['train']['valid_image_folder'],
+                                           config['train']['valid_annot_folder'],
+                                           config['train']['first_trainable_layer'],
+                                           config['train']['is_only_detect'])
+    converter.convert_model(model_path,model_layers,config['train']['valid_image_folder'])

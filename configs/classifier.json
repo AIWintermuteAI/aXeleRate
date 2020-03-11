@@ -11,7 +11,7 @@
         "full":   				""
     },
     "train" : {
-        "actual_epoch":         30,
+        "actual_epoch":         1,
         "train_image_folder":   "/home/ubuntu/datasets/classifier/imgs",
         "train_times":          4,
         "valid_image_folder":   "/home/ubuntu/datasets/classifier/imgs_validation",
@@ -21,5 +21,8 @@
         "saved_folder":   		"classifier",
         "first_trainable_layer": "65",
         "augumentation":				true
+    },
+    "converter" : {
+        "type":   				["k210","tflite"]
     }
 }

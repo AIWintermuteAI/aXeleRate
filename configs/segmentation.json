@@ -9,7 +9,7 @@
         "full":   				""
     },
     "train" : {
-        "actual_epoch":         30,
+        "actual_epoch":         1,
         "train_image_folder":   "/home/ubuntu/datasets/segmentation/imgs",
         "train_annot_folder":   "/home/ubuntu/datasets/segmentation/anns",
         "train_times":          4,
@@ -22,5 +22,8 @@
         "first_trainable_layer": "0",
         "ignore_zero_class":    false,
         "augumentation":				true
+    },
+    "converter" : {
+        "type":   				["k210","tflite"]
     }
 }

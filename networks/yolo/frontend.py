@@ -131,7 +131,7 @@ class YOLO(object):
         loss = self._get_loss_func(batch_size)
         
         # 3. Run training loop
-        train(model,
+        return train(model,
                 loss,
                 train_batch_generator,
                 valid_batch_generator,

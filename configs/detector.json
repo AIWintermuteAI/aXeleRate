@@ -14,7 +14,7 @@
         "full":   				""
     },
     "train" : {
-        "actual_epoch":         5,
+        "actual_epoch":         1,
         "train_image_folder":   "/home/ubuntu/datasets/detector/imgs",
         "train_annot_folder":   "/home/ubuntu/datasets/detector/anns",
         "train_times":          4,
@@ -25,7 +25,10 @@
         "learning_rate":        1e-4,
         "saved_folder":   		"detector",
         "first_trainable_layer": "",
-        "jitter":				true,
+        "augumentation":				true,
         "is_only_detect" : 		false
+    },
+    "converter" : {
+        "type":   				["k210","tflite"]
     }
 }
