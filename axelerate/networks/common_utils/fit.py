@@ -10,6 +10,7 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import matplotlib.pyplot as plt
 from datetime import datetime
 import warnings
+from axelerate.networks.common_utils.file_utils import space_safety
 
 class CheckpointPB(keras.callbacks.Callback):
 
@@ -115,7 +116,7 @@ def train(model,
     name = ""
     for item in saved_weights_name.split('/')[:-1]: name = os.path.join(name,item)
     path = os.path.join(name,train_date)
-    os.mkdir(path)
+    os.makedirs(path)
     saved_weights_name = os.path.join(path, train_date + '.h5')
     saved_weights_name_ctrlc = os.path.join(path, train_date + '_ctrlc.h5')
     try:

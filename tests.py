@@ -68,7 +68,7 @@ def configs(network_type):
             "valid_times":          4,
             "batch_size":           4,
             "learning_rate":        1e-4,
-            "saved_folder":   		"detector",
+            "saved_folder":   		"detector space",
             "first_trainable_layer": "",
             "augumentation":				True,
             "is_only_detect" : 		False

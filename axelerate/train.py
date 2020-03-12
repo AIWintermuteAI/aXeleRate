@@ -10,6 +10,7 @@ from axelerate.networks.yolo.frontend import create_yolo, get_object_labels
 from axelerate.networks.classifier.frontend_classifier import create_classifier, get_labels
 from axelerate.networks.segnet.frontend_segnet import create_segnet
 from axelerate.networks.common_utils.convert import Converter
+from axelerate.networks.common_utils.file_utils import space_safety
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '4'
 import tensorflow as tf
@@ -141,6 +142,7 @@ def setup_training(config_file=None,config_dict=None):
         print('No config found')
         sys.exit()
     dirname = config['train']['saved_folder']
+    dirname = space_safety(dirname)
     if os.path.isdir(dirname):
         print("{} is already exists. Weight file in directory will be overwritten".format(dirname))
     else:
