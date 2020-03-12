@@ -1,7 +1,7 @@
 import os
 
 def space_safety(path):
-    path = path.replace(' ', '\s')
+    path = path.replace(' ', '\ ')
     print('safe')
     return path
 
