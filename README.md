@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/logo.png?token=AHYNY6ZVGQXE7KT45JZXHYK6NIFCY" alt="aXeleRate" width="350">
+  <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/logo.png?token=AHYNY656IU52DK4W2KMVEDK6NILIO" alt="aXeleRate" width="350">
 </h1>
 
 <h3 align="center">Keras-based framework for AI on the Edge</h3>
@@ -30,11 +30,11 @@ aXeleRate is meant for people who need to run computer vision applications(image
 
 Stable version:
 
-#### `pip install axelerate
+pip install axelerate
 
 Daily development version:
 
-#### `pip install git+https://github.com/autonomio/talos`
+pip install git+https://github.com/AIWintermuteAI/aXeleRate
 
 ###  :computer: Project Story
 
@@ -51,6 +51,6 @@ aXeleRate is still work in progress project. I will be making some changes from 
 
 ### Acknoledgements
 
-YOLOv2 Keras code jeongjoonsup and Ngoc Anh Huynh https://github.com/experiencor/keras-yolo2
-SegNet Keras code Divam Gupta https://github.com/divamgupta/image-segmentation-keras
-Big Thank You to creator/maintainers of Keras/Tensorflow
+  - YOLOv2 Keras code jeongjoonsup and Ngoc Anh Huynh https://github.com/experiencor/keras-yolo2
+  - SegNet Keras code Divam Gupta https://github.com/divamgupta/image-segmentation-keras
+  - Big Thank You to creator/maintainers of Keras/Tensorflow
