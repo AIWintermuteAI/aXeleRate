@@ -27,7 +27,7 @@ session = tf.Session(config=config)
 DEFAULT_THRESHOLD = 0.3
 
 argparser = argparse.ArgumentParser(
-    description='Predict digits driver')
+    description='Run inference script')
 
 argparser.add_argument(
     '-c',
@@ -50,12 +50,8 @@ argparser.add_argument(
     '--path',
     help='path to images')
 
-if __name__ == '__main__':
-    # 1. extract arguments
-    args = argparser.parse_args()
-    with open(args.conf) as config_buffer:
-        config = json.loads(config_buffer.read())
 
+def setup_inference(config,weights,threshold=0.3,path=None):
 
     if config['model']['type']=='SegNet':
         print('Segmentation')           
@@ -65,7 +61,7 @@ if __name__ == '__main__':
                                    config['model']['n_classes'],
                                    int(config['train']['first_trainable_layer']))   
         # 2. Load the pretrained weights (if any) 
-        segnet.load_weights(args.weights)
+        segnet.load_weights(weights)
         predict_multiple(segnet._network, inp_dir=config['train']['valid_image_folder'], out_dir='detected',overlay_img=True)
         print(evaluate(segnet._network, inp_images_dir=config['train']['valid_image_folder'],annotations_dir=config['train']['valid_annot_folder']))
 
@@ -84,7 +80,7 @@ if __name__ == '__main__':
                                        config['model']['dropout'],
                                        int(config['train']['first_trainable_layer']))   
         # 2. Load the pretrained weights (if any) 
-        classifier.load_weights(args.weights)
+        classifier.load_weights(weights)
         font = cv2.FONT_HERSHEY_SIMPLEX
         valid_image_folder = config['train']['valid_image_folder']
         image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
@@ -104,7 +100,7 @@ if __name__ == '__main__':
                            config['model']['labels'],
                            config['model']['input_size'],
                            config['model']['anchors'])
-        yolo.load_weights(args.weights)
+        yolo.load_weights(weights)
 
         # 3. read image
         write_dname = "detected"
@@ -124,7 +120,7 @@ if __name__ == '__main__':
             true_boxes = annotations.boxes(i)
             true_labels = annotations.code_labels(i)
             
-            boxes, probs = yolo.predict(image, float(args.threshold))
+            boxes, probs = yolo.predict(image, float(threshold))
             labels = np.argmax(probs, axis=1) if len(probs) > 0 else [] 
           
             # 4. save detection result
@@ -138,3 +134,11 @@ if __name__ == '__main__':
             n_truth += len(true_boxes)
             n_pred += len(boxes)
         print(calc_score(n_true_positives, n_truth, n_pred))
+
+
+if __name__ == '__main__':
+    # 1. extract arguments
+    args = argparser.parse_args()
+    with open(args.conf) as config_buffer:
+        config = json.loads(config_buffer.read())
+    setup_inference(config,args.weights,args.threshold)
