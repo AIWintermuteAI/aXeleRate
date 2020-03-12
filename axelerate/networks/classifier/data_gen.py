@@ -3,7 +3,7 @@ from keras.applications.mobilenet import preprocess_input
 import os
 
 
-def create_datagen(train_folder, valid_folder, batch_size, input_size, filename, augumentation):
+def create_datagen(train_folder, valid_folder, batch_size, input_size, project_folder, augumentation):
     if augumentation:
         data_gen_args = dict(brightness_range=[0.5,1.5],
                      rotation_range=90,
@@ -49,7 +49,7 @@ def create_datagen(train_folder, valid_folder, batch_size, input_size, filename,
 				                                         shuffle=True)				                                     
     labels = (train_generator.class_indices)
     labels = dict((v,k) for k,v in labels.items())
-    fo = open(os.path.join(os.path.dirname(filename),"labels.txt"), "w")
+    fo = open(os.path.join(project_folder,"labels.txt"), "w")
     for k,v in labels.items():
         print(v)
         fo.write(v+"\n")

@@ -93,7 +93,7 @@ def train(model,
          valid_batch_gen,
          learning_rate = 1e-4,
          nb_epoch = 300,
-         saved_weights_name = 'best_weights.h5'):
+         project_folder = 'project'):
     """A function that performs training on a general keras model.
 
     # Args
@@ -113,9 +113,8 @@ def train(model,
     # 4. training
     train_start = time.time()
     train_date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    name = ""
-    for item in saved_weights_name.split('/')[:-1]: name = os.path.join(name,item)
-    path = os.path.join(name,train_date)
+    path = os.path.join(project_folder,train_date)
+    print(path)
     os.makedirs(path)
     saved_weights_name = os.path.join(path, train_date + '.h5')
     saved_weights_name_ctrlc = os.path.join(path, train_date + '_ctrlc.h5')

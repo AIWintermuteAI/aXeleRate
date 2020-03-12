@@ -1,5 +1,6 @@
 import argparse
 from axelerate.train import setup_training
+from keras import backend as K 
 
 argparser = argparse.ArgumentParser(description='Test axelerate on sample datasets')
 
@@ -33,7 +34,7 @@ def configs(network_type):
             "valid_times":          4,
             "batch_size":           4,
             "learning_rate":        1e-4,
-            "saved_folder":   		"classifier",
+            "saved_folder":   		"/home/ubuntu/space safety/classifier",
             "first_trainable_layer": "65",
             "augumentation":				True
         },
@@ -68,7 +69,7 @@ def configs(network_type):
             "valid_times":          4,
             "batch_size":           4,
             "learning_rate":        1e-4,
-            "saved_folder":   		"/home/ubuntu/space safety/detetor",
+            "saved_folder":   		"/home/ubuntu/space safety/detector",
             "first_trainable_layer": "",
             "augumentation":				True,
             "is_only_detect" : 		False
@@ -98,7 +99,7 @@ def configs(network_type):
                 "valid_times":          4,
                 "batch_size":           8,
                 "learning_rate":        1e-4,
-                "saved_folder":   		"segment",
+                "saved_folder":   		"/home/ubuntu/space safety/segment",
                 "first_trainable_layer": "0",
                 "ignore_zero_class":    False,
                 "augumentation":				True
@@ -114,3 +115,7 @@ def configs(network_type):
 
 for item in configs(args.type):
     setup_training(config_dict=item)
+    K.clear_session()
+
+
+

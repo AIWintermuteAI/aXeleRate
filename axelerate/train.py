@@ -31,7 +31,7 @@ argparser.add_argument(
     default="configs/from_scratch.json",
     help='path to configuration file')
 
-def train_from_config(config,weight_file):
+def train_from_config(config,project_folder):
     # Create the converter
     converter = Converter(config['converter']['type'])
 
@@ -49,7 +49,7 @@ def train_from_config(config,weight_file):
         model_layers, model_path = segnet.train(config['train']['train_image_folder'],
                                            config['train']['train_annot_folder'],
                                            config['train']['actual_epoch'],
-                                           weight_file,
+                                           project_folder,
                                            config["train"]["batch_size"],
                                            config["train"]["augumentation"],
                                            config['train']['learning_rate'], 
@@ -80,7 +80,7 @@ def train_from_config(config,weight_file):
         # 3. actual training 
         model_layers, model_path = classifier.train(config['train']['train_image_folder'],
                                                config['train']['actual_epoch'],
-                                               weight_file,
+                                               project_folder,
                                                config["train"]["batch_size"],
                                                config["train"]["augumentation"],
                                                config['train']['learning_rate'], 
@@ -119,7 +119,7 @@ def train_from_config(config,weight_file):
         model_layers, model_path = yolo.train(config['train']['train_image_folder'],
                                            config['train']['train_annot_folder'],
                                            config['train']['actual_epoch'],
-                                           weight_file,
+                                           project_folder,
                                            config["train"]["batch_size"],
                                            config["train"]["augumentation"],
                                            config['train']['learning_rate'], 
@@ -149,9 +149,9 @@ def setup_training(config_file=None,config_dict=None):
         print("{} is created.".format(dirname, dirname))
         os.makedirs(dirname)
     print("Weight file and Config file will be saved in \"{}\"".format(dirname))
-    train_from_config(config, os.path.join(dirname, "weights.h5"))
+    train_from_config(config, dirname)
 
 
 if __name__ == '__main__':
     args = argparser.parse_args()
-    config, weight_file = setup_training(args.conf)
+    setup_training(args.conf)

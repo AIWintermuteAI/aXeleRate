@@ -64,7 +64,7 @@ class Classifier(object):
     def train(self,
               img_folder,
               nb_epoch,
-              saved_weights_name,
+              project_folder,
               batch_size=8,
               augumentation=False,
               learning_rate=1e-4, 
@@ -73,8 +73,8 @@ class Classifier(object):
               valid_img_folder="",
               first_trainable_layer=None):
         
-        train_generator, validation_generator = create_datagen(img_folder, valid_img_folder, batch_size, self._input_size, saved_weights_name, augumentation)
+        train_generator, validation_generator = create_datagen(img_folder, valid_img_folder, batch_size, self._input_size, project_folder, augumentation)
         self._network.summary()
-        return train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch,saved_weights_name)
+        return train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch,project_folder)
 
     

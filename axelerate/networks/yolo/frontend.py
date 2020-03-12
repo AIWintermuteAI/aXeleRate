@@ -103,7 +103,7 @@ class YOLO(object):
               img_folder,
               ann_folder,
               nb_epoch,
-              saved_weights_name,
+              project_folder,
               batch_size=8,
               jitter=True,
               learning_rate=1e-4, 
@@ -137,7 +137,7 @@ class YOLO(object):
                 valid_batch_generator,
                 learning_rate      = learning_rate, 
                 nb_epoch           = nb_epoch,
-                saved_weights_name = saved_weights_name)
+                project_folder = project_folder)
 
     def _get_loss_func(self, batch_size):
         return self._yolo_loss.custom_loss(batch_size)

@@ -52,7 +52,7 @@ class Segnet(object):
               img_folder,
               ann_folder,
               nb_epoch,
-              saved_weights_name,
+              project_folder,
               batch_size=8,
               do_augment=False,
               learning_rate=1e-4, 
@@ -73,5 +73,5 @@ class Segnet(object):
             validation_generator = create_batch_generator(valid_img_folder, valid_ann_folder, self._input_size,self._output_size, self._n_classes,batch_size,valid_times)
         
         self._network.summary()
-        return train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch,saved_weights_name)
+        return train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch,project_folder)
     
