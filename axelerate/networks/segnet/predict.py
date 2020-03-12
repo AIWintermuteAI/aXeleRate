@@ -5,6 +5,7 @@ import os
 
 import cv2
 import numpy as np
+np.set_printoptions(threshold=np.inf)
 from tqdm import tqdm
 from keras.models import load_model
 
@@ -93,6 +94,11 @@ def visualize_segmentation( seg_arr , inp_img=None  , n_classes=None ,
     colors=class_colors , class_names=None , overlay_img=False , show_legends=False , 
     prediction_width=None , prediction_height=None  ):
     
+    #print("Found the following classes in the segmentation image:", np.unique(seg_arr))
+    #image = seg_arr/(seg_arr.max()/255.0)
+    #cv2.imshow("img", inp_img)
+    #cv2.imshow("seg_img", image)
+    #cv2.waitKey()
 
     if n_classes is None:
         n_classes = np.max(seg_arr)
@@ -155,9 +161,8 @@ def predict(model=None, inp=None, out_fname=None, checkpoints_path=None,overlay_
     pr = model.predict(np.array([x]))[0]
     #pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
     pr = pr.argmax(axis=2)
-
-    seg_img = visualize_segmentation( pr , inp ,n_classes=n_classes , colors=colors
-        , overlay_img=overlay_img ,show_legends=show_legends ,class_names=class_names ,prediction_width=prediction_width , prediction_height=prediction_height   )
+    seg_img = visualize_segmentation(pr, inp ,n_classes=n_classes , colors=colors
+        , overlay_img=overlay_img ,show_legends=show_legends ,class_names=class_names ,prediction_width=prediction_width , prediction_height=prediction_height)
 
     if out_fname is not None:
         cv2.imwrite(out_fname, seg_img)

@@ -74,8 +74,7 @@ def get_vgg_encoder(input_height=224,  input_width=224, pretrained='imagenet'):
     f5 = x
 
     if pretrained == 'imagenet':
-        VGG_Weights_path = keras.utils.get_file(
-            pretrained_url.split("/")[-1], pretrained_url)
+        VGG_Weights_path = '/home/ubuntu/.keras/models/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5' #keras.utils.get_file(pretrained_url.split("/")[-1], pretrained_url)
         Model(img_input, x).load_weights(VGG_Weights_path)
 
     return img_input, [f1, f2, f3, f4, f5]

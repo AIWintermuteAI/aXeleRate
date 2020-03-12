@@ -1,8 +1,15 @@
 import argparse
+import json
 from axelerate import setup_inference
 from keras import backend as K 
 
 argparser = argparse.ArgumentParser(description='Test axelerate on sample datasets')
+
+argparser.add_argument(
+    '-c',
+    '--conf',
+    default=None,
+    help='path to configuration file')
 
 argparser.add_argument(
     '-t',
@@ -118,8 +125,12 @@ def configs(network_type):
 
     return dict[network_type]
 
-
-for item in configs(args.type):
-    setup_inference(item,args.weights)
-    K.clear_session()
+if not args.conf:
+    for item in configs(args.type):
+        setup_inference(item,args.weights)
+        K.clear_session()
+else:
+    with open(args.conf) as config_buffer:
+        config = json.loads(config_buffer.read())
+        setup_inference(config,args.weights)
 

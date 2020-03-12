@@ -8,7 +8,8 @@ import numpy as np
 from axelerate.networks.segnet.data_utils.data_loader import create_batch_generator, verify_segmentation_dataset
 from axelerate.networks.common_utils.feature import create_feature_extractor
 from axelerate.networks.common_utils.fit import train
-from axelerate.networks.segnet.models.segnet import mobilenet_segnet
+from axelerate.networks.segnet.models.segnet import mobilenet_segnet,vgg_segnet
+from axelerate.networks.segnet.models.unet import mobilenet_unet,vgg_unet
 
 def masked_categorical_crossentropy(gt , pr ):
     from keras.losses import categorical_crossentropy
