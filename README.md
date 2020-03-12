@@ -6,7 +6,7 @@
 
 <hr>
 <p align="center">
-aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized to support both the workflow on local machine and on Google Colab.
+aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized to support both the workflow on local machine and on Google Colab.Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
 </p>
 <p align="center">
 <img src='https://i.ibb.co/3NFH646/keras-model-to-talos.gif' width=550px>
@@ -23,6 +23,7 @@ aXeleRate is meant for people who need to run computer vision applications(image
   - Supports multiple computer vision models: object detection(YOLOv2), image classification, semantic segmentation(SegNet-basic)
   - Different feature extractors to be used with the above network types: Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50, and Inception3. 
   - Automatic conversion of the best model for the training session. aXeleRate will download the suitable converter automatically.
+  - Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
   - Model version control made easier. Keras model files and converted models are saved in the project folder, grouped by the training date. Training history is saved as .png graph in the model folder.
   - Two modes of operation: locally, with train.py script and .json config file and remote, tailored for Google Colab, with module import and dictionary config.
 
