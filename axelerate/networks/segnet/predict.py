@@ -13,7 +13,7 @@ from axelerate.networks.segnet.train import find_latest_checkpoint
 from axelerate.networks.segnet.data_utils.data_loader import get_image_array, get_segmentation_array, DATA_LOADER_SEED, class_colors, get_pairs_from_paths
 from axelerate.networks.segnet.models.config import IMAGE_ORDERING
 from . import metrics
-
+import matplotlib.pyplot as plt
 import six
 
 
@@ -128,7 +128,7 @@ def visualize_segmentation( seg_arr , inp_img=None  , n_classes=None ,
 
         seg_img = concat_lenends( seg_img , legend_img )
 
-    cv2.imshow("seg_img", seg_img)
+    plt.imshow(seg_img)
     return seg_img
 
 
