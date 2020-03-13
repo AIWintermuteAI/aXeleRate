@@ -94,7 +94,7 @@ def visualize_segmentation( seg_arr , inp_img=None  , n_classes=None ,
     colors=class_colors , class_names=None , overlay_img=False , show_legends=False , 
     prediction_width=None , prediction_height=None  ):
     
-    #print("Found the following classes in the segmentation image:", np.unique(seg_arr))
+    print("Found the following classes in the segmentation image:", np.unique(seg_arr))
     #image = seg_arr/(seg_arr.max()/255.0)
     #cv2.imshow("img", inp_img)
     #cv2.imshow("seg_img", image)
@@ -128,7 +128,7 @@ def visualize_segmentation( seg_arr , inp_img=None  , n_classes=None ,
 
         seg_img = concat_lenends( seg_img , legend_img )
 
-
+    cv2.imshow("seg_img", seg_img)
     return seg_img
 
 

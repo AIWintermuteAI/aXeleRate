@@ -25,15 +25,17 @@ def get_labels(directory):
     return labels
 
 def create_classifier(architecture, labels, input_size, layers, dropout ,first_trainable_layer):
-    base_model=create_feature_extractor(architecture, input_size, first_trainable_layer)
-    x=base_model.feature_extractor.output
+    base_model=create_feature_extractor(architecture, input_size)
+    x=base_model.feature_extractor.outputs[0]
     x=GlobalAveragePooling2D()(x)
     for layer in layers[0:-1]:
         x=Dense(layer,activation='relu')(x) 
         x=Dropout(dropout)(x)
     x=Dense(layers[-1],activation='relu')(x)
     preds=Dense(len(labels),activation='softmax')(x)
-    model=Model(inputs=base_model.feature_extractor.input,outputs=preds)
+    model=Model(inputs=base_model.feature_extractor.inputs[0],outputs=preds)
+    for i,layer in enumerate(model.layers):
+        print(i,layer.name)
     network = Classifier(model,input_size,labels)
 
     return network

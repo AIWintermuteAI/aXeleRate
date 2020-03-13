@@ -10,7 +10,7 @@ from keras.applications.resnet50 import ResNet50
 
 from .mobilenet_sipeed.mobilenet import MobileNet
 
-def create_feature_extractor(architecture, input_size, first_trainable_layer=None):
+def create_feature_extractor(architecture, input_size):
     """
     # Args
         architecture : str
@@ -24,8 +24,14 @@ def create_feature_extractor(architecture, input_size, first_trainable_layer=Non
         feature_extractor = Inception3Feature(input_size, weights)
     elif architecture == 'SqueezeNet':
         feature_extractor = SqueezeNetFeature(input_size, weights)
-    elif architecture == 'MobileNet':
-        feature_extractor = MobileNetFeature(input_size, first_trainable_layer, weights)
+    elif architecture == 'MobileNet1_0':
+        feature_extractor = MobileNetFeature(input_size, weights, alpha=1)
+    elif architecture == 'MobileNet7_5':
+        feature_extractor = MobileNetFeature(input_size, weights,alpha=0.75)
+    elif architecture == 'MobileNet5_0':
+        feature_extractor = MobileNetFeature(input_size, weights,alpha=0.5)
+    elif architecture == 'MobileNet2_5':
+        feature_extractor = MobileNetFeature(input_size, weights,alpha=0.25)
     elif architecture == 'Full Yolo':
         feature_extractor = FullYoloFeature(input_size, weights)
     elif architecture == 'Tiny Yolo':
@@ -241,20 +247,12 @@ class TinyYoloFeature(BaseFeatureExtractor):
 
 class MobileNetFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
-    def __init__(self, input_size, first_trainable_layer,weights=False):
+    def __init__(self, input_size,weights, alpha ):
         input_image = Input(shape=(input_size, input_size, 3))
-        mobilenet = MobileNet(input_shape=(224,224,3),alpha = 0.75,depth_multiplier = 1, dropout = 0.001, weights = 'imagenet', classes = 1000, include_top=False,backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
+        mobilenet = MobileNet(input_shape=(224,224,3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = 'imagenet', classes = 1000, include_top=False,backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
 
-        for i,layer in enumerate(mobilenet.layers):
-            print(i,layer.name)
-        if first_trainable_layer:
-            for layer in mobilenet.layers[:first_trainable_layer]:
-                layer.trainable=False
-            for layer in mobilenet.layers[first_trainable_layer:]:
-                layer.trainable=True
-            print("-----Layers before {} are frozen and not trained!-----".format(mobilenet.layers[first_trainable_layer].name))
         x = mobilenet(input_image)
-        self.feature_extractor = Model(input_image, x)  
+        self.feature_extractor = mobilenet  
 
     def normalize(self, image):
         image = image / 255.
@@ -333,7 +331,7 @@ class Inception3Feature(BaseFeatureExtractor):
             inception.load_weights(weights)
         x = inception(input_image)
 
-        self.feature_extractor = Model(input_image, x)  
+        self.feature_extractor = inception
         if weights:
             self.feature_extractor.load_weights(weights)
 

@@ -33,10 +33,10 @@ class YoloNetwork(object):
         output_tensor = Conv2D(nb_box * (4 + 1 + nb_classes), (1,1), strides=(1,1),
                                padding='same', 
                                name='detection_layer_{}'.format(nb_box * (4 + 1 + nb_classes)), 
-                               kernel_initializer='lecun_normal')(feature_extractor.feature_extractor.output)
+                               kernel_initializer='lecun_normal')(feature_extractor.feature_extractor.outputs[0])
         output_tensor = Reshape((grid_size, grid_size, nb_box, 4 + 1 + nb_classes))(output_tensor)
     
-        model = Model(feature_extractor.feature_extractor.input, output_tensor)
+        model = Model(feature_extractor.feature_extractor.inputs[0], output_tensor)
         self._norm = feature_extractor.normalize
         self._model = model
         self._model.summary()

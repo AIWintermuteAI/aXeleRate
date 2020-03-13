@@ -220,4 +220,4 @@ class BatchGenerator(Sequence):
 
     def on_epoch_end(self):
         self.counter = 0
-
+        random.shuffle(self.img_seg_pairs)

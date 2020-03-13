@@ -8,17 +8,31 @@ import numpy as np
 from axelerate.networks.segnet.data_utils.data_loader import create_batch_generator, verify_segmentation_dataset
 from axelerate.networks.common_utils.feature import create_feature_extractor
 from axelerate.networks.common_utils.fit import train
-from axelerate.networks.segnet.models.segnet import mobilenet_segnet,vgg_segnet
-from axelerate.networks.segnet.models.unet import mobilenet_unet,vgg_unet
+from axelerate.networks.segnet.models.segnet import mobilenet_segnet, squeezenet_segnet, full_yolo_segnet, tiny_yolo_segnet, vgg16_segnet, resnet50_segnet
 
 def masked_categorical_crossentropy(gt , pr ):
     from keras.losses import categorical_crossentropy
     mask = 1-  gt[: , : , 0 ] 
     return categorical_crossentropy( gt , pr )*mask
 
-def create_segnet(architecture, input_size, n_classes ,first_trainable_layer):
-    
-    model = mobilenet_segnet(n_classes ,input_height=input_size,input_width=input_size)
+def create_segnet(architecture, input_size, n_classes, first_trainable_layer):
+
+    if architecture == 'Inception3':
+        raise Exception('Inception3 not supported with SegNet! Only support Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50 at the moment!')
+    elif architecture == 'SqueezeNet':
+        model = squeezenet_segnet(n_classes,input_size, encoder_level=4)
+    elif architecture == 'Full Yolo':
+        model = full_yolo_segnet(n_classes,input_size, encoder_level=4)
+    elif architecture == 'Tiny Yolo':
+        model = tiny_yolo_segnet(n_classes,input_size, encoder_level=4)
+    elif architecture == 'VGG16':
+        model = vgg16_segnet(n_classes,input_size, encoder_level=4)
+    elif architecture == 'ResNet50':
+        model = resnet50_segnet(n_classes,input_size, encoder_level=4)
+    elif 'MobileNet' in architecture:
+        model = mobilenet_segnet(n_classes,input_size, encoder_level=4, architecture = architecture)
+
+
     output_size = model.output_height
     network = Segnet(model,input_size, n_classes, output_size)
 

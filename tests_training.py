@@ -17,7 +17,7 @@ def configs(network_type):
     classifier = {
         "model" : {
             "type":                 "Classifier",
-            "architecture":         "MobileNet",
+            "architecture":         "MobileNet2_5",
             "input_size":           224,
             "fully-connected":      [100,50],
             "labels":               [],
@@ -47,7 +47,7 @@ def configs(network_type):
     detector = {
         "model":{
             "type":                 "Detector",
-            "architecture":         "MobileNet",
+            "architecture":         "MobileNet2_5",
             "input_size":           224,
             "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
             "labels":               ["aeroplane","person","diningtable","bottle"],
@@ -82,7 +82,7 @@ def configs(network_type):
     segnet = {
             "model" : {
                 "type":                 "SegNet",
-                "architecture":         "MobileNet",
+                "architecture":         "MobileNet7_5",
                 "input_size":           224,
                 "n_classes" : 		21
             },

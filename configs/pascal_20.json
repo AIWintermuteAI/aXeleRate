@@ -1,7 +1,7 @@
 {
     "model" : {
         "type":                 "SegNet",
-        "architecture":         "MobileNet",
+        "architecture":         "MobileNet7_5",
         "input_size":           224,
         "n_classes" : 		21
     },
@@ -24,6 +24,6 @@
         "augumentation":				true
     },
     "converter" : {
-        "type":   				["tflite"]
+        "type":   				["tflite","k210"]
     }
 }
