@@ -33,8 +33,8 @@ def create_classifier(architecture, labels, input_size, layers, dropout ,first_t
     x=Dense(layers[-1],activation='relu')(x)
     preds=Dense(len(labels),activation='softmax')(x)
     model=Model(inputs=base_model.feature_extractor.inputs[0],outputs=preds)
-    for i,layer in enumerate(model.layers):
-        print(i,layer.name)
+    #for i,layer in enumerate(model.layers):
+    #    print(i,layer.name)
     network = Classifier(model,input_size,labels)
 
     return network
