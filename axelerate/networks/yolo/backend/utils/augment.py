@@ -89,24 +89,27 @@ def resize_image(image, boxes, desired_w, desired_h):
     h, w, _ = image.shape
     
     # resize the image to standard size
-    image = cv2.resize(image, (desired_h, desired_w))
-    #image = image[:,:,::-1]
+    if desired_w and desired_h:
+        image = cv2.resize(image, (desired_h, desired_w))
+        #image = image[:,:,::-1]
 
-    # fix object's position and size
-    new_boxes = []
-    for box in boxes:
-        x1,y1,x2,y2 = box
-        x1 = int(x1 * float(desired_w) / w)
-        x1 = max(min(x1, desired_w), 0)
-        x2 = int(x2 * float(desired_w) / w)
-        x2 = max(min(x2, desired_w), 0)
-        
-        y1 = int(y1 * float(desired_h) / h)
-        y1 = max(min(y1, desired_h), 0)
-        y2 = int(y2 * float(desired_h) / h)
-        y2 = max(min(y2, desired_h), 0)
+        # fix object's position and size
+        new_boxes = []
+        for box in boxes:
+            x1,y1,x2,y2 = box
+            x1 = int(x1 * float(desired_w) / w)
+            x1 = max(min(x1, desired_w), 0)
+            x2 = int(x2 * float(desired_w) / w)
+            x2 = max(min(x2, desired_w), 0)
+            
+            y1 = int(y1 * float(desired_h) / h)
+            y1 = max(min(y1, desired_h), 0)
+            y2 = int(y2 * float(desired_h) / h)
+            y2 = max(min(y2, desired_h), 0)
 
-        new_boxes.append([x1,y1,x2,y2])
+            new_boxes.append([x1,y1,x2,y2])
+    else:
+        new_boxes = boxes
     return image, np.array(new_boxes)
 
 
@@ -146,32 +149,37 @@ def _create_augment_pipeline():
     return aug_pipe
 
 
-if __name__ == '__main__':
+def visualize_dataset(img_folder, ann_folder, img_size=None, jitter=None):
     import os
-    from annotation import PascalVocXmlParser
+    from axelerate.networks.yolo.backend.utils.annotation import PascalVocXmlParser
     import matplotlib.pyplot as plt
     parser = PascalVocXmlParser()
-    for ann in sorted(os.listdir("anns")):
-        annotation_file = os.path.join("anns", ann)
+    for ann in os.listdir(ann_folder):
+        annotation_file = os.path.join(ann_folder, ann)
         fname = parser.get_fname(annotation_file)
         labels = parser.get_labels(annotation_file)
         boxes = parser.get_boxes(annotation_file)
+        img_file =  os.path.join(img_folder, fname)
+
+        aug = ImgAugment(img_size, img_size, jitter=jitter)
+        img, boxes_ = aug.imread(img_file, boxes)
+        img = img.astype(np.uint8)
         
-        for i in range(5):
-            img_file =  os.path.join("imgs", fname)
-            
-            desired_w = 224
-            desired_h = 224
-            jitter = True
-            
-            aug = ImgAugment(desired_w, desired_h, jitter)
-            img, boxes_ = aug.imread(img_file, boxes)
-            img = img.astype(np.uint8)
-            
-            for box in boxes_:
-                x1, y1, x2, y2 = box
-                cv2.rectangle(img, (x1,y1), (x2,y2), (0,255,0), 3)
-            plt.imshow(img)
-            plt.show(block=False)
-            plt.pause(0.5)
-            plt.close()
+        for box in boxes_:
+            x1, y1, x2, y2 = box
+            cv2.rectangle(img, (x1,y1), (x2,y2), (0,255,0), 3)
+        plt.imshow(img)
+        plt.show(block=False)
+        plt.pause(1)
+        plt.close()
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--images", type=str)
+    parser.add_argument("--annotations", type=str)
+    parser.add_argument("--img_size", type=int)
+    parser.add_argument("--aug", type=bool)
+    args = parser.parse_args()
+    visualize_dataset(args.images, args.annotations, args.img_size, args.aug)
+

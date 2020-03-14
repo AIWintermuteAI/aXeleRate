@@ -1,6 +1,7 @@
 import argparse
 import json
 from axelerate import setup_inference
+#from axelerate.networks.yolo.backend.utils.augment import visualize_dataset
 from keras import backend as K 
 
 argparser = argparse.ArgumentParser(description='Test axelerate on sample datasets')
@@ -124,6 +125,8 @@ def configs(network_type):
     dict = {'classifier':[classifier],'detector':[detector],'segnet':[segnet]}
 
     return dict[network_type]
+
+#visualize_dataset('/home/ubuntu/github/sample_datasets/detector/imgs','/home/ubuntu/github/sample_datasets/detector/anns')
 
 if not args.conf:
     for item in configs(args.type):
