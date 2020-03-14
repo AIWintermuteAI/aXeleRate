@@ -152,7 +152,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
             
             cv2.imwrite(output_path, image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
-
+            show_image(output_path)
             n_true_positives += count_true_positives(boxes, true_boxes, labels, true_labels)
             n_truth += len(true_boxes)
             n_pred += len(boxes)

@@ -14,7 +14,7 @@ def count_true_positives(detect_boxes, true_boxes, detect_labels=None, true_labe
     matcher = BoxMatcher(detect_boxes, true_boxes, detect_labels, true_labels)
     for i in range(len(detect_boxes)):
         matching_idx, iou = matcher.match_idx_of_box1_idx(i)
-        # print("detect_idx: {}, true_idx: {}, matching-score: {}".format(i, matching_idx, iou))
+        print("detect_idx: {}, true_idx: {}, matching-score: {}".format(i, matching_idx, iou))
         if matching_idx is not None and iou > 0.5:
             n_true_positives += 1
     return n_true_positives
@@ -26,8 +26,16 @@ def calc_score(n_true_positives, n_truth, n_pred):
         detect_boxes : list of box-arrays
         true_boxes : list of box-arrays
     """
-    precision = n_true_positives / n_pred
-    recall = n_true_positives / n_truth
+    if n_pred > 0:
+        precision = n_true_positives / n_pred
+    else:
+        precision = 0
+    if n_truth > 0:
+        recall = n_true_positives / n_truth
+    elif n_truth == 0 and n_true_positives == 0:
+        recall = 1
+    else:
+        recall = 0
     if precision + recall > 0:
         fscore = 2* precision * recall / (precision + recall)
         score = {"fscore": fscore, "precision": precision, "recall": recall}
