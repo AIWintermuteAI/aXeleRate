@@ -4,6 +4,7 @@ import argparse
 import json
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 from axelerate.networks.yolo.frontend import create_yolo
 from axelerate.networks.yolo.backend.utils.box import draw_scaled_boxes
@@ -51,7 +52,21 @@ argparser.add_argument(
     help='path to images')
 
 
+def show_image(filename):
+    image = mpimg.imread(filename)
+    plt.figure()
+    plt.imshow(image)
+    plt.show()
+    print(filename)
+
 def setup_inference(config,weights,threshold=0.3,path=None):
+    """make directory to save inference results """
+    dirname = 'detected'
+    if os.path.isdir(dirname):
+        print("{} is already exists. Image files in directory might be overwritten".format(dirname))
+    else:
+        print("{} is created.".format(dirname, dirname))
+        os.makedirs(dirname)
 
     if config['model']['type']=='SegNet':
         print('Segmentation')           
@@ -91,6 +106,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
             img_class, prob = classifier.predict(filename)
             cv2.putText(image, "{}:{:.2f}".format(img_class[0], prob[0]), (10,20), font, image.shape[0]/400, (0, 0, 255), 2, True)
             cv2.imwrite(output_path, image)
+            show_image(output_path)
             print("{}:{}".format(img_class[0], prob[0]))
 
 

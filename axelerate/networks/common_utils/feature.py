@@ -248,10 +248,10 @@ class TinyYoloFeature(BaseFeatureExtractor):
 class MobileNetFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size,weights, alpha ):
-        input_image = Input(shape=(input_size, input_size, 3))
-        mobilenet = MobileNet(input_shape=(224,224,3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = 'imagenet', classes = 1000, include_top=False,backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
+        #input_image = Input(shape=(input_size, input_size, 3))
+        mobilenet = MobileNet(input_shape=(input_size,input_size,3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = 'imagenet', classes = 1000, include_top=False,backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
 
-        x = mobilenet(input_image)
+        #x = mobilenet(input_image)
         self.feature_extractor = mobilenet  
 
     def normalize(self, image):
@@ -324,12 +324,12 @@ class SqueezeNetFeature(BaseFeatureExtractor):
 class Inception3Feature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights):
-        input_image = Input(shape=(input_size, input_size, 3))
+        #input_image = Input(shape=(input_size, input_size, 3))
 
         inception = InceptionV3(input_shape=(input_size,input_size,3), include_top=False)
         if weights:
             inception.load_weights(weights)
-        x = inception(input_image)
+        #x = inception(input_image)
 
         self.feature_extractor = inception
         if weights:

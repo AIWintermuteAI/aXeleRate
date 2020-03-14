@@ -128,7 +128,6 @@ def visualize_segmentation( seg_arr , inp_img=None  , n_classes=None ,
 
         seg_img = concat_lenends( seg_img , legend_img )
 
-    plt.imshow(seg_img)
     return seg_img
 
 
@@ -166,6 +165,8 @@ def predict(model=None, inp=None, out_fname=None, checkpoints_path=None,overlay_
 
     if out_fname is not None:
         cv2.imwrite(out_fname, seg_img)
+    else:
+        plt.imshow(seg_img)
 
     return pr
 

@@ -130,7 +130,7 @@ def train_from_config(config,project_folder):
                                            config['train']['first_trainable_layer'],
                                            config['train']['is_only_detect'])
     converter.convert_model(model_path,model_layers,config['train']['valid_image_folder'])    
-
+    return model_path
 def setup_training(config_file=None,config_dict=None):
     """make directory to save weights & its configuration """
     if config_file:
