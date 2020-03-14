@@ -131,6 +131,7 @@ def train_from_config(config,project_folder):
                                            config['train']['is_only_detect'])
     converter.convert_model(model_path,model_layers,config['train']['valid_image_folder'])    
     return model_path
+
 def setup_training(config_file=None,config_dict=None):
     """make directory to save weights & its configuration """
     if config_file:
@@ -149,7 +150,7 @@ def setup_training(config_file=None,config_dict=None):
         print("{} is created.".format(dirname, dirname))
         os.makedirs(dirname)
     print("Weight file and Config file will be saved in \"{}\"".format(dirname))
-    train_from_config(config, dirname)
+    return(train_from_config(config, dirname))
 
 
 if __name__ == '__main__':

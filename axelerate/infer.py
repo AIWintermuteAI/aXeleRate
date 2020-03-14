@@ -57,7 +57,9 @@ def show_image(filename):
     image = mpimg.imread(filename)
     plt.figure()
     plt.imshow(image)
-    plt.show()
+    plt.show(block=False)
+    plt.pause(1)
+    plt.close()
     print(filename)
 
 def setup_inference(config,weights,threshold=0.3,path=None):

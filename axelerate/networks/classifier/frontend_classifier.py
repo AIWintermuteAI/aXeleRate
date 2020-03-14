@@ -14,7 +14,6 @@ from keras.preprocessing import image
 from keras.applications.mobilenet import preprocess_input
 
 def prepare_image(file, show=False, size=(224,224)):
-    print(file)
     img = image.load_img(file, target_size=size)
     img_array = image.img_to_array(img)
     img_array_expanded_dims = np.expand_dims(img_array, axis=0)

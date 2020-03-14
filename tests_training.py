@@ -1,5 +1,5 @@
 import argparse
-from axelerate.train import setup_training
+from axelerate import setup_training, setup_inference
 from keras import backend as K 
 
 argparser = argparse.ArgumentParser(description='Test axelerate on sample datasets')
@@ -39,7 +39,7 @@ def configs(network_type):
             "augumentation":				True
         },
         "converter" : {
-            "type":   				["k210","tflite"]
+            "type":   				[]
         }
     }
 
@@ -114,8 +114,9 @@ def configs(network_type):
     return dict[network_type]
 
 for item in configs(args.type):
-    setup_training(config_dict=item)
+    model_path = setup_training(config_dict=item)
     K.clear_session()
+    setup_inference(item,model_path)
 
 
 
