@@ -247,7 +247,7 @@ class TinyYoloFeature(BaseFeatureExtractor):
 
 class MobileNetFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
-    def __init__(self, input_size,weights, alpha ):
+    def __init__(self, input_size, weights, alpha):
         #input_image = Input(shape=(input_size, input_size, 3))
         mobilenet = MobileNet(input_shape=(input_size,input_size,3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = 'imagenet', classes = 1000, include_top=False,backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
 

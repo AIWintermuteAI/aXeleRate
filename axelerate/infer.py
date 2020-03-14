@@ -5,6 +5,7 @@ import json
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 from axelerate.networks.yolo.frontend import create_yolo
 from axelerate.networks.yolo.backend.utils.box import draw_scaled_boxes
