@@ -50,7 +50,7 @@ def visualize_segmentation_dataset(images_path, segs_path, n_classes,
             #cv2.imshow("img", img)
             #cv2.imshow("seg_img", seg_img)
             #cv2.waitKey()
-            fig = plt.figure()
+            fig = plt.figure(figsize=(14,7))
             ax1 = fig.add_subplot(1,3,1)
             ax1.imshow(img)
             ax2 = fig.add_subplot(1,3,2)
