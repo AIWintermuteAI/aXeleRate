@@ -24,6 +24,6 @@
         "augumentation":				true
     },
     "converter" : {
-        "type":   				["tflite","k210"]
+        "type":   				["tflite"]
     }
 }

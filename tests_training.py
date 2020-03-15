@@ -84,7 +84,7 @@ def configs(network_type):
                 "type":                 "SegNet",
                 "architecture":         "MobileNet7_5",
                 "input_size":           224,
-                "n_classes" : 		21
+                "n_classes" : 		20
             },
             "pretrained" : {
                 "full":   				""

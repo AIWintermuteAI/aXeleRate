@@ -36,7 +36,6 @@ class YoloLoss(object):
 
         self.coord_scale = coord_scale
 
-        # Todo : create method를 따로 만들어서 주입받자.
         self._activator = _Activator(self.anchors)
         self._mask = _Mask(nb_class, coord_scale, class_scale, object_scale, no_object_scale)
 

@@ -41,7 +41,7 @@ def create_feature_extractor(architecture, input_size):
     elif architecture == 'ResNet50':
         feature_extractor = ResNet50Feature(input_size, weights)
     else:
-        raise Exception('Architecture not supported! Only support Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50, and Inception3 at the moment!')
+        raise Exception('Architecture not supported! Name should be Full Yolo, Tiny Yolo, MobileNet1_0, MobileNet7_5, MobileNet5_0, MobileNet2_5, SqueezeNet, VGG16, ResNet50 or Inception3')
     return feature_extractor
 
 

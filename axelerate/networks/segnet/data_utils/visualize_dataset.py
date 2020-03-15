@@ -2,7 +2,7 @@
 
 import glob
 import random
-
+import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
@@ -42,14 +42,24 @@ def visualize_segmentation_dataset(images_path, segs_path, n_classes,
 
         print("Please press any key to display the next image")
         for im_fn, seg_fn in img_seg_pairs:
-            img = cv2.imread(im_fn)
+            img = cv2.imread(im_fn)[...,::-1]
             seg = cv2.imread(seg_fn)
             print("Found the following classes in the segmentation image:", np.unique(seg))
             img , seg_img = _get_colored_segmentation_image(img, seg, colors, n_classes, do_augment=do_augment)
-            print("Please press any key to display the next image")
-            cv2.imshow("img", img)
-            cv2.imshow("seg_img", seg_img)
-            cv2.waitKey()
+            #print("Please press any key to display the next image")
+            #cv2.imshow("img", img)
+            #cv2.imshow("seg_img", seg_img)
+            #cv2.waitKey()
+            fig = plt.figure()
+            ax1 = fig.add_subplot(1,3,1)
+            ax1.imshow(img)
+            ax2 = fig.add_subplot(1,3,2)
+            ax2.imshow(seg)
+            ax3 = fig.add_subplot(1,3,3)
+            ax3.imshow(seg_img)
+            plt.show(block=False)
+            plt.pause(1)
+            plt.close()
     except DataLoaderError as e:
         print("Found error during data loading\n{0}".format(str(e)))
         return False
@@ -86,5 +96,4 @@ if __name__ == "__main__":
     parser.add_argument("--n_classes", type=int)
     args = parser.parse_args()
 
-    visualize_segmentation_dataset(
-        args.images, args.annotations, args.n_classes)
+    visualize_segmentation_dataset(args.images, args.annotations, args.n_classes)
