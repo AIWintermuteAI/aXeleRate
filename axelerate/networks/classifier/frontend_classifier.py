@@ -73,7 +73,6 @@ class Classifier(object):
               first_trainable_layer=None):
         
         train_generator, validation_generator = create_datagen(img_folder, valid_img_folder, batch_size, self._input_size, project_folder, augumentation)
-        self._network.summary()
         return train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch,project_folder,first_trainable_layer)
 
     

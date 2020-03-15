@@ -39,7 +39,6 @@ class YoloNetwork(object):
         model = Model(feature_extractor.feature_extractor.inputs[0], output_tensor)
         self._norm = feature_extractor.normalize
         self._model = model
-        self._model.summary()
         self._init_layer()
 
     def _init_layer(self):

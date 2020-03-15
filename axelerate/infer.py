@@ -83,7 +83,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
                                    config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
-        predict_multiple(segnet._network, inp_dir=config['train']['valid_image_folder'], out_dir='detected', overlay_img=True)
+        predict_multiple(segnet._network, inp_dir=config['train']['valid_image_folder'], out_dir='Inference_results', overlay_img=True)
         print(evaluate(segnet._network, inp_images_dir=config['train']['valid_image_folder'], annotations_dir=config['train']['valid_annot_folder']))
 
 
@@ -106,7 +106,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
 
         for filename in image_files_list:
-            output_path = os.path.join('detected', os.path.basename(filename))
+            output_path = os.path.join('Inference_results', os.path.basename(filename))
             image = cv2.imread(filename)
             img_class, prob = classifier.predict(filename)
             cv2.putText(image, "{}:{:.2f}".format(img_class[0], prob[0]), (10,20), font, image.shape[0]/400, (0, 0, 255), 2, True)
@@ -124,7 +124,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         yolo.load_weights(weights)
 
         # 3. read image
-        write_dname = "detected"
+        write_dname = "Inference_results"
         if not os.path.exists(write_dname): os.makedirs(write_dname)
         annotations = parse_annotation(config['train']['valid_annot_folder'],
                                        config['train']['valid_image_folder'],

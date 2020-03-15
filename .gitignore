@@ -2,7 +2,7 @@ pascal_20/
 /classifier
 /detector
 /segment
-detected/
+Inference_results/
 __pycache__/
 axelerate/networks/common_utils/ncc
 axelerate/networks/common_utils/ncc_linux_x86_64.tar.xz

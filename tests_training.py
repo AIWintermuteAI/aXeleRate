@@ -35,7 +35,7 @@ def configs(network_type):
             "batch_size":           4,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/classifier",
-            "first_trainable_layer": "",
+            "first_trainable_layer": "dense_3",
             "augumentation":				True
         },
         "converter" : {
@@ -70,7 +70,7 @@ def configs(network_type):
             "batch_size":           4,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/detector",
-            "first_trainable_layer": "",
+            "first_trainable_layer": "detection_layer_45",
             "augumentation":				True,
             "is_only_detect" : 		False
         },
