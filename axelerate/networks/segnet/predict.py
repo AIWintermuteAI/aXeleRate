@@ -138,8 +138,8 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None ,
 
 
 
-def predict(model=None, inp=None, out_fname=None, checkpoints_path=None,overlay_img=False ,
-    class_names=None , show_legends=False , colors=class_colors , prediction_width=None , prediction_height=None  ):
+def predict(model=None, inp=None, out_fname=None, checkpoints_path=None, overlay_img=False,
+    class_names=None, show_legends=False, colors=class_colors, prediction_width=None, prediction_height=None):
 
     if model is None and (checkpoints_path is not None):
         model = model_from_checkpoint_path(checkpoints_path)
@@ -169,7 +169,7 @@ def predict(model=None, inp=None, out_fname=None, checkpoints_path=None,overlay_
 
     if out_fname is not None:
         cv2.imwrite(out_fname, seg_img)
-    show_image(seg_img)
+        show_image(seg_img)
 
     return pr
 
@@ -232,9 +232,9 @@ def evaluate( model=None , inp_images=None , annotations=None,inp_images_dir=Non
     fn = np.zeros( model.n_classes  )
     n_pixels = np.zeros( model.n_classes  )
     
-    for inp , ann   in tqdm( zip( inp_images , annotations )):
-        pr = predict(model , inp )
-        gt = get_segmentation_array( ann , model.n_classes ,  model.output_width , model.output_height , no_reshape=True  )
+    for inp , ann   in tqdm(zip(inp_images , annotations)):
+        pr = predict(model, inp)
+        gt = get_segmentation_array(ann , model.n_classes ,  model.output_width , model.output_height , no_reshape=True)
         gt = gt.argmax(-1)
         #pr = pr.flatten()
         #gt = gt.flatten()
