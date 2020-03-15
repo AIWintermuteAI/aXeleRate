@@ -10,7 +10,7 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import matplotlib.pyplot as plt
 from datetime import datetime
 import warnings
-from axelerate.networks.common_utils.file_utils import space_safety
+
 
 class CheckpointPB(keras.callbacks.Callback):
 
@@ -74,7 +74,7 @@ class CheckpointPB(keras.callbacks.Callback):
                         if self.save_weights_only:
                             self.model.save_weights(filepath, overwrite=True)
                         else:
-                            self.model.save(os.path.join(self.filepath, self.date + '.h5'), overwrite=True,include_optimizer=False)
+                            self.model.save(os.path.join(self.filepath, self.date + '.h5'), overwrite=True, include_optimizer=False)
                             #save_tflite(self.model, self.filepath, self.date)
                     else:
                         if self.verbose > 0:
@@ -93,7 +93,8 @@ def train(model,
          valid_batch_gen,
          learning_rate = 1e-4,
          nb_epoch = 300,
-         project_folder = 'project'):
+         project_folder = 'project',
+         first_trainable_layer=None):
     """A function that performs training on a general keras model.
 
     # Args
@@ -106,15 +107,36 @@ def train(model,
         learning_rate : float
         saved_weights_name : str
     """
-    # 1. create optimizer
+    print('\n')
+    # 1 Freeze layers
+    layer_names = [layer.name for layer in model.layers]
+    fixed_layers = []
+    if first_trainable_layer in layer_names:
+        for layer in model.layers:
+            if layer.name == first_trainable_layer:
+                break
+            layer.trainable = False
+            fixed_layers.append(layer.name)
+    elif not first_trainable_layer:
+        pass
+    else:
+        print('First trainable layer specified in config file is not in the model. Did you mean one of these?')
+        for i,layer in enumerate(model.layers):
+            print(i,layer.name)
+        raise Exception('First trainable layer specified in config file is not in the model')
+
+    if fixed_layers != []:
+        print("The following layers do not update weights!!!")
+        print("    ", fixed_layers)
+    # 2 create optimizer
     optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    # 2. create loss function
+    # 3. create loss function
     model.compile(loss=loss_func,optimizer=optimizer)
     # 4. training
     train_start = time.time()
     train_date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     path = os.path.join(project_folder,train_date)
-    print(path)
+    print('Current training session folder is {}'.format(path))
     os.makedirs(path)
     saved_weights_name = os.path.join(path, train_date + '.h5')
     saved_weights_name_ctrlc = os.path.join(path, train_date + '_ctrlc.h5')

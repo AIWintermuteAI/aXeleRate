@@ -41,8 +41,7 @@ def train_from_config(config,project_folder):
         # 1. Construct the model 
         segnet = create_segnet(config['model']['architecture'],
                                    config['model']['input_size'],
-                                   config['model']['n_classes'],
-                                   int(config['train']['first_trainable_layer']))   
+                                   config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(config['pretrained']['full'], by_name=True)
         # 3. actual training 
@@ -72,8 +71,7 @@ def train_from_config(config,project_folder):
                                        labels,
                                        config['model']['input_size'],
                                        config['model']['fully-connected'],
-                                       config['model']['dropout'],
-                                       int(config['train']['first_trainable_layer']))   
+                                       config['model']['dropout'])   
         # 2. Load the pretrained weights (if any) 
         classifier.load_weights(config['pretrained']['full'], by_name=True)
 
@@ -145,11 +143,11 @@ def setup_training(config_file=None,config_dict=None):
     dirname = config['train']['saved_folder']
     #dirname = space_safety(dirname)
     if os.path.isdir(dirname):
-        print("{} is already exists. Weight file in directory will be overwritten".format(dirname))
+        print("Project folder {} already exists. Creating a folder for new training session.".format(dirname))
     else:
-        print("{} is created.".format(dirname, dirname))
+        print("Project folder {} is created.".format(dirname, dirname))
         os.makedirs(dirname)
-    print("Weight file and Config file will be saved in \"{}\"".format(dirname))
+    #print("Weight file and Config file will be saved in \"{}\"".format(dirname))
     return(train_from_config(config, dirname))
 
 

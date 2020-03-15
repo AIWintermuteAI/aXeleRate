@@ -70,7 +70,7 @@ class YOLO(object):
             print("Loading pre-trained weights in", weight_path)
             self._yolo_network.load_weights(weight_path, by_name=by_name)
         else:
-            print("Fail to load pre-trained weights. Make sure weight file path.")
+            print("Fail to load pre-trained weights-starting training from scratch")
 
     def predict(self, image, threshold=0.3):
         """
@@ -121,7 +121,6 @@ class YOLO(object):
                                                                      valid_img_folder,
                                                                      valid_ann_folder,
                                                                      is_only_detect)
-        print(img_folder)
         # 1. get batch generator
         train_batch_generator = self._get_batch_generator(train_annotations, batch_size, train_times, jitter=jitter)
         valid_batch_generator = self._get_batch_generator(valid_annotations, batch_size, valid_times, jitter=False)
@@ -137,7 +136,8 @@ class YOLO(object):
                 valid_batch_generator,
                 learning_rate      = learning_rate, 
                 nb_epoch           = nb_epoch,
-                project_folder = project_folder)
+                project_folder = project_folder,
+                first_trainable_layer=first_trainable_layer)
 
     def _get_loss_func(self, batch_size):
         return self._yolo_loss.custom_loss(batch_size)

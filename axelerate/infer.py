@@ -68,11 +68,11 @@ def show_image(filename):
 
 def setup_inference(config,weights,threshold=0.3,path=None):
     """make directory to save inference results """
-    dirname = 'detected'
+    dirname = 'Inference_results'
     if os.path.isdir(dirname):
-        print("{} is already exists. Image files in directory might be overwritten".format(dirname))
+        print("Folder {} is already exists. Image files in directory might be overwritten".format(dirname))
     else:
-        print("{} is created.".format(dirname, dirname))
+        print("Folder {} is created.".format(dirname, dirname))
         os.makedirs(dirname)
 
     if config['model']['type']=='SegNet':
@@ -80,12 +80,11 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         # 1. Construct the model 
         segnet = create_segnet(config['model']['architecture'],
                                    config['model']['input_size'],
-                                   config['model']['n_classes'],
-                                   int(config['train']['first_trainable_layer']))   
+                                   config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
         predict_multiple(segnet._network, inp_dir=config['train']['valid_image_folder'], out_dir='detected', overlay_img=True)
-        print(evaluate(segnet._network, inp_images_dir=config['train']['valid_image_folder'],annotations_dir=config['train']['valid_annot_folder']))
+        print(evaluate(segnet._network, inp_images_dir=config['train']['valid_image_folder'], annotations_dir=config['train']['valid_annot_folder']))
 
 
     if config['model']['type']=='Classifier':
@@ -99,8 +98,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
                                        labels,
                                        config['model']['input_size'],
                                        config['model']['fully-connected'],
-                                       config['model']['dropout'],
-                                       int(config['train']['first_trainable_layer']))   
+                                       config['model']['dropout'])   
         # 2. Load the pretrained weights (if any) 
         classifier.load_weights(weights)
         font = cv2.FONT_HERSHEY_SIMPLEX

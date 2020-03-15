@@ -15,7 +15,7 @@ def masked_categorical_crossentropy(gt , pr ):
     mask = 1-  gt[: , : , 0 ] 
     return categorical_crossentropy( gt , pr )*mask
 
-def create_segnet(architecture, input_size, n_classes, first_trainable_layer):
+def create_segnet(architecture, input_size, n_classes):
 
     if architecture == 'Inception3':
         raise Exception('Inception3 not supported with SegNet! Only support Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50 at the moment!')
@@ -31,7 +31,6 @@ def create_segnet(architecture, input_size, n_classes, first_trainable_layer):
         model = resnet50_segnet(n_classes,input_size, encoder_level=4)
     elif 'MobileNet' in architecture:
         model = mobilenet_segnet(n_classes,input_size, encoder_level=4, architecture = architecture)
-
 
     output_size = model.output_height
     network = Segnet(model,input_size, n_classes, output_size)
@@ -54,7 +53,7 @@ class Segnet(object):
             print("Loading pre-trained weights in", weight_path)
             self._network.load_weights(weight_path, by_name=by_name)
         else:
-            print("Fail to load pre-trained weights. Make sure weight file path.")
+            print("Fail to load pre-trained weights-starting training from scratch")
 
     def predict(self, image):
         preprocessed_image = prepare_image(image,show=False)
@@ -88,5 +87,5 @@ class Segnet(object):
             validation_generator = create_batch_generator(valid_img_folder, valid_ann_folder, self._input_size,self._output_size, self._n_classes,batch_size,valid_times)
         
         self._network.summary()
-        return train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch,project_folder)
+        return train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch, project_folder, first_trainable_layer)
     

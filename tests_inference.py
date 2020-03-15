@@ -48,7 +48,7 @@ def configs(network_type):
             "batch_size":           4,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/classifier",
-            "first_trainable_layer": "65",
+            "first_trainable_layer": "",
             "augumentation":				True
         },
         "converter" : {
@@ -113,7 +113,7 @@ def configs(network_type):
                 "batch_size":           8,
                 "learning_rate":        1e-4,
                 "saved_folder":   		"/home/ubuntu/space safety/segment",
-                "first_trainable_layer": "0",
+                "first_trainable_layer": "",
                 "ignore_zero_class":    False,
                 "augumentation":				True
             },

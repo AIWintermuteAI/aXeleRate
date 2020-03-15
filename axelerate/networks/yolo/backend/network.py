@@ -41,8 +41,6 @@ class YoloNetwork(object):
         self._model = model
         self._model.summary()
         self._init_layer()
-        layer_names = [layer.name for layer in self._model.layers]
-        print(layer_names)
 
     def _init_layer(self):
         layer = self._model.layers[-2]
@@ -75,18 +73,6 @@ class YoloNetwork(object):
         return netout
 
     def get_model(self, first_trainable_layer=None):
-        layer_names = [layer.name for layer in self._model.layers]
-        fixed_layers = []
-        if first_trainable_layer in layer_names:
-            for layer in self._model.layers:
-                if layer.name == first_trainable_layer:
-                    break
-                layer.trainable = False
-                fixed_layers.append(layer.name)
-
-        if fixed_layers != []:
-            print("The following layers do not update weights!!!")
-            print("    ", fixed_layers)
         return self._model
 
     def get_grid_size(self):

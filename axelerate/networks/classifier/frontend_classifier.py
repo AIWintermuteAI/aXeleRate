@@ -23,7 +23,7 @@ def get_labels(directory):
     labels = os.listdir(directory)
     return labels
 
-def create_classifier(architecture, labels, input_size, layers, dropout ,first_trainable_layer):
+def create_classifier(architecture, labels, input_size, layers, dropout):
     base_model=create_feature_extractor(architecture, input_size)
     x=base_model.feature_extractor.outputs[0]
     x=GlobalAveragePooling2D()(x)
@@ -33,8 +33,6 @@ def create_classifier(architecture, labels, input_size, layers, dropout ,first_t
     x=Dense(layers[-1],activation='relu')(x)
     preds=Dense(len(labels),activation='softmax')(x)
     model=Model(inputs=base_model.feature_extractor.inputs[0],outputs=preds)
-    #for i,layer in enumerate(model.layers):
-    #    print(i,layer.name)
     network = Classifier(model,input_size,labels)
 
     return network
@@ -53,7 +51,7 @@ class Classifier(object):
             print("Loading pre-trained weights in", weight_path)
             self._network.load_weights(weight_path, by_name=by_name)
         else:
-            print("Fail to load pre-trained weights. Make sure weight file path.")
+            print("Fail to load pre-trained weights-starting training from scratch")
 
     def predict(self, image):
         preprocessed_image = prepare_image(image,show=False,size=(self._input_size,self._input_size))
@@ -76,6 +74,6 @@ class Classifier(object):
         
         train_generator, validation_generator = create_datagen(img_folder, valid_img_folder, batch_size, self._input_size, project_folder, augumentation)
         self._network.summary()
-        return train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch,project_folder)
+        return train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch,project_folder,first_trainable_layer)
 
     
