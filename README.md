@@ -24,7 +24,7 @@ aXeleRate streamlines training and converting computer vision models to be run o
   <tr>
     <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" width=300 height=300></td>
     <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2009_001349.jpg" width=300 height=300></td>
-    <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2010_001177.jpg" width=300 height=300></td>
+    <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2010_001177.jpg" width=250 height=350></td>
   </tr>
  </table>
 
