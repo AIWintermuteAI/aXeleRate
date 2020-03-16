@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/logo.png?token=AHYNY656IU52DK4W2KMVEDK6NILIO" alt="aXeleRate" width="350">
+  <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/logo.png" alt="aXeleRate" width="350">
 </h1>
 
 <h3 align="center">Keras-based framework for AI on the Edge</h3>
@@ -8,11 +8,20 @@
 <p align="center">
 aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized to support both the workflow on local machine and on Google Colab.Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
 </p>
-<p align="center">
-<img src='https://i.ibb.co/3NFH646/keras-model-to-talos.gif' width=550px>
-</p>
 
-### Talos
+ <div class="row">
+  <div class="column">
+    <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" alt="Snow" style="width:10%">
+  </div>
+  <div class="column">
+    <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2009_001349.jpg" alt="Forest" style="width:10%">
+  </div>
+  <div class="column">
+    <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2010_001177.jpg" alt="Mountains" style="width:10%">
+  </div>
+</div> 
+
+### aXeleRate
 
 TL;DR
 
