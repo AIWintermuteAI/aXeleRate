@@ -141,7 +141,6 @@ def setup_training(config_file=None,config_dict=None):
         print('No config found')
         sys.exit()
     dirname = config['train']['saved_folder']
-    #dirname = space_safety(dirname)
     if os.path.isdir(dirname):
         print("Project folder {} already exists. Creating a folder for new training session.".format(dirname))
     else:
