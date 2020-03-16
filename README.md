@@ -11,9 +11,9 @@ aXeleRate streamlines training and converting computer vision models to be run o
 
 <table>
   <tr>
-    <td>First Screen Page</td>
-     <td>Holiday Mention</td>
-     <td>Present day in purple and selected day in pink</td>
+    <td>Standford Dog Breed Classification Dataset VGG16 backend + Classifier</td>
+     <td>PASCAL-VOC 2012 Object Detection Dataset MobileNet7_5 backend + YOLOv2</td>
+     <td>PASCAL-VOC 2012 Semantic Segmentation MobileNet7_5 backend + Segnet-Basic</td>
   </tr>
   <tr>
     <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" width=300 height=300></td>
@@ -65,6 +65,3 @@ aXeleRate is still work in progress project. I will be making some changes from 
   - YOLOv2 Keras code jeongjoonsup and Ngoc Anh Huynh https://github.com/experiencor/keras-yolo2
   - SegNet Keras code Divam Gupta https://github.com/divamgupta/image-segmentation-keras
   - Big Thank You to creator/maintainers of Keras/Tensorflow
-</div>
-</body>
-</html>
