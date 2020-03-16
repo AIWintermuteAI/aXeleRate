@@ -1,0 +1,28 @@
+{
+    "model" : {
+        "type":                 "Classifier",
+        "architecture":         "VGG16",
+        "input_size":           224,
+        "fully-connected":      [100,50],
+        "labels":               [],
+        "dropout" : 		0.2
+    },
+    "pretrained" : {
+        "full":   				""
+    },
+    "train" : {
+        "actual_epoch":         50,
+        "train_image_folder":   "/home/ubuntu/datasets/dogs_classification/imgs",
+        "train_times":          4,
+        "valid_image_folder":   "/home/ubuntu/datasets/dogs_classification/imgs_validation",
+        "valid_times":          4,
+        "batch_size":           8,
+        "learning_rate":        1e-4,
+        "saved_folder":   		"classifier",
+        "first_trainable_layer": "block5_conv1",
+        "augumentation":				true
+    },
+    "converter" : {
+        "type":   				["tflite"]
+    }
+}
