@@ -13,13 +13,13 @@ aXeleRate streamlines training and converting computer vision models to be run o
 
 <table>
   <tr>
-    <td>Standford Dog Breed Classification Dataset VGG16 backend + Classifier <a href="https://github.com/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_classifier.ipynb">
+    <td>Standford Dog Breed Classification Dataset VGG16 backend + Classifier <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_classifier.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a> </td>
      <td>PASCAL-VOC 2012 Object Detection Dataset MobileNet7_5 backend + YOLOv2 <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_detector.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a> </td>
-     <td>PASCAL-VOC 2012 Semantic Segmentation MobileNet7_5 backend + Segnet-Basic <a href="https://github.com/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_segnet.ipynb">
+     <td>PASCAL-VOC 2012 Semantic Segmentation MobileNet7_5 backend + Segnet-Basic <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_segnet.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a> </td>
   </tr>
