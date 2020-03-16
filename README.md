@@ -6,10 +6,8 @@
 
 <hr>
 <p align="center">
-aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized to support both the workflow on local machine and on Google Colab.Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
+aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized for both the workflow on local machine and on Google Colab. Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
 </p>
-
-
 
 <table>
   <tr>
@@ -68,7 +66,7 @@ aXeleRate is still work in progress project. I will be making some changes from 
   - [ ] Unifiying image augumentation pipeline
   - [ ] SegNet to use common encoders(currently SegNet uses it's own feature extractors as encoder part)
 
-### Acknoledgements
+### Acknowledgements
 
   - YOLOv2 Keras code jeongjoonsup and Ngoc Anh Huynh https://github.com/experiencor/keras-yolo2
   - SegNet Keras code Divam Gupta https://github.com/divamgupta/image-segmentation-keras
