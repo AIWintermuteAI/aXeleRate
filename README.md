@@ -9,21 +9,18 @@
 aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized to support both the workflow on local machine and on Google Colab.Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
 </p>
 
-<div class="image123">
-    <div style="float:left;margin-right:5px;">
-        <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" height="200" width="200"  />
-        <p style="text-align:center;">This is image 1</p>
-    </div>
-    <div style="float:left;margin-right:5px;">
-        <img class="middle-img" src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" height="200" width="200" />
-        <p style="text-align:center;">This is image 2</p>
-    </div>
-    <div style="float:left;margin-right:5px;">
-        <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" height="200" width="200" />
-        <p style="text-align:center;">This is image 3</p>
-    </div>
-</div>
-
+<table>
+  <tr>
+    <td>First Screen Page</td>
+     <td>Holiday Mention</td>
+     <td>Present day in purple and selected day in pink</td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" width=300 height=300></td>
+    <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2009_001349.jpg" width=300 height=300></td>
+    <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2010_001177.jpg" width=300 height=300></td>
+  </tr>
+ </table>
 
 ### aXeleRate
 
