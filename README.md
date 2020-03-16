@@ -9,17 +9,21 @@
 aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized to support both the workflow on local machine and on Google Colab.Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
 </p>
 
- <div class="row">
-  <div class="column">
-    <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" alt="Snow" style="width:10%">
-  </div>
-  <div class="column">
-    <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2009_001349.jpg" alt="Forest" style="width:10%">
-  </div>
-  <div class="column">
-    <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2010_001177.jpg" alt="Mountains" style="width:10%">
-  </div>
-</div> 
+<div class="image123">
+    <div style="float:left;margin-right:5px;">
+        <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" height="200" width="200"  />
+        <p style="text-align:center;">This is image 1</p>
+    </div>
+    <div style="float:left;margin-right:5px;">
+        <img class="middle-img" src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" height="200" width="200" />
+        <p style="text-align:center;">This is image 2</p>
+    </div>
+    <div style="float:left;margin-right:5px;">
+        <img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" height="200" width="200" />
+        <p style="text-align:center;">This is image 3</p>
+    </div>
+</div>
+
 
 ### aXeleRate
 
@@ -64,3 +68,6 @@ aXeleRate is still work in progress project. I will be making some changes from 
   - YOLOv2 Keras code jeongjoonsup and Ngoc Anh Huynh https://github.com/experiencor/keras-yolo2
   - SegNet Keras code Divam Gupta https://github.com/divamgupta/image-segmentation-keras
   - Big Thank You to creator/maintainers of Keras/Tensorflow
+</div>
+</body>
+</html>
