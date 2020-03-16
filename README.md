@@ -9,11 +9,19 @@
 aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized to support both the workflow on local machine and on Google Colab.Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
 </p>
 
+
+
 <table>
   <tr>
-    <td>Standford Dog Breed Classification Dataset VGG16 backend + Classifier</td>
-     <td>PASCAL-VOC 2012 Object Detection Dataset MobileNet7_5 backend + YOLOv2</td>
-     <td>PASCAL-VOC 2012 Semantic Segmentation MobileNet7_5 backend + Segnet-Basic</td>
+    <td>Standford Dog Breed Classification Dataset VGG16 backend + Classifier <a href="https://github.com/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_classifier.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a> </td>
+     <td>PASCAL-VOC 2012 Object Detection Dataset MobileNet7_5 backend + YOLOv2 <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_detector.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a> </td>
+     <td>PASCAL-VOC 2012 Semantic Segmentation MobileNet7_5 backend + Segnet-Basic <a href="https://github.com/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_segnet.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a> </td>
   </tr>
   <tr>
     <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" width=300 height=300></td>
