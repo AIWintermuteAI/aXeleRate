@@ -11,6 +11,7 @@ from keras.utils import get_file
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
 k210_converter_download_path=os.path.join(os.path.dirname(__file__),'ncc_linux_x86_64.tar.xz')
 nncase_download_url="https://github.com/kendryte/nncase/releases/download/v0.2.0-beta2/ncc_linux_x86_64.tar.xz"
+cwd = os.path.dirname(os.path.realpath(__file__))
 
 class Converter(object):
     def __init__(self,converter_type):
@@ -27,7 +28,22 @@ class Converter(object):
                 tar_file.extractall(os.path.join(os.path.dirname(__file__),"ncc"))
                 tar_file.close()
                 os.chmod(k210_converter_path, 0o775)
+
+        if 'edgetpu' in converter_type:
+            rc, out = subprocess.getstatusoutput('dpkg -l edgetpu-compiler')
+            if rc == 0:
+                print('Edge TPU Converter ready')
+            else:
+                print('Installing Edge TPU Converter')
+                subprocess.Popen(['bash install_edge_tpu_compiler.sh'], shell=True, stdin=subprocess.PIPE, cwd=cwd).communicate()
         self._converter_type = converter_type
+
+    def convert_edgetpu(self,model_path,dataset_path):
+        output_name = os.path.basename(model_path).split(".")[0]+".kmodel"
+        output_path = os.path.join(os.path.dirname(model_path),output_name)
+        print(output_path)
+        result = subprocess.run([k210_converter_path, "compile",model_path,output_path,"-i","tflite","--dataset",dataset_path])
+        print(result.returncode)
 
     def convert_k210(self,model_path,dataset_path):
         output_name = os.path.basename(model_path).split(".")[0]+".kmodel"
@@ -51,9 +67,13 @@ class Converter(object):
         if 'k210' in self._converter_type:
             self.convert_tflite(model_path,model_layers, k210=True)
             self.convert_k210(model_path.split(".")[0] + '.tflite',dataset_path)
-        
+
         if 'tflite' in self._converter_type:
             self.convert_tflite(model_path,model_layers)
+        
+        if 'edgetpu' in self._converter_type:
+            self.convert_tflite(model_path,model_layers)
+
 
     def save_frozen_graph(self,model, path, train_date):
         output_node_names = [node.op.name for node in model.outputs]
