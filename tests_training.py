@@ -39,7 +39,7 @@ def configs(network_type):
             "augumentation":				True
         },
         "converter" : {
-            "type":   				["k210","tflite"]
+            "type":   				['edgetpu']
         }
     }
 
