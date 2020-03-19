@@ -39,7 +39,7 @@ def configs(network_type):
             "augumentation":				True
         },
         "converter" : {
-            "type":   				[]
+            "type":   				["k210","tflite"]
         }
     }
 
@@ -82,7 +82,7 @@ def configs(network_type):
     segnet = {
             "model" : {
                 "type":                 "SegNet",
-                "architecture":         "MobileNet7_5",
+                "architecture":         "MobileNet2_5",
                 "input_size":           224,
                 "n_classes" : 		20
             },
