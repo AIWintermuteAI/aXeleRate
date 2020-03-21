@@ -32,7 +32,7 @@ class Classifier:
     input_tensor = self.interpreter.tensor(tensor_index)()[0]
     input_tensor[:, :] = image
 
-  def classify_image(self, original_image, top_k=1):
+  def classify(self, original_image, top_k=1):
     start_time = time.time()
     image = cv2.resize(original_image, (self.height, self.width))
 
@@ -64,7 +64,7 @@ def index ( ):
 def gen(camera):
     while True:
         frame = camera.get_frame()
-        image = classifier.classify_image(frame)
+        image = classifier.classify(frame)
         yield (b'--frame\r\n'+b'Content-Type: image/jpeg\r\n\r\n' + image + b'\r\n')
 
 @app.route('/video_feed')
