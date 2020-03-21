@@ -64,7 +64,7 @@ aXeleRate is still work in progress project. I will be making some changes from 
   - [ ] Porting to tf.keras and Tensorflow 2
   - [ ] Adding support for multi-GPU and Cloud TPU training
   - [ ] Unifiying image augumentation pipeline
-  - [ ] SegNet to use common encoders(currently SegNet uses it's own feature extractors as encoder part)
+  - [X] SegNet to use common encoders(currently SegNet uses it's own feature extractors as encoder part)
 
 ### Acknowledgements
 
