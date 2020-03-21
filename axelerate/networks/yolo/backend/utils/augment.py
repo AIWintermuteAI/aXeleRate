@@ -109,7 +109,6 @@ def resize_image(image, boxes, desired_w, desired_h):
             new_boxes.append([x1,y1,x2,y2])
     else:
         new_boxes = boxes
-    print(np.array(new_boxes))
     return image, np.array(new_boxes)
 
 
