@@ -101,7 +101,7 @@ def draw_boxes(image, boxes, probs, labels):
                     (x1, y1 - 13), 
                     cv2.FONT_HERSHEY_SIMPLEX, 
                     1e-3 * image.shape[0], 
-                    (0,255,0), 2)
+                    (0,0,255), 1)
     return image        
 
 

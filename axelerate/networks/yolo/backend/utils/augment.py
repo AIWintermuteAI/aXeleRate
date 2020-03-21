@@ -30,6 +30,7 @@ class ImgAugment(object):
         # 1. read image file
 
         image = cv2.imread(img_file)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         # 2. make jitter on image
         boxes_ = np.copy(boxes)
   
@@ -91,8 +92,6 @@ def resize_image(image, boxes, desired_w, desired_h):
     # resize the image to standard size
     if desired_w and desired_h:
         image = cv2.resize(image, (desired_h, desired_w))
-        #image = image[:,:,::-1]
-
         # fix object's position and size
         new_boxes = []
         for box in boxes:
@@ -110,6 +109,7 @@ def resize_image(image, boxes, desired_w, desired_h):
             new_boxes.append([x1,y1,x2,y2])
     else:
         new_boxes = boxes
+    print(np.array(new_boxes))
     return image, np.array(new_boxes)
 
 
@@ -163,7 +163,7 @@ def visualize_dataset(img_folder, ann_folder, img_size=None, jitter=None):
 
         aug = ImgAugment(img_size, img_size, jitter=jitter)
         img, boxes_ = aug.imread(img_file, boxes)
-        img = img.astype(np.uint8)
+        #img = img.astype(np.uint8)
         
         for box in boxes_:
             x1, y1, x2, y2 = box
