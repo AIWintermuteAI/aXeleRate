@@ -11,7 +11,7 @@
         "no_object_scale" : 	1.0
     },
     "pretrained" : {
-        "full":   				""
+        "full":   				"/home/ubuntu/github/detector/2020-03-15_19-57-18/2020-03-15_19-57-18.h5"
     },
     "train" : {
         "actual_epoch":         50,
