@@ -18,18 +18,18 @@ app = Flask (__name__, static_url_path = '')
 
 class Detector(object):
     def __init__(self, label_file, model_file, threshold):
-        self._threshold = threshold
+        self._threshold = float(threshold)
         self.labels = self.load_labels(label_file)
         self.interpreter = Interpreter(model_file)
-        self._interpreter.allocate_tensors()
-        _, self._input_height, self._input_width, _ = self._interpreter.get_input_details()[0]['shape']
+        self.interpreter.allocate_tensors()
+        _, self.input_height, self.input_width, _ = self.interpreter.get_input_details()[0]['shape']
 
     def load_labels(self, path):
         with open(path, 'r') as f:
-            return {i: line.strip() for i, line in enumerate(f.readlines())}
+            return {i: line.strip() for i, line in enumerate(f.read().replace('"','').split(','))}
 
 
-    def set_input_tensor(image):
+    def set_input_tensor(self, image):
       """Sets the input tensor."""
       tensor_index = self.interpreter.get_input_details()[0]['index']
       input_tensor = self.interpreter.tensor(tensor_index)()[0]
@@ -41,32 +41,39 @@ class Detector(object):
       tensor = np.squeeze(self.interpreter.get_tensor(output_details['index']))
       return tensor
 
-    def detect_objects(interpreter, image):
+    def detect_objects(self, image):
       """Returns a list of detection results, each a dictionary of object info."""
-      set_input_tensor(interpreter, image)
-      interpreter.invoke()
+      self.set_input_tensor(image)
+      self.interpreter.invoke()
       # Get all output details
-      boxes = get_output_tensor(interpreter, 0)
+      boxes = self.get_output_tensor(0)
       return boxes
 
     def detect(self, original_image):
+        self.output_width, self.output_height = original_image.shape[0:2]
         start_time = time.time()
-        image = cv2.resize(original_image, (self.height, self.width), Image.ANTIALIAS)
-        results = detect_objects(self._interpreter, image)
+        image = cv2.resize(original_image, (self.input_width, self.input_height))
+        #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        results = self.detect_objects(image)
         elapsed_ms = (time.time() - start_time) * 1000
+
+        fps  = 1 / elapsed_ms*1000
+        print("Estimated frames per second : {0:.2f} Inference time: {1:.2f}".format(fps, elapsed_ms))
 
         def _to_original_scale(boxes):
             minmax_boxes = to_minmax(boxes)
-            minmax_boxes[:,0] *= self.width
-            minmax_boxes[:,2] *= self.width
-            minmax_boxes[:,1] *= self.height
-            minmax_boxes[:,3] *= self.height
+            minmax_boxes[:,0] *= self.output_width
+            minmax_boxes[:,2] *= self.output_width
+            minmax_boxes[:,1] *= self.output_height
+            minmax_boxes[:,3] *= self.output_height
             return minmax_boxes.astype(np.int)
 
         boxes, probs = self.run(results)
-        boxes = _to_original_scale(boxes)
-        image = draw_boxes(image, boxes, probs, self.labels)
-        return cv2.imencode('.jpg', image)[1].tobytes()
+        print(boxes)
+        if len(boxes) > 0:
+            boxes = _to_original_scale(boxes)
+            original_image = draw_boxes(original_image, boxes, probs, self.labels)
+        return cv2.imencode('.jpg', original_image)[1].tobytes()
 
 
     def run(self, netout):

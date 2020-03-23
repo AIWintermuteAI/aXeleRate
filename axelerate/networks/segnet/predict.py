@@ -46,7 +46,7 @@ def model_from_checkpoint_path(checkpoints_path):
 
 
 
-def get_colored_segmentation_image( seg_arr  , n_classes , colors=class_colors ):
+def get_colored_segmentation_image(seg_arr, n_classes, colors=class_colors):
     output_height = seg_arr.shape[0]
     output_width = seg_arr.shape[1]
 
@@ -61,12 +61,12 @@ def get_colored_segmentation_image( seg_arr  , n_classes , colors=class_colors )
 
 
 
-def get_legends( class_names ,  colors=class_colors ): 
+def get_legends(class_names,  colors=class_colors): 
     
     n_classes = len(class_names)
     legend = np.zeros(((len(class_names) * 25) + 25, 125, 3), dtype="uint8") + 255
 
-    for (i, (class_name, color)) in enumerate(zip( class_names[:n_classes] , colors[:n_classes] )):
+    for (i, (class_name, color)) in enumerate(zip(class_names[:n_classes] , colors[:n_classes])):
 
         color = [int(c) for c in color]
         cv2.putText(legend, class_name, (5, (i * 25) + 17),
@@ -83,8 +83,6 @@ def overlay_seg_image( inp_img , seg_img  ):
 
     fused_img = (inp_img/2 + seg_img/2 ).astype('uint8')
     return fused_img 
-
-
 
 def concat_lenends(  seg_img , legend_img  ):
     
@@ -124,7 +122,7 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None ,
 
     if overlay_img:
         assert not inp_img is None
-        seg_img = overlay_seg_image( inp_img , seg_img  )
+        seg_img = overlay_seg_image(inp_img , seg_img)
 
 
     if show_legends:

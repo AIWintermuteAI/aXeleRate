@@ -11,3 +11,7 @@ axelerate.egg-info/
 build/
 dist/
 configs/
+*.txt
+*.h5
+*.tflite
+*.kmodel

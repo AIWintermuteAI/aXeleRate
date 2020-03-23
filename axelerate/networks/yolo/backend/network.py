@@ -64,7 +64,8 @@ class YoloNetwork(object):
         image = cv2.resize(image, (input_size, input_size))
         image = self._norm(image)
 
-        input_image = image[:,:,::-1]
+        #input_image = image[:,:,::-1]
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         input_image = np.expand_dims(input_image, 0)
 
         # (13,13,5,6)
