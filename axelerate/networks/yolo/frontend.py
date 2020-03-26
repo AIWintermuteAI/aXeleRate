@@ -90,14 +90,14 @@ class YOLO(object):
             minmax_boxes[:,3] *= height
             return minmax_boxes.astype(np.int)
 
-        netout = self._yolo_network.forward(image)
+        prediction_time, netout = self._yolo_network.forward(image)
         boxes, probs = self._yolo_decoder.run(netout, threshold)
         
         if len(boxes) > 0:
             boxes = _to_original_scale(boxes)
-            return boxes, probs
+            return prediction_time, boxes, probs
         else:
-            return [], []
+            return prediction_time, [], []
 
     def train(self,
               img_folder,

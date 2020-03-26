@@ -2,6 +2,7 @@
 import numpy as np
 import cv2
 import os
+import time
 from keras.models import Model
 from keras.layers import Reshape, Conv2D, Input, Lambda
 from axelerate.networks.common_utils.feature import create_feature_extractor
@@ -61,16 +62,18 @@ class YoloNetwork(object):
             return h
             
         input_size = _get_input_size()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = cv2.resize(image, (input_size, input_size))
         image = self._norm(image)
 
         #input_image = image[:,:,::-1]
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        input_image = np.expand_dims(input_image, 0)
 
-        # (13,13,5,6)
+        input_image = np.expand_dims(image, 0)
+
+        start_time = time.time()
         netout = self._model.predict(input_image)[0]
-        return netout
+        elapsed_ms = (time.time() - start_time) * 1000
+        return elapsed_ms, netout
 
     def get_model(self, first_trainable_layer=None):
         return self._model

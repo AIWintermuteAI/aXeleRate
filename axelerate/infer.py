@@ -104,16 +104,18 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         font = cv2.FONT_HERSHEY_SIMPLEX
         valid_image_folder = config['train']['valid_image_folder']
         image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
-
+        inference_time = []
         for filename in image_files_list:
             output_path = os.path.join('Inference_results', os.path.basename(filename))
             image = cv2.imread(filename)
-            img_class, prob = classifier.predict(filename)
+            prediction_time, img_class, prob = classifier.predict(filename)
+            inference_time.append(prediction_time)
             cv2.putText(image, "{}:{:.2f}".format(img_class[0], prob[0]), (10,20), font, image.shape[0]/600, (0, 0, 255), 2, True)
             cv2.imwrite(output_path, image)
             show_image(output_path)
             print("{}:{}".format(img_class[0], prob[0]))
-
+        if len(inference_time)>1:
+            print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
 
     if config['model']['type']=='Detector':
         # 2. create yolo instance & predict
@@ -134,6 +136,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         n_true_positives = 0
         n_truth = 0
         n_pred = 0
+        inference_time = []
         for i in range(len(annotations)):
             img_path = annotations.fname(i)
             img_fname = os.path.basename(img_path)
@@ -141,7 +144,8 @@ def setup_inference(config,weights,threshold=0.3,path=None):
             true_boxes = annotations.boxes(i)
             true_labels = annotations.code_labels(i)
             
-            boxes, probs = yolo.predict(image, float(threshold))
+            prediction_time, boxes, probs = yolo.predict(image, float(threshold))
+            inference_time.append(prediction_time)
             labels = np.argmax(probs, axis=1) if len(probs) > 0 else [] 
           
             # 4. save detection result
@@ -155,7 +159,8 @@ def setup_inference(config,weights,threshold=0.3,path=None):
             n_truth += len(true_boxes)
             n_pred += len(boxes)
         print(calc_score(n_true_positives, n_truth, n_pred))
-
+        if len(inference_time)>1:
+            print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
 
 if __name__ == '__main__':
     # 1. extract arguments

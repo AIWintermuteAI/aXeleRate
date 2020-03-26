@@ -17,7 +17,7 @@ def configs(network_type):
     classifier = {
         "model" : {
             "type":                 "Classifier",
-            "architecture":         "MobileNet7_5",
+            "architecture":         "VGG16",
             "input_size":           224,
             "fully-connected":      [100,50],
             "labels":               [],
@@ -27,7 +27,7 @@ def configs(network_type):
             "full":   				""
         },
         "train" : {
-            "actual_epoch":         5,
+            "actual_epoch":         1,
             "train_image_folder":   "sample_datasets/classifier/imgs",
             "train_times":          4,
             "valid_image_folder":   "sample_datasets/classifier/imgs_validation",
@@ -35,11 +35,11 @@ def configs(network_type):
             "batch_size":           4,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/classifier",
-            "first_trainable_layer": "dense_3",
+            "first_trainable_layer": "",
             "augumentation":				True
         },
         "converter" : {
-            "type":   				['tflite']
+            "type":   				[]
         }
     }
 
@@ -47,7 +47,7 @@ def configs(network_type):
     detector = {
         "model":{
             "type":                 "Detector",
-            "architecture":         "MobileNet7_5",
+            "architecture":         "SqueezeNet",
             "input_size":           224,
             "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
             "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
@@ -60,7 +60,7 @@ def configs(network_type):
             "full":   				""
         },
         "train" : {
-            "actual_epoch":         5,
+            "actual_epoch":         1,
             "train_image_folder":   "sample_datasets/detector/imgs",
             "train_annot_folder":   "sample_datasets/detector/anns",
             "train_times":          4,
@@ -70,12 +70,12 @@ def configs(network_type):
             "batch_size":           4,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/detector",
-            "first_trainable_layer": "detection_layer_45",
+            "first_trainable_layer": "",
             "augumentation":				True,
             "is_only_detect" : 		False
         },
         "converter" : {
-            "type":   				["k210","tflite"]
+            "type":   				[]
         }
     }
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This module is responsible for communicating with the outside of the yolo package.
 # Outside the package, someone can use yolo detector accessing with this module.
-
+import time
 import os
 import numpy as np
 
@@ -55,10 +55,12 @@ class Classifier(object):
 
     def predict(self, image):
         preprocessed_image = prepare_image(image,show=False,size=(self._input_size,self._input_size))
+        start_time = time.time()
         pred = self._network.predict(preprocessed_image)
+        elapsed_ms = (time.time() - start_time) * 1000
         predicted_class_indices=np.argmax(pred,axis=1)
         predictions = [self._labels[k] for k in predicted_class_indices]
-        return predictions, pred[0][predicted_class_indices]
+        return elapsed_ms, predictions, pred[0][predicted_class_indices]
 
     def train(self,
               img_folder,
