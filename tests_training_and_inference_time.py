@@ -39,7 +39,7 @@ def configs(network_type):
             "augumentation":				True
         },
         "converter" : {
-            "type":   				[]
+            "type":   				["tflite"]
         }
     }
 
@@ -75,7 +75,7 @@ def configs(network_type):
             "is_only_detect" : 		False
         },
         "converter" : {
-            "type":   				[]
+            "type":   				["tflite"]
         }
     }
 
