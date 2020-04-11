@@ -110,7 +110,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
             image = cv2.imread(filename)
             prediction_time, img_class, prob = classifier.predict(filename)
             inference_time.append(prediction_time)
-            cv2.putText(image, "{}:{:.2f}".format(img_class[0], prob[0]), (10,20), font, image.shape[0]/600, (0, 0, 255), 2, True)
+            cv2.putText(image, "{}:{:.2f}".format(img_class[0], prob[0]), (image.shape[1]//50,image.shape[1]//25), font, image.shape[1]//600, (0, 0, 255), 2, True)
             cv2.imwrite(output_path, image)
             show_image(output_path)
             print("{}:{}".format(img_class[0], prob[0]))

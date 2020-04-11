@@ -68,6 +68,6 @@ aXeleRate is still work in progress project. I will be making some changes from 
 
 ### Acknowledgements
 
-  - YOLOv2 Keras code jeongjoonsup and Ngoc Anh Huynh https://github.com/experiencor/keras-yolo2
+  - YOLOv2 Keras code jeongjoonsup and Ngoc Anh Huynh https://github.com/experiencor/keras-yolo2 https://github.com/penny4860/Yolo-digit-detector
   - SegNet Keras code Divam Gupta https://github.com/divamgupta/image-segmentation-keras
   - Big Thank You to creator/maintainers of Keras/Tensorflow

@@ -16,3 +16,4 @@ person_detector/
 *.h5
 *.tflite
 *.kmodel
+*.png

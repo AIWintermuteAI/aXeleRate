@@ -20,7 +20,7 @@ def prepare_image(file, show=False, size=(224,224)):
     return preprocess_input(img_array_expanded_dims)
 
 def get_labels(directory):
-    labels = os.listdir(directory)
+    labels = sorted(os.listdir(directory))
     return labels
 
 def create_classifier(architecture, labels, input_size, layers, dropout):
