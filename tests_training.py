@@ -39,7 +39,7 @@ def configs(network_type):
             "augumentation":				True
         },
         "converter" : {
-            "type":   				['tflite']
+            "type":   				["k210","tflite"]
         }
     }
 
@@ -63,14 +63,14 @@ def configs(network_type):
             "actual_epoch":         5,
             "train_image_folder":   "sample_datasets/detector/imgs",
             "train_annot_folder":   "sample_datasets/detector/anns",
-            "train_times":          4,
+            "train_times":          1,
             "valid_image_folder":   "sample_datasets/detector/imgs_validation",
             "valid_annot_folder":   "sample_datasets/detector/anns_validation",
-            "valid_times":          4,
-            "batch_size":           4,
+            "valid_times":          1,
+            "batch_size":           2,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/detector",
-            "first_trainable_layer": "detection_layer_45",
+            "first_trainable_layer": "",
             "augumentation":				True,
             "is_only_detect" : 		False
         },

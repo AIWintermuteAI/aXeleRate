@@ -56,24 +56,8 @@ class YoloNetwork(object):
         self._model.load_weights(weight_path, by_name=by_name)
         
     def forward(self, image):
-        def _get_input_size():
-            input_shape = self._model.get_input_shape_at(0)
-            _, h, w, _ = input_shape
-            return h
-            
-        input_size = _get_input_size()
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(image, (input_size, input_size))
-        image = self._norm(image)
-
-        #input_image = image[:,:,::-1]
-
-        input_image = np.expand_dims(image, 0)
-
-        start_time = time.time()
-        netout = self._model.predict(input_image)[0]
-        elapsed_ms = (time.time() - start_time) * 1000
-        return elapsed_ms, netout
+        netout = self._model.predict(image)[0]
+        return netout
 
     def get_model(self, first_trainable_layer=None):
         return self._model

@@ -65,6 +65,26 @@ class BatchGenerator(Sequence):
     def __len__(self):
         return int(len(self.annotations) * self._repeat_times /self._batch_size)
 
+    def load_batch(self, idx):
+        imgs_list = []
+        anns_list = []
+        for i in range(self._batch_size):
+            fname = self.annotations.fname(self._batch_size*idx + i)
+            boxes = self.annotations.boxes(self._batch_size*idx + i)
+            labels = self.annotations.code_labels(self._batch_size*idx + i)
+            img, boxes = self._img_aug.imread(fname, boxes)
+            imgs_list.append(self._netin_gen.run(img))
+            annotations = []
+            for j in range(len(boxes)):
+                annotation = []
+                for item in boxes[j].tolist():
+                    annotation.append(item)
+                annotation.append(labels[j])
+                annotations.append(annotation)
+            anns_list.append(np.array(annotations))
+        return imgs_list, np.array(anns_list)
+
+
     def __getitem__(self, idx):
         """
         # Args
@@ -80,13 +100,6 @@ class BatchGenerator(Sequence):
             
             # 2. read image in fixed size
             img, boxes = self._img_aug.imread(fname, boxes)
-
-            #image_copy = img
-            #for box in boxes:
-            #    x1, y1, x2, y2 = box
-            #    cv2.rectangle(image_copy, (x1,y1), (x2,y2), (0,255,0), 3)
-            #print(os.path.join('test',os.path.basename(fname)))
-            #cv2.imwrite(os.path.join('test',os.path.basename(fname)), image_copy)
 
             # 3. grid scaling centroid boxes
             norm_boxes = self._yolo_box.trans(boxes)
@@ -125,7 +138,6 @@ class _YoloBox(object):
         centroid_boxes = to_centroid(boxes).astype(np.float32)
         # 2. image scale -> grid scale
         norm_boxes = centroid_boxes * (self._grid_size / self._input_size)
-        #print(norm_boxes)
         return norm_boxes
 
 

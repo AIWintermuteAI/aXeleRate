@@ -3,6 +3,7 @@
 # Outside the package, someone can use yolo detector accessing with this module.
 
 import os
+import time
 import numpy as np
 
 from axelerate.networks.common_utils.fit import train
@@ -72,7 +73,7 @@ class YOLO(object):
         else:
             print("Fail to load pre-trained weights-starting training from scratch")
 
-    def predict(self, image, threshold=0.3):
+    def predict(self, image, height, width, threshold=0.3):
         """
         # Args
             image : 3d-array (BGR ordered)
@@ -82,7 +83,7 @@ class YOLO(object):
             probs : array, shape of (N, nb_classes)
         """
         def _to_original_scale(boxes):
-            height, width = image.shape[:2]
+            #height, width = image.shape[:2]
             minmax_boxes = to_minmax(boxes)
             minmax_boxes[:,0] *= width
             minmax_boxes[:,2] *= width
@@ -90,14 +91,16 @@ class YOLO(object):
             minmax_boxes[:,3] *= height
             return minmax_boxes.astype(np.int)
 
-        prediction_time, netout = self._yolo_network.forward(image)
+        start_time = time.time()
+        netout = self._yolo_network.forward(image)
+        elapsed_ms = (time.time() - start_time) * 1000
         boxes, probs = self._yolo_decoder.run(netout, threshold)
         
         if len(boxes) > 0:
             boxes = _to_original_scale(boxes)
-            return prediction_time, boxes, probs
+            return elapsed_ms, boxes, probs
         else:
-            return prediction_time, [], []
+            return elapsed_ms, [], []
 
     def train(self,
               img_folder,
@@ -111,8 +114,7 @@ class YOLO(object):
               valid_times=1,
               valid_img_folder="",
               valid_ann_folder="",
-              first_trainable_layer=None,
-              is_only_detect=False):
+              first_trainable_layer=None):
 
         # 1. get annotations        
         train_annotations, valid_annotations = get_train_annotations(self._labels,
@@ -120,7 +122,7 @@ class YOLO(object):
                                                                      ann_folder,
                                                                      valid_img_folder,
                                                                      valid_ann_folder,
-                                                                     is_only_detect)
+                                                                     is_only_detect=False)
         # 1. get batch generator
         train_batch_generator = self._get_batch_generator(train_annotations, batch_size, train_times, jitter=jitter)
         valid_batch_generator = self._get_batch_generator(valid_annotations, batch_size, valid_times, jitter=False)
@@ -137,7 +139,8 @@ class YOLO(object):
                 learning_rate      = learning_rate, 
                 nb_epoch           = nb_epoch,
                 project_folder = project_folder,
-                first_trainable_layer=first_trainable_layer)
+                first_trainable_layer=first_trainable_layer,
+                network=self)
 
     def _get_loss_func(self, batch_size):
         return self._yolo_loss.custom_loss(batch_size)

@@ -140,14 +140,19 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         for i in range(len(annotations)):
             img_path = annotations.fname(i)
             img_fname = os.path.basename(img_path)
-            image = cv2.imread(img_path)
             true_boxes = annotations.boxes(i)
             true_labels = annotations.code_labels(i)
-            
-            prediction_time, boxes, probs = yolo.predict(image, float(threshold))
+
+            image = cv2.imread(img_path)
+            height, width = image.shape[:2]
+            input_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) 
+            input_image = cv2.resize(image, (yolo._input_size, yolo._input_size))
+            input_image = yolo._yolo_network._norm(input_image)
+            input_image = np.expand_dims(input_image, 0)
+
+            prediction_time, boxes, probs = yolo.predict(input_image, height, width, float(threshold))
             inference_time.append(prediction_time)
             labels = np.argmax(probs, axis=1) if len(probs) > 0 else [] 
-          
             # 4. save detection result
             image = draw_scaled_boxes(image, boxes, probs, config['model']['labels'])
             output_path = os.path.join(write_dname, os.path.split(img_fname)[-1])

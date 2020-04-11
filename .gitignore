@@ -11,6 +11,7 @@ axelerate.egg-info/
 build/
 dist/
 configs/
+person_detector/
 *.txt
 *.h5
 *.tflite

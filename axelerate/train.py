@@ -10,7 +10,6 @@ from axelerate.networks.yolo.frontend import create_yolo, get_object_labels
 from axelerate.networks.classifier.frontend_classifier import create_classifier, get_labels
 from axelerate.networks.segnet.frontend_segnet import create_segnet
 from axelerate.networks.common_utils.convert import Converter
-#from axelerate.networks.common_utils.file_utils import space_safety
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '4'
 import tensorflow as tf
@@ -125,8 +124,7 @@ def train_from_config(config,project_folder):
                                            config['train']['valid_times'],
                                            config['train']['valid_image_folder'],
                                            config['train']['valid_annot_folder'],
-                                           config['train']['first_trainable_layer'],
-                                           config['train']['is_only_detect'])
+                                           config['train']['first_trainable_layer'])
     converter.convert_model(model_path,model_layers,config['train']['valid_image_folder'])    
     return model_path
 
