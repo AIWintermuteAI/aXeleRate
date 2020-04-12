@@ -1,3 +1,4 @@
+#tested with frimware 5-0.22
 import sensor, image, lcd, time
 import KPU as kpu
 lcd.init()
@@ -8,10 +9,10 @@ sensor.set_windowing((224, 224))
 sensor.set_vflip(1)
 lcd.clear()
 
-labels=['backpack','bomb','book','chair','computer','cup_mug','pen','person','pizza','smartphone']
+labels=['backpack','bomb','book','chair','computer','cup_mug','pen','person','pizza','smartphone'] #number of labels should match the number of labels the model was trained with
 
-task = kpu.load(0x200000)
-kpu.set_outputs(task, 0, 1, 1, 5)
+task = kpu.load(0x200000) #change to "/sd/name_of_the_model_file.kmodel" if loading from SD card
+kpu.set_outputs(task, 0, 1, 1, 10) #the actual shape needs to match the last layer shape of your model
 
 while(True):
     kpu.memtest()
