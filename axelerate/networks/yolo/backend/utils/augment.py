@@ -148,12 +148,12 @@ def _create_augment_pipeline():
     return aug_pipe
 
 
-def visualize_dataset(img_folder, ann_folder, img_size=None, jitter=None):
+def visualize_dataset(img_folder, ann_folder, num_imgs = None, img_size=None, jitter=None):
     import os
     from axelerate.networks.yolo.backend.utils.annotation import PascalVocXmlParser
     import matplotlib.pyplot as plt
     parser = PascalVocXmlParser()
-    for ann in os.listdir(ann_folder):
+    for ann in os.listdir(ann_folder)[:num_imgs]:
         annotation_file = os.path.join(ann_folder, ann)
         fname = parser.get_fname(annotation_file)
         labels = parser.get_labels(annotation_file)
@@ -164,9 +164,15 @@ def visualize_dataset(img_folder, ann_folder, img_size=None, jitter=None):
         img, boxes_ = aug.imread(img_file, boxes)
         #img = img.astype(np.uint8)
         
-        for box in boxes_:
-            x1, y1, x2, y2 = box
+        for i in range(len(boxes_)):
+            x1, y1, x2, y2 = boxes_[i]
             cv2.rectangle(img, (x1,y1), (x2,y2), (0,255,0), 3)
+            cv2.putText(img, 
+                        '{}'.format(labels[i]), 
+                        (x1, y1 - 13), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 
+                        1e-3 * img.shape[0], 
+                        (255,0,0), 1)
         plt.imshow(img)
         plt.show(block=False)
         plt.pause(1)
@@ -177,8 +183,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--images", type=str)
     parser.add_argument("--annotations", type=str)
+    parser.add_argument("--num_imgs", type=int)
     parser.add_argument("--img_size", type=int)
     parser.add_argument("--aug", type=bool)
     args = parser.parse_args()
-    visualize_dataset(args.images, args.annotations, args.img_size, args.aug)
+    visualize_dataset(args.images, args.annotations, args.num_imgs, args.img_size, args.aug)
 

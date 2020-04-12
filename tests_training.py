@@ -27,11 +27,11 @@ def configs(network_type):
             "full":   				""
         },
         "train" : {
-            "actual_epoch":         5,
+            "actual_epoch":         1,
             "train_image_folder":   "sample_datasets/classifier/imgs",
-            "train_times":          4,
+            "train_times":          1,
             "valid_image_folder":   "sample_datasets/classifier/imgs_validation",
-            "valid_times":          4,
+            "valid_times":          1,
             "batch_size":           4,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/classifier",
@@ -39,7 +39,7 @@ def configs(network_type):
             "augumentation":				True
         },
         "converter" : {
-            "type":   				["k210","tflite"]
+            "type":   				["edgetpu"]
         }
     }
 
