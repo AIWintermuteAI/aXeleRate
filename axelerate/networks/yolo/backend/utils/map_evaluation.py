@@ -1,7 +1,8 @@
+import os
 import tensorflow as tf
 import numpy as np
 import keras
-
+import matplotlib.pyplot as plt
 
 class MapEvaluation(keras.callbacks.Callback):
     """ Evaluate a given dataset using a given model.
@@ -21,6 +22,7 @@ class MapEvaluation(keras.callbacks.Callback):
                  iou_threshold=0.7,
                  score_threshold=0.5,
                  save_path=None,
+                 save_plot_name=None,
                  period=1,
                  save_best=False,
                  save_name=None,
@@ -37,13 +39,18 @@ class MapEvaluation(keras.callbacks.Callback):
         self._save_name = save_name
         self._tensorboard = tensorboard
 
+        self.loss = []
+        self.val_loss = []
+        self.maps = []
+        self._save_plot_name = save_plot_name
+
         self.bestMap = 0
 
         if not isinstance(self._tensorboard, keras.callbacks.TensorBoard) and self._tensorboard is not None:
             raise ValueError("Tensorboard object must be a instance from keras.callbacks.TensorBoard")
 
     def on_epoch_end(self, epoch, logs={}):
-
+        logs = logs or {}
         if epoch % self._period == 0 and self._period != 0:
             _map, average_precisions = self.evaluate_map()
             print('\n')
@@ -61,6 +68,12 @@ class MapEvaluation(keras.callbacks.Callback):
                     self.model.save(self._save_name,overwrite=True,include_optimizer=False)
                 else:
                     print("mAP did not improve from {}.".format(self.bestMap))
+
+
+            self.loss.append(logs.get("loss"))
+            self.val_loss.append(logs.get("val_loss"))
+            self.maps.append(_map)
+            plot(self.loss,self.val_loss,self.maps,self._save_plot_name)
 
             if self._tensorboard is not None and self._tensorboard.writer is not None:
                 summary = tf.Summary()
@@ -101,7 +114,6 @@ class MapEvaluation(keras.callbacks.Callback):
                     score = np.array(probs) 
                     pred_labels = score
                    
-                #print(pred_boxes)    
                 # sort the boxes and the labels according to scores
                 #score_sort = np.argsort(-score)
                 #pred_labels = pred_labels[score_sort]
@@ -227,4 +239,28 @@ def compute_ap(recall, precision):
     # and sum (\Delta recall) * prec
     ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
+
+def plot(acc, val_acc, maps, filename):
+    plt.figure(figsize=(10,10))
+    plt.plot(acc, 'g')
+    plt.plot(val_acc, 'r')
+    plt.plot(maps, 'b')
+
+    for i,j in enumerate(acc):
+        plt.annotate("{:.4f}".format(j),xy=(i,j))
+
+    for i,j in enumerate(val_acc):
+        plt.annotate("{:.4f}".format(j),xy=(i,j))
+
+    for i,j in enumerate(maps):
+        plt.annotate("{:.4f}".format(j),xy=(i,j))
+
+    plt.title('Model loss')
+    plt.ylabel('Loss,mAP')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test', 'mAP'], loc='upper left')
+    #plt.show(block=False)
+    #plt.pause(1)
+    plt.savefig(os.path.join(filename))
+    plt.close()
 

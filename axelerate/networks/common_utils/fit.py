@@ -7,86 +7,26 @@ import numpy as np
 
 from axelerate.networks.yolo.backend.utils.map_evaluation import MapEvaluation
 from keras.optimizers import Adam, SGD
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 import matplotlib.pyplot as plt
 from datetime import datetime
 import warnings
 
 
-class CheckpointPB(keras.callbacks.Callback):
+class PlotCallback(keras.callbacks.Callback):
 
-    def __init__(self, filepath, date, monitor='val_loss', verbose=0,
-                 save_best_only=False, save_weights_only=False,
-                 mode='auto', period=1):
-        super(CheckpointPB, self).__init__()
-        self.monitor = monitor
-        self.verbose = verbose
+    def __init__(self, filepath):
+        super(PlotCallback, self).__init__()
         self.filepath = filepath
-        self.date = date
-        self.save_best_only = save_best_only
-        self.save_weights_only = save_weights_only
-        self.period = period
-        self.epochs_since_last_save = 0
         self.loss = []
         self.val_loss = []
-
-        if mode not in ['auto', 'min', 'max']:
-            warnings.warn('ModelCheckpoint mode %s is unknown, '
-                          'fallback to auto mode.' % (mode),
-                          RuntimeWarning)
-            mode = 'auto'
-
-        if mode == 'min':
-            self.monitor_op = np.less
-            self.best = np.Inf
-        elif mode == 'max':
-            self.monitor_op = np.greater
-            self.best = -np.Inf
-        else:
-            if 'acc' in self.monitor or self.monitor.startswith('fmeasure'):
-                self.monitor_op = np.greater
-                self.best = -np.Inf
-            else:
-                self.monitor_op = np.less
-                self.best = np.Inf
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
         self.loss.append(logs.get("loss"))
         self.val_loss.append(logs.get("val_loss"))
-        plot(self.loss,self.val_loss,self.filepath,self.date)
-        self.epochs_since_last_save += 1
-        if self.epochs_since_last_save >= self.period:
-            self.epochs_since_last_save = 0
-            filepath = self.filepath.format(epoch=epoch + 1, **logs)
-            if self.save_best_only:
-                current = logs.get(self.monitor)
-                if current is None:
-                    warnings.warn('Can save best model only with %s available, '
-                                  'skipping.' % (self.monitor), RuntimeWarning)
-                else:
-                    if self.monitor_op(current, self.best):
-                        if self.verbose > 0:
-                            print('\nEpoch %05d: %s improved from %0.5f to %0.5f,'
-                                  ' saving model to %s'
-                                  % (epoch + 1, self.monitor, self.best,
-                                     current, filepath))
-                        self.best = current
-                        if self.save_weights_only:
-                            self.model.save_weights(filepath, overwrite=True)
-                        else:
-                            self.model.save(os.path.join(self.filepath,self.date+'.h5'), overwrite=True, include_optimizer=False)
-                    else:
-                        if self.verbose > 0:
-                            print('\nEpoch %05d: %s did not improve from %0.5f' %
-                                  (epoch + 1, self.monitor, self.best))
-            else:
-                if self.verbose > 0:
-                    print('\nEpoch %05d: saving model to %s' % (epoch + 1, filepath))
-                if self.save_weights_only:
-                    self.model.save_weights(filepath, overwrite=True)
-                else:
-                    self.model.save(filepath, overwrite=True)
+        plot(self.loss,self.val_loss,self.filepath)
+
 def train(model,
          loss_func,
          train_batch_gen,
@@ -114,8 +54,9 @@ def train(model,
     path = os.path.join(project_folder,train_date)
     print('Current training session folder is {}'.format(path))
     os.makedirs(path)
-    saved_weights_name = os.path.join(path, train_date + '.h5')
-    saved_weights_name_ctrlc = os.path.join(path, train_date + '_ctrlc.h5')
+    save_weights_name = os.path.join(path, train_date + '.h5')
+    save_plot_name = os.path.join(path, train_date + '.jpg')
+    save_weights_name_ctrlc = os.path.join(path, train_date + '_ctrlc.h5')
 
     print('\n')
     # 1 Freeze layers
@@ -153,7 +94,7 @@ def train(model,
                        mode='min', 
                        verbose=1,
                        restore_best_weights=True)
-    checkpoint = CheckpointPB(path,train_date, 
+    checkpoint = ModelCheckpoint(save_weights_name, 
                                  monitor='val_loss', 
                                  verbose=1, 
                                  save_best_only=True, 
@@ -162,18 +103,19 @@ def train(model,
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
                               patience=5, min_lr=0.00001,verbose=1)
 
+    graph = PlotCallback(save_plot_name)
+
     map_evaluator_cb = MapEvaluation(network, valid_batch_gen,
                                      save_best=True,
-                                     save_name=saved_weights_name,
+                                     save_name=save_weights_name,
+                                     save_plot_name=save_plot_name,
                                      iou_threshold=0.7,
                                      score_threshold=0.3)
 
     if network.__class__.__name__ == 'YOLO':
-        callbacks = [map_evaluator_cb,reduce_lr]
+        callbacks = [map_evaluator_cb, reduce_lr]
     else:
-        callbacks= [early_stop, checkpoint, reduce_lr] 
-
-
+        callbacks= [early_stop, checkpoint, reduce_lr, graph] 
 
     # 4. training
     try:
@@ -187,11 +129,11 @@ def train(model,
                         workers          = 2,
                         max_queue_size   = 4)
     except KeyboardInterrupt:
-        model.save(saved_weights_name_ctrlc,overwrite=True,include_optimizer=False)
-        return model.layers, saved_weights_name_ctrlc 
+        model.save(save_weights_name_ctrlc,overwrite=True,include_optimizer=False)
+        return model.layers, save_weights_name_ctrlc 
 
     _print_time(time.time()-train_start)
-    return model.layers, saved_weights_name
+    return model.layers, save_weights_name
 
 def _print_time(process_time):
     if process_time < 60:
@@ -199,12 +141,23 @@ def _print_time(process_time):
     else:
         print("{:d}-mins to train".format(int(process_time/60)))
 
-def plot(acc,val_acc,path,train_date):
-    plt.plot(acc)
-    plt.plot(val_acc)
+def plot(acc, val_acc, filename):
+    plt.figure(figsize=(10,10))
+    plt.plot(acc, 'g')
+    plt.plot(val_acc, 'r')
+
+    for i,j in enumerate(acc):
+        plt.annotate("{:.4f}".format(j),xy=(i,j))
+
+    for i,j in enumerate(val_acc):
+        plt.annotate("{:.4f}".format(j),xy=(i,j))
+
     plt.title('Model loss')
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
-    plt.savefig(os.path.join(path, train_date +'.png'))
+    #plt.show(block=False)
+    #plt.pause(1)
+    plt.savefig(os.path.join(filename))
+    plt.close()
 
