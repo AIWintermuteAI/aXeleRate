@@ -116,7 +116,7 @@ def configs(network_type):
 for item in configs(args.type):
     model_path = setup_training(config_dict=item)
     K.clear_session()
-    setup_inference(item,model_path)
+    #setup_inference(item,model_path)
 
 
 

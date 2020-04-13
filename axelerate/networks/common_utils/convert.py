@@ -38,7 +38,7 @@ class Converter(object):
                 subprocess.Popen(['bash install_edge_tpu_compiler.sh'], shell=True, stdin=subprocess.PIPE, cwd=cwd).communicate()
         self._converter_type = converter_type
 
-    def convert_edgetpu(self,model_path,dataset_path):
+    def convert_edgetpu(self,model_path):
         output_name = os.path.basename(model_path).split(".")[0]+".kmodel"
         output_path = os.path.join(os.path.dirname(model_path),output_name)
         print(output_path)
@@ -73,7 +73,7 @@ class Converter(object):
         
         if 'edgetpu' in self._converter_type:
             self.convert_tflite(model_path,model_layers)
-
+            self.convert_edgetpu(model_path.split(".")[0] + '.tflite')
 
     def save_frozen_graph(self,model, path, train_date):
         output_node_names = [node.op.name for node in model.outputs]
@@ -85,8 +85,5 @@ class Converter(object):
         graph_io.write_graph(constant_graph, "" , os.path.join (path, train_date + '.pb'), as_text=False)
 
     def convert_tensorrt(self):
-        pass
-
-    def convert_edgetpu(self):
         pass
 
