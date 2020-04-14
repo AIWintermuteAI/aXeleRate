@@ -12,6 +12,7 @@ build/
 dist/
 configs/
 person_detector/
+example_scripts/edge_tpu/
 *.txt
 *.h5
 *.tflite

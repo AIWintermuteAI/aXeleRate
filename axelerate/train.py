@@ -32,7 +32,8 @@ argparser.add_argument(
 
 def train_from_config(config,project_folder):
     # Create the converter
-    converter = Converter(config['converter']['type'])
+    converter = Converter(config['converter']['type'], config['model']['architecture'],
+                          config['model']['input_size'], config['train']['valid_image_folder'])
 
     #  Segmentation network
     if config['model']['type']=='SegNet':
