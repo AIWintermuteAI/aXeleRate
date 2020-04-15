@@ -61,10 +61,9 @@ class YOLO(object):
         self._yolo_network = yolo_network
         self._yolo_loss = yolo_loss
         self._yolo_decoder = yolo_decoder
-        
         self._labels = labels
-        # Batch를 생성할 때만 사용한다.
         self._input_size = input_size
+        self._norm = yolo_network._norm
 
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):

@@ -47,7 +47,7 @@ class Segnet(object):
         self._n_classes = n_classes
         self._input_size = input_size
         self._output_size = output_size
-
+        #self._norm = 
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):
             print("Loading pre-trained weights in", weight_path)
@@ -82,9 +82,9 @@ class Segnet(object):
         else:
             loss_k = 'categorical_crossentropy'
         train_generator = create_batch_generator(img_folder, ann_folder, self._input_size, self._output_size, self._n_classes,
-                                                     batch_size,train_times,do_augment)
+                                                 batch_size,train_times,do_augment)
         if valid_img_folder:
-            validation_generator = create_batch_generator(valid_img_folder, valid_ann_folder, self._input_size,self._output_size, self._n_classes,batch_size,valid_times)
+            validation_generator = create_batch_generator(valid_img_folder, valid_ann_folder, self._input_size,self._output_size, self._n_classes,batch_size,valid_times,False)
         
         return train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch, project_folder, first_trainable_layer)
     

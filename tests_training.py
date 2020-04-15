@@ -39,7 +39,7 @@ def configs(network_type):
             "augumentation":				True
         },
         "converter" : {
-            "type":   				["edgetpu"]
+            "type":   				[]
         }
     }
 
@@ -60,7 +60,7 @@ def configs(network_type):
             "full":   				""
         },
         "train" : {
-            "actual_epoch":         5,
+            "actual_epoch":         1,
             "train_image_folder":   "sample_datasets/detector/imgs",
             "train_annot_folder":   "sample_datasets/detector/anns",
             "train_times":          1,
@@ -75,7 +75,7 @@ def configs(network_type):
             "is_only_detect" : 		False
         },
         "converter" : {
-            "type":   				["k210","tflite"]
+            "type":   				[]
         }
     }
 
@@ -90,7 +90,7 @@ def configs(network_type):
                 "full":   				""
             },
             "train" : {
-                "actual_epoch":         5,
+                "actual_epoch":         1,
                 "train_image_folder":   "sample_datasets/segmentation/imgs",
                 "train_annot_folder":   "sample_datasets/segmentation/anns",
                 "train_times":          4,
@@ -105,7 +105,7 @@ def configs(network_type):
                 "augumentation":				True
             },
             "converter" : {
-                "type":   				["k210","tflite"]
+                "type":   				[]
             }
         }
 
@@ -116,7 +116,7 @@ def configs(network_type):
 for item in configs(args.type):
     model_path = setup_training(config_dict=item)
     K.clear_session()
-    #setup_inference(item,model_path)
+    setup_inference(item,model_path)
 
 
 

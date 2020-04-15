@@ -72,7 +72,6 @@ def get_pairs_from_paths(images_path, segs_path, ignore_non_matching=False):
 def get_image_array(image_input, width, height, imgNorm="sub_mean",
                   ordering='channels_first'):
     """ Load image array from input """
-
     if type(image_input) is np.ndarray:
         # It is already an array, use it as it is
         img = image_input
@@ -83,19 +82,14 @@ def get_image_array(image_input, width, height, imgNorm="sub_mean",
     else:
         raise DataLoaderError("get_image_array: Can't process input type {0}".format(str(type(image_input))))
 
-    if imgNorm == "sub_and_divide":
-        img = np.float32(cv2.resize(img, (width, height))) / 127.5 - 1
-    elif imgNorm == "sub_mean":
-        img = cv2.resize(img, (width, height))
-        img = img.astype(np.float32)
-        img[:, :, 0] -= 103.939
-        img[:, :, 1] -= 116.779
-        img[:, :, 2] -= 123.68
-        img = img[:, :, ::-1]
-    elif imgNorm == "divide":
-        img = cv2.resize(img, (width, height))
-        img = img.astype(np.float32)
-        img = img/255.0
+
+
+    img = cv2.resize(img, (width, height))
+    img = img.astype(np.float32)
+    img = img / 255.
+    img = img - 0.5
+    img = img * 2.
+    img = img[:, :, ::-1]
 
     if ordering == 'channels_first':
         img = np.rollaxis(img, 2, 0)
@@ -193,6 +187,7 @@ class BatchGenerator(Sequence):
         random.shuffle(self.img_seg_pairs)
         self.zipped = itertools.cycle(self.img_seg_pairs)
         self.counter = 0
+
     def __len__(self):
         return int(len(self.img_seg_pairs) * self._repeat_times/self._batch_size)
 

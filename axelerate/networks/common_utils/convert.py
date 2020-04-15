@@ -82,7 +82,7 @@ class Converter(object):
             converter = tf.lite.TFLiteConverter.from_keras_model_file(model_path)
             converter.optimizations = [tf.lite.Optimize.DEFAULT]
             converter.representative_dataset = self.representative_dataset_gen
-            converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+            #converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
             converter.inference_input_type = tf.uint8
             converter.inference_output_type = tf.uint8
             tflite_quant_model = converter.convert()

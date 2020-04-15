@@ -8,15 +8,12 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 from keras import backend as K 
-
 from axelerate.networks.yolo.frontend import create_yolo
 from axelerate.networks.yolo.backend.utils.box import draw_scaled_boxes
 from axelerate.networks.yolo.backend.utils.annotation import parse_annotation
 from axelerate.networks.yolo.backend.utils.eval.fscore import count_true_positives, calc_score
-
 from axelerate.networks.segnet.frontend_segnet import create_segnet
 from axelerate.networks.segnet.predict import predict_multiple, evaluate
-
 from axelerate.networks.classifier.frontend_classifier import get_labels,create_classifier
 
 import os
@@ -51,12 +48,6 @@ argparser.add_argument(
     '--weights',
     help='trained weight files')
 
-argparser.add_argument(
-    '-p',
-    '--path',
-    help='path to images')
-
-
 def show_image(filename):
     image = mpimg.imread(filename)
     plt.figure()
@@ -66,13 +57,21 @@ def show_image(filename):
     plt.close()
     print(filename)
 
+def prepare_image(img_path, network):
+    orig_image = cv2.imread(img_path)
+    input_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
+    input_image = cv2.resize(input_image, (network._input_size,network._input_size))
+    input_image = network._norm(input_image)
+    input_image = np.expand_dims(input_image, 0)
+    return orig_image, input_image
+
 def setup_inference(config,weights,threshold=0.3,path=None):
     """make directory to save inference results """
-    dirname = 'Inference_results'
+    dirname = os.path.join(os.path.dirname(weights),'Inference_results')
     if os.path.isdir(dirname):
         print("Folder {} is already exists. Image files in directory might be overwritten".format(dirname))
     else:
-        print("Folder {} is created.".format(dirname, dirname))
+        print("Folder {} is created.".format(dirname))
         os.makedirs(dirname)
 
     if config['model']['type']=='SegNet':
@@ -106,12 +105,12 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
         inference_time = []
         for filename in image_files_list:
-            output_path = os.path.join('Inference_results', os.path.basename(filename))
-            image = cv2.imread(filename)
-            prediction_time, img_class, prob = classifier.predict(filename)
+            output_path = os.path.join(dirname, os.path.basename(filename))
+            orig_image, input_image = prepare_image(filename, classifier)
+            prediction_time, img_class, prob = classifier.predict(input_image)
             inference_time.append(prediction_time)
-            cv2.putText(image, "{}:{:.2f}".format(img_class[0], prob[0]), (image.shape[1]//50,image.shape[1]//25), font, image.shape[1]//600, (0, 0, 255), 2, True)
-            cv2.imwrite(output_path, image)
+            cv2.putText(orig_image, "{}:{:.2f}".format(img_class[0], prob[0]), (orig_image.shape[1]//20,orig_image.shape[1]//10), font, orig_image.shape[1]//190, (0, 0, 255), 2, True)
+            cv2.imwrite(output_path, orig_image)
             show_image(output_path)
             print("{}:{}".format(img_class[0], prob[0]))
         if len(inference_time)>1:
@@ -126,8 +125,6 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         yolo.load_weights(weights)
 
         # 3. read image
-        write_dname = "Inference_results"
-        if not os.path.exists(write_dname): os.makedirs(write_dname)
         annotations = parse_annotation(config['train']['valid_annot_folder'],
                                        config['train']['valid_image_folder'],
                                        config['model']['labels'],
@@ -143,21 +140,15 @@ def setup_inference(config,weights,threshold=0.3,path=None):
             true_boxes = annotations.boxes(i)
             true_labels = annotations.code_labels(i)
 
-            image = cv2.imread(img_path)
-            height, width = image.shape[:2]
-            input_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) 
-            input_image = cv2.resize(image, (yolo._input_size, yolo._input_size))
-            input_image = yolo._yolo_network._norm(input_image)
-            input_image = np.expand_dims(input_image, 0)
-
+            orig_image, input_image = prepare_image(img_path, yolo)
+            height, width = orig_image.shape[:2]
             prediction_time, boxes, probs = yolo.predict(input_image, height, width, float(threshold))
             inference_time.append(prediction_time)
             labels = np.argmax(probs, axis=1) if len(probs) > 0 else [] 
             # 4. save detection result
-            image = draw_scaled_boxes(image, boxes, probs, config['model']['labels'])
-            output_path = os.path.join(write_dname, os.path.split(img_fname)[-1])
-            
-            cv2.imwrite(output_path, image)
+            image = draw_scaled_boxes(orig_image, boxes, probs, config['model']['labels'])
+            output_path = os.path.join(dirname, os.path.split(img_fname)[-1])
+            cv2.imwrite(output_path, orig_image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
             show_image(output_path)
             n_true_positives += count_true_positives(boxes, true_boxes, labels, true_labels)
