@@ -19,12 +19,15 @@ def configs(network_type):
             "type":                 "Classifier",
             "architecture":         "MobileNet7_5",
             "input_size":           224,
-            "fully-connected":      [100,50],
+            "fully-connected":      [],
             "labels":               [],
-            "dropout" : 		0.5
+            "dropout" : 		    0.5
         },
-        "pretrained" : {
-            "full":   				""
+        "weights" : {
+            "full":   				"",
+            "backend":   		    "",
+            "save_bottleneck":      False
+        
         },
         "train" : {
             "actual_epoch":         1,
@@ -32,10 +35,11 @@ def configs(network_type):
             "train_times":          1,
             "valid_image_folder":   "sample_datasets/classifier/imgs_validation",
             "valid_times":          1,
+            "valid_metric":         "accuracy",
             "batch_size":           4,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/classifier",
-            "first_trainable_layer": "dense_3",
+            "first_trainable_layer": "",
             "augumentation":				True
         },
         "converter" : {
@@ -56,8 +60,9 @@ def configs(network_type):
             "object_scale" : 		5.0,
             "no_object_scale" : 	1.0
         },
-        "pretrained" : {
-            "full":   				""
+        "weights" : {
+            "full":   				"",
+            "backend":   		    ""
         },
         "train" : {
             "actual_epoch":         1,
@@ -67,6 +72,7 @@ def configs(network_type):
             "valid_image_folder":   "sample_datasets/detector/imgs_validation",
             "valid_annot_folder":   "sample_datasets/detector/anns_validation",
             "valid_times":          1,
+            "valid_metric":         "mAP",
             "batch_size":           2,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/detector",
@@ -86,9 +92,10 @@ def configs(network_type):
                 "input_size":           224,
                 "n_classes" : 		20
             },
-            "pretrained" : {
-                "full":   				""
-            },
+        "weights" : {
+            "full":   				"",
+            "backend":   		    ""
+        },
             "train" : {
                 "actual_epoch":         1,
                 "train_image_folder":   "sample_datasets/segmentation/imgs",
@@ -97,12 +104,13 @@ def configs(network_type):
                 "valid_image_folder":   "sample_datasets/segmentation/imgs_validation",
                 "valid_annot_folder":   "sample_datasets/segmentation/anns_validation",
                 "valid_times":          4,
+                "valid_metric":         "loss",
                 "batch_size":           8,
                 "learning_rate":        1e-4,
                 "saved_folder":   		"/home/ubuntu/space safety/segment",
                 "first_trainable_layer": "",
                 "ignore_zero_class":    False,
-                "augumentation":				True
+                "augumentation":		True
             },
             "converter" : {
                 "type":   				[]

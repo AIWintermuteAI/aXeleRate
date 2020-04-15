@@ -43,7 +43,7 @@ def train_from_config(config,project_folder):
                                    config['model']['input_size'],
                                    config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
-        segnet.load_weights(config['pretrained']['full'], by_name=True)
+        segnet.load_weights(config['weights']['full'], by_name=True)
         # 3. actual training 
         model_layers, model_path = segnet.train(config['train']['train_image_folder'],
                                            config['train']['train_annot_folder'],
@@ -73,7 +73,7 @@ def train_from_config(config,project_folder):
                                        config['model']['fully-connected'],
                                        config['model']['dropout'])   
         # 2. Load the pretrained weights (if any) 
-        classifier.load_weights(config['pretrained']['full'], by_name=True)
+        classifier.load_weights(config['weights']['full'], by_name=True)
 
         # 3. actual training 
         model_layers, model_path = classifier.train(config['train']['train_image_folder'],
@@ -111,7 +111,7 @@ def train_from_config(config,project_folder):
                            config['model']['no_object_scale'])
         
         # 2. Load the pretrained weights (if any) 
-        yolo.load_weights(config['pretrained']['full'], by_name=True)
+        yolo.load_weights(config['weights']['full'], by_name=True)
 
         # 3. actual training 
         model_layers, model_path = yolo.train(config['train']['train_image_folder'],
