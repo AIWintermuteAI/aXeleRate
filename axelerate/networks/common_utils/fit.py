@@ -4,22 +4,22 @@ import time
 import tensorflow as tf
 import keras
 import numpy as np
+import warnings
+import matplotlib.pyplot as plt
 
 from axelerate.networks.yolo.backend.utils.map_evaluation import MapEvaluation
 from keras.optimizers import Adam, SGD
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
-import matplotlib.pyplot as plt
 from datetime import datetime
-import warnings
 
+metrics_dict = {'val_acc':['accuracy'],'val_loss':[],'mAP':[]}
 
 class PlotCallback(keras.callbacks.Callback):
-
     def __init__(self, filepath):
         super(PlotCallback, self).__init__()
         self.filepath = filepath
-        self.loss = []
-        self.val_loss = []
+        self.loss = [0]
+        self.val_loss = [0]
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
@@ -35,7 +35,8 @@ def train(model,
          nb_epoch = 300,
          project_folder = 'project',
          first_trainable_layer=None,
-         network=None):
+         network=None,
+         metrics="val_loss"):
     """A function that performs training on a general keras model.
 
     # Args
@@ -52,13 +53,14 @@ def train(model,
     train_start = time.time()
     train_date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     path = os.path.join(project_folder,train_date)
+    basename = network.__class__.__name__ + "_best_"+ metrics
     print('Current training session folder is {}'.format(path))
     os.makedirs(path)
-    save_weights_name = os.path.join(path, train_date + '.h5')
-    save_plot_name = os.path.join(path, train_date + '.jpg')
-    save_weights_name_ctrlc = os.path.join(path, train_date + '_ctrlc.h5')
-
+    save_weights_name = os.path.join(path, basename + '.h5')
+    save_plot_name = os.path.join(path, basename + '.jpg')
+    save_weights_name_ctrlc = os.path.join(path, basename + '_ctrlc.h5')
     print('\n')
+
     # 1 Freeze layers
     layer_names = [layer.name for layer in model.layers]
     fixed_layers = []
@@ -84,23 +86,23 @@ def train(model,
     optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
     # 3. create loss function
-    model.compile(loss=loss_func,optimizer=optimizer)
+    model.compile(loss=loss_func,optimizer=optimizer,metrics=metrics_dict[metrics])
     model.summary()
 
     #4 create callbacks   
-    early_stop = EarlyStopping(monitor='val_loss', 
+    early_stop = EarlyStopping(monitor=metrics, 
                        min_delta=0.001, 
                        patience=20, 
                        mode='min', 
                        verbose=1,
                        restore_best_weights=True)
     checkpoint = ModelCheckpoint(save_weights_name, 
-                                 monitor='val_loss', 
+                                 monitor=metrics, 
                                  verbose=1, 
                                  save_best_only=True, 
                                  mode='min', 
                                  period=1)
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
+    reduce_lr = ReduceLROnPlateau(monitor=metrics, factor=0.2,
                               patience=5, min_lr=0.00001,verbose=1)
 
     graph = PlotCallback(save_plot_name)
@@ -112,8 +114,8 @@ def train(model,
                                      iou_threshold=0.7,
                                      score_threshold=0.3)
 
-    if network.__class__.__name__ == 'YOLO':
-        callbacks = [map_evaluator_cb, reduce_lr]
+    if network.__class__.__name__ == 'YOLO' and metrics =='mAP':
+        callbacks = [map_evaluator_cb, ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.00001,verbose=1)]
     else:
         callbacks= [early_stop, checkpoint, reduce_lr, graph] 
 
@@ -146,11 +148,8 @@ def plot(acc, val_acc, filename):
     plt.plot(acc, 'g')
     plt.plot(val_acc, 'r')
 
-    for i,j in enumerate(acc):
-        plt.annotate("{:.4f}".format(j),xy=(i,j))
-
-    for i,j in enumerate(val_acc):
-        plt.annotate("{:.4f}".format(j),xy=(i,j))
+    plt.annotate("{:.4f}".format(acc[-1]),xy=(len(acc),acc[-1]))
+    plt.annotate("{:.4f}".format(val_acc[-1]),xy=(len(val_acc),val_acc[-1]))
 
     plt.title('Model loss')
     plt.ylabel('Loss')

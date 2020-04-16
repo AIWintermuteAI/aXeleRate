@@ -67,9 +67,14 @@ class Classifier(object):
               train_times=1,
               valid_times=1,
               valid_img_folder="",
-              first_trainable_layer=None):
-        
+              first_trainable_layer=None,
+              metrics="val_loss"):
+
+        if metrics != "val_acc" and metrics != "val_loss":
+            print("Unknown metric for Classifier, valid options are: val_loss or val_acc. Defaulting ot val_loss")
+            metrics = "val_loss"
+
         train_generator, validation_generator = create_datagen(img_folder, valid_img_folder, batch_size, self._input_size, project_folder, augumentation)
-        return train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch,project_folder,first_trainable_layer)
+        return train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch,project_folder,first_trainable_layer, self, metrics)
 
     

@@ -25,17 +25,17 @@ def configs(network_type):
         },
         "weights" : {
             "full":   				"",
-            "backend":   		    "",
+            "backend":   		    "imagenet",
             "save_bottleneck":      False
         
         },
         "train" : {
-            "actual_epoch":         1,
+            "actual_epoch":         5,
             "train_image_folder":   "sample_datasets/classifier/imgs",
             "train_times":          1,
             "valid_image_folder":   "sample_datasets/classifier/imgs_validation",
             "valid_times":          1,
-            "valid_metric":         "accuracy",
+            "valid_metric":         "val_acc",
             "batch_size":           4,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/classifier",
@@ -62,7 +62,7 @@ def configs(network_type):
         },
         "weights" : {
             "full":   				"",
-            "backend":   		    ""
+            "backend":   		    "imagenet"
         },
         "train" : {
             "actual_epoch":         1,
@@ -94,7 +94,7 @@ def configs(network_type):
             },
         "weights" : {
             "full":   				"",
-            "backend":   		    ""
+            "backend":   		    "imagenet"
         },
             "train" : {
                 "actual_epoch":         1,
@@ -104,7 +104,7 @@ def configs(network_type):
                 "valid_image_folder":   "sample_datasets/segmentation/imgs_validation",
                 "valid_annot_folder":   "sample_datasets/segmentation/anns_validation",
                 "valid_times":          4,
-                "valid_metric":         "loss",
+                "valid_metric":         "val_loss",
                 "batch_size":           8,
                 "learning_rate":        1e-4,
                 "saved_folder":   		"/home/ubuntu/space safety/segment",

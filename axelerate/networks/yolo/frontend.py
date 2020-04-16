@@ -113,7 +113,8 @@ class YOLO(object):
               valid_times=1,
               valid_img_folder="",
               valid_ann_folder="",
-              first_trainable_layer=None):
+              first_trainable_layer=None,
+              metrics="mAP"):
 
         # 1. get annotations        
         train_annotations, valid_annotations = get_train_annotations(self._labels,
@@ -139,7 +140,8 @@ class YOLO(object):
                 nb_epoch           = nb_epoch,
                 project_folder = project_folder,
                 first_trainable_layer=first_trainable_layer,
-                network=self)
+                network=self,
+                metrics="mAP")
 
     def _get_loss_func(self, batch_size):
         return self._yolo_loss.custom_loss(batch_size)

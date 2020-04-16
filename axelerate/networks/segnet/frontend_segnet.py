@@ -75,8 +75,13 @@ class Segnet(object):
               valid_img_folder="",
               valid_ann_folder="",
               first_trainable_layer=None,
-              ignore_zero_class=False):
+              ignore_zero_class=False,
+              metrics='val_loss'):
         
+        if metrics != "val_acc" and metrics != "val_loss":
+            print("Unknown metric for SegNet, valid options are: val_loss or val_acc. Defaulting ot val_loss")
+            metrics = "val_loss"
+
         if ignore_zero_class:
             loss_k = masked_categorical_crossentropy
         else:
@@ -86,5 +91,5 @@ class Segnet(object):
         if valid_img_folder:
             validation_generator = create_batch_generator(valid_img_folder, valid_ann_folder, self._input_size,self._output_size, self._n_classes,batch_size,valid_times,False)
         
-        return train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch, project_folder, first_trainable_layer)
+        return train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch, project_folder, first_trainable_layer, self, metrics)
     

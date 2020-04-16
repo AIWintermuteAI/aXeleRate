@@ -57,7 +57,8 @@ def train_from_config(config,project_folder):
                                            config['train']['valid_image_folder'],
                                            config['train']['valid_annot_folder'],
                                            config['train']['first_trainable_layer'],
-                                           config['train']['ignore_zero_class'])
+                                           config['train']['ignore_zero_class'],
+                                           config['train']['valid_metric'])
                
     #  Classifier
     if config['model']['type']=='Classifier':
@@ -85,7 +86,8 @@ def train_from_config(config,project_folder):
                                                config['train']['train_times'],
                                                config['train']['valid_times'],
                                                config['train']['valid_image_folder'],
-                                               config['train']['first_trainable_layer'])
+                                               config['train']['first_trainable_layer'],
+                                               config['train']['valid_metric'])
 
 
 
@@ -125,7 +127,9 @@ def train_from_config(config,project_folder):
                                            config['train']['valid_times'],
                                            config['train']['valid_image_folder'],
                                            config['train']['valid_annot_folder'],
-                                           config['train']['first_trainable_layer'])
+                                           config['train']['first_trainable_layer'],
+                                           config['train']['valid_metric'])
+    # 4 Convert the model
     converter.convert_model(model_path,model_layers,config['train']['valid_image_folder'])    
     return model_path
 

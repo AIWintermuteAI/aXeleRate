@@ -82,7 +82,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
                                    config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
-        predict_multiple(segnet._network, inp_dir=config['train']['valid_image_folder'], out_dir='Inference_results', overlay_img=True)
+        predict_multiple(segnet._network, inp_dir=config['train']['valid_image_folder'], out_dir=dirname, overlay_img=True)
         print(evaluate(segnet._network, inp_images_dir=config['train']['valid_image_folder'], annotations_dir=config['train']['valid_annot_folder']))
 
 
