@@ -12,7 +12,7 @@ from keras.optimizers import Adam, SGD
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from datetime import datetime
 
-metrics_dict = {'val_acc':['accuracy'],'val_loss':[],'mAP':[]}
+metrics_dict = {'val_accuracy':['accuracy'],'val_loss':[],'mAP':[]}
 
 class PlotCallback(keras.callbacks.Callback):
     def __init__(self, filepath):

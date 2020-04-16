@@ -35,7 +35,7 @@ def configs(network_type):
             "train_times":          1,
             "valid_image_folder":   "sample_datasets/classifier/imgs_validation",
             "valid_times":          1,
-            "valid_metric":         "val_acc",
+            "valid_metric":         "val_accuracy",
             "batch_size":           4,
             "learning_rate":        1e-4,
             "saved_folder":   		"/home/ubuntu/space safety/classifier",

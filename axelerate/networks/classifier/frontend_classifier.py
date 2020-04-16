@@ -70,8 +70,8 @@ class Classifier(object):
               first_trainable_layer=None,
               metrics="val_loss"):
 
-        if metrics != "val_acc" and metrics != "val_loss":
-            print("Unknown metric for Classifier, valid options are: val_loss or val_acc. Defaulting ot val_loss")
+        if metrics != "val_accuracy" and metrics != "val_loss":
+            print("Unknown metric for Classifier, valid options are: val_loss or val_accuracy. Defaulting ot val_loss")
             metrics = "val_loss"
 
         train_generator, validation_generator = create_datagen(img_folder, valid_img_folder, batch_size, self._input_size, project_folder, augumentation)

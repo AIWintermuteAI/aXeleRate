@@ -78,8 +78,8 @@ class Segnet(object):
               ignore_zero_class=False,
               metrics='val_loss'):
         
-        if metrics != "val_acc" and metrics != "val_loss":
-            print("Unknown metric for SegNet, valid options are: val_loss or val_acc. Defaulting ot val_loss")
+        if metrics != "val_accuracy" and metrics != "val_loss":
+            print("Unknown metric for SegNet, valid options are: val_loss or val_accuracy. Defaulting ot val_loss")
             metrics = "val_loss"
 
         if ignore_zero_class:

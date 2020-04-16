@@ -5,11 +5,6 @@ from keras.layers import *
 
 from .config import IMAGE_ORDERING
 from .model_utils import get_segmentation_model
-from .vgg16 import get_vgg_encoder
-from .mobilenet import get_mobilenet_encoder
-from .basic_models import vanilla_encoder
-from .resnet50 import get_resnet50_encoder
-
 from axelerate.networks.common_utils.feature import create_feature_extractor
 
 mobilenet = {1:10,2:23,3:36,4:73,5:86 }
