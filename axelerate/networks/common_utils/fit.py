@@ -93,14 +93,14 @@ def train(model,
     early_stop = EarlyStopping(monitor=metrics, 
                        min_delta=0.001, 
                        patience=20, 
-                       mode='min', 
+                       mode='auto', 
                        verbose=1,
                        restore_best_weights=True)
     checkpoint = ModelCheckpoint(save_weights_name, 
                                  monitor=metrics, 
                                  verbose=1, 
                                  save_best_only=True, 
-                                 mode='min', 
+                                 mode='auto', 
                                  period=1)
     reduce_lr = ReduceLROnPlateau(monitor=metrics, factor=0.2,
                               patience=5, min_lr=0.00001,verbose=1)
