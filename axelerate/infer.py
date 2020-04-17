@@ -146,7 +146,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
             inference_time.append(prediction_time)
             labels = np.argmax(probs, axis=1) if len(probs) > 0 else [] 
             # 4. save detection result
-            image = draw_scaled_boxes(orig_image, boxes, probs, config['model']['labels'])
+            orig_image = draw_scaled_boxes(orig_image, boxes, probs, config['model']['labels'])
             output_path = os.path.join(dirname, os.path.split(img_fname)[-1])
             cv2.imwrite(output_path, orig_image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
