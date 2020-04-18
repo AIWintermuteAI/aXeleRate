@@ -41,7 +41,8 @@ def train_from_config(config,project_folder):
         # 1. Construct the model 
         segnet = create_segnet(config['model']['architecture'],
                                    config['model']['input_size'],
-                                   config['model']['n_classes'])   
+                                   config['model']['n_classes'],
+                                   config['weights']['backend'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(config['weights']['full'], by_name=True)
         # 3. actual training 
@@ -72,7 +73,9 @@ def train_from_config(config,project_folder):
                                        labels,
                                        config['model']['input_size'],
                                        config['model']['fully-connected'],
-                                       config['model']['dropout'])   
+                                       config['model']['dropout'],
+                                       config['weights']['backend'],
+                                       config['weights']['save_bottleneck'])   
         # 2. Load the pretrained weights (if any) 
         classifier.load_weights(config['weights']['full'], by_name=True)
 
@@ -110,7 +113,8 @@ def train_from_config(config,project_folder):
                            config['model']['coord_scale'],
                            config['model']['class_scale'],
                            config['model']['object_scale'],
-                           config['model']['no_object_scale'])
+                           config['model']['no_object_scale'],
+                           config['weights']['backend'])
         
         # 2. Load the pretrained weights (if any) 
         yolo.load_weights(config['weights']['full'], by_name=True)

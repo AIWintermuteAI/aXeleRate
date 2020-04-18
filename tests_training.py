@@ -17,7 +17,7 @@ def configs(network_type):
     classifier = {
         "model" : {
             "type":                 "Classifier",
-            "architecture":         "MobileNet7_5",
+            "architecture":         "MobileNet2_5",
             "input_size":           224,
             "fully-connected":      [],
             "labels":               [],
@@ -26,11 +26,11 @@ def configs(network_type):
         "weights" : {
             "full":   				"",
             "backend":   		    "imagenet",
-            "save_bottleneck":      False
+            "save_bottleneck":      True
         
         },
         "train" : {
-            "actual_epoch":         5,
+            "actual_epoch":         1,
             "train_image_folder":   "sample_datasets/classifier/imgs",
             "train_times":          1,
             "valid_image_folder":   "sample_datasets/classifier/imgs_validation",
@@ -51,7 +51,7 @@ def configs(network_type):
     detector = {
         "model":{
             "type":                 "Detector",
-            "architecture":         "MobileNet7_5",
+            "architecture":         "MobileNet2_5",
             "input_size":           224,
             "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
             "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
@@ -62,7 +62,7 @@ def configs(network_type):
         },
         "weights" : {
             "full":   				"",
-            "backend":   		    "imagenet"
+            "backend":   		    ""
         },
         "train" : {
             "actual_epoch":         1,

@@ -17,7 +17,6 @@ resnet50 = {1:2,2:37,3:80,4:142,5:174 }
 def chopper(model, model_name, f):
     outputs = model.layers[model_name[f]].output
 
-
 def segnet_decoder(f, n_classes, n_up=3):
 
     assert n_up >= 2
@@ -59,9 +58,9 @@ def _segnet(n_classes, encoder_input, encoder_output,  input_height=416, input_w
     return model
 
 
-def full_yolo_segnet(n_classes, input_size = 224, encoder_level=3):
+def full_yolo_segnet(n_classes, input_size, encoder_level, weights):
 
-    encoder = create_feature_extractor('Full Yolo',input_size)
+    encoder = create_feature_extractor('Full Yolo',input_size, weights)
     encoder_output = encoder.feature_extractor.layers[full_yolo[encoder_level]].output
     encoder_input = encoder.feature_extractor.inputs[0]
 
@@ -69,9 +68,9 @@ def full_yolo_segnet(n_classes, input_size = 224, encoder_level=3):
     model.model_name = "vgg_segnet"
     return model
 
-def tiny_yolo_segnet(n_classes, input_size = 224, encoder_level=3):
+def tiny_yolo_segnet(n_classes, input_size, encoder_level, weights):
 
-    encoder = create_feature_extractor('Tiny Yolo',input_size)
+    encoder = create_feature_extractor('Tiny Yolo',input_size, weights)
     encoder_output = encoder.feature_extractor.layers[tiny_yolo[encoder_level]].output
     encoder_input = encoder.feature_extractor.inputs[0]
 
@@ -79,9 +78,9 @@ def tiny_yolo_segnet(n_classes, input_size = 224, encoder_level=3):
     model.model_name = "vgg_segnet"
     return model
 
-def squeezenet_segnet(n_classes, input_size = 224, encoder_level=3):
+def squeezenet_segnet(n_classes, input_size, encoder_level, weights):
 
-    encoder = create_feature_extractor('SqueezeNet',input_size)
+    encoder = create_feature_extractor('SqueezeNet',input_size, weights)
     encoder_output = encoder.feature_extractor.layers[squeezenet[encoder_level]].output
     encoder_input = encoder.feature_extractor.inputs[0]
 
@@ -89,9 +88,9 @@ def squeezenet_segnet(n_classes, input_size = 224, encoder_level=3):
     model.model_name = "vgg_segnet"
     return model
 
-def vgg16_segnet(n_classes, input_size = 224, encoder_level=3):
+def vgg16_segnet(n_classes, input_size, encoder_level, weights):
 
-    encoder = create_feature_extractor('VGG16',input_size)
+    encoder = create_feature_extractor('VGG16',input_size, weights)
     encoder_output = encoder.feature_extractor.layers[vgg16[encoder_level]].output
     encoder_input = encoder.feature_extractor.inputs[0]
 
@@ -100,9 +99,9 @@ def vgg16_segnet(n_classes, input_size = 224, encoder_level=3):
     return model
 
 
-def resnet50_segnet(n_classes, input_size = 224, encoder_level=3):
+def resnet50_segnet(n_classes, input_size, encoder_level, weights):
 
-    encoder = create_feature_extractor('ResNet50',input_size)
+    encoder = create_feature_extractor('ResNet50',input_size, weights)
     encoder_output = encoder.feature_extractor.layers[resnet50[encoder_level]].output
     encoder_input = encoder.feature_extractor.inputs[0]
 
@@ -111,9 +110,9 @@ def resnet50_segnet(n_classes, input_size = 224, encoder_level=3):
     return model
 
 
-def mobilenet_segnet(n_classes, input_size = 224, encoder_level=3, architecture = 'MobileNet2_5'):
+def mobilenet_segnet(n_classes, input_size, encoder_level, weights, architecture = 'MobileNet2_5'):
     
-    encoder = create_feature_extractor(architecture, input_size)
+    encoder = create_feature_extractor(architecture, input_size, weights)
     encoder_output = encoder.feature_extractor.layers[mobilenet[encoder_level]].output
     encoder_input = encoder.feature_extractor.inputs[0]
 
@@ -121,10 +120,3 @@ def mobilenet_segnet(n_classes, input_size = 224, encoder_level=3, architecture 
     model.model_name = "mobilenet_segnet"
     return model
 
-
-if __name__ == '__main__':
-    m = vgg_segnet(101)
-    m = segnet(101)
-    # m = mobilenet_segnet( 101 )
-    # from keras.utils import plot_model
-    # plot_model( m , show_shapes=True , to_file='model.png')

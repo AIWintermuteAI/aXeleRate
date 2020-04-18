@@ -29,11 +29,12 @@ def create_yolo(architecture,
                 coord_scale=1.0,
                 class_scale=1.0,
                 object_scale=5.0,
-                no_object_scale=1.0):
+                no_object_scale=1.0,
+                weights=None):
 
     n_classes = len(labels)
     n_boxes = int(len(anchors)/2)
-    yolo_network = create_yolo_network(architecture, input_size, n_classes, n_boxes)
+    yolo_network = create_yolo_network(architecture, input_size, n_classes, n_boxes, weights)
     yolo_loss = YoloLoss(yolo_network.get_grid_size(),
                          n_classes,
                          anchors,
@@ -67,10 +68,10 @@ class YOLO(object):
 
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):
-            print("Loading pre-trained weights in", weight_path)
+            print("Loading pre-trained weights for the whole model: ", weight_path)
             self._yolo_network.load_weights(weight_path, by_name=by_name)
         else:
-            print("Fail to load pre-trained weights-starting training from scratch")
+            print("Failed to load pre-trained weights for the whole model. It might be because you didn't specify any or the weight file cannot be found")
 
     def predict(self, image, height, width, threshold=0.3):
         """

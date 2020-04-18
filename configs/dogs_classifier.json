@@ -7,19 +7,23 @@
         "labels":               [],
         "dropout" : 		0.2
     },
-    "pretrained" : {
-        "full":   				""
+     "weights" : {
+            "full":   				"",
+            "backend":   		    "imagenet",
+            "save_bottleneck":      false
+        
     },
     "train" : {
         "actual_epoch":         50,
         "train_image_folder":   "/home/ubuntu/datasets/dogs_classification/imgs",
-        "train_times":          4,
+        "train_times":          1,
         "valid_image_folder":   "/home/ubuntu/datasets/dogs_classification/imgs_validation",
-        "valid_times":          4,
-        "batch_size":           8,
-        "learning_rate":        1e-4,
+        "valid_times":          1,
+        "valid_metric":         "val_loss",
+        "batch_size":           4,
+        "learning_rate":        1e-3,
         "saved_folder":   		"classifier",
-        "first_trainable_layer": "block4_conv1",
+        "first_trainable_layer": "",
         "augumentation":				true
     },
     "converter" : {

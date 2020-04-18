@@ -10,8 +10,9 @@ from axelerate.networks.common_utils.feature import create_feature_extractor
 def create_yolo_network(architecture,
                         input_size,
                         nb_classes,
-                        nb_box):
-    feature_extractor = create_feature_extractor(architecture, input_size)
+                        nb_box,
+                        weights):
+    feature_extractor = create_feature_extractor(architecture, input_size, weights)
     yolo_net = YoloNetwork(feature_extractor,
                            input_size,
                            nb_classes,

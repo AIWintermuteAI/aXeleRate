@@ -15,22 +15,22 @@ def masked_categorical_crossentropy(gt , pr ):
     mask = 1-  gt[: , : , 0 ] 
     return categorical_crossentropy( gt , pr )*mask
 
-def create_segnet(architecture, input_size, n_classes):
+def create_segnet(architecture, input_size, n_classes, weights = None):
 
     if architecture == 'Inception3':
         raise Exception('Inception3 not supported with SegNet! Only support Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50 at the moment!')
     elif architecture == 'SqueezeNet':
-        model = squeezenet_segnet(n_classes,input_size, encoder_level=4)
+        model = squeezenet_segnet(n_classes,input_size, encoder_level=4, weights = weights)
     elif architecture == 'Full Yolo':
-        model = full_yolo_segnet(n_classes,input_size, encoder_level=4)
+        model = full_yolo_segnet(n_classes,input_size, encoder_level=4, weights = weights)
     elif architecture == 'Tiny Yolo':
-        model = tiny_yolo_segnet(n_classes,input_size, encoder_level=4)
+        model = tiny_yolo_segnet(n_classes,input_size, encoder_level=4, weights = weights)
     elif architecture == 'VGG16':
-        model = vgg16_segnet(n_classes,input_size, encoder_level=4)
+        model = vgg16_segnet(n_classes,input_size, encoder_level=4, weights = weights)
     elif architecture == 'ResNet50':
-        model = resnet50_segnet(n_classes,input_size, encoder_level=4)
+        model = resnet50_segnet(n_classes,input_size, encoder_level=4, weights = weights)
     elif 'MobileNet' in architecture:
-        model = mobilenet_segnet(n_classes,input_size, encoder_level=4, architecture = architecture)
+        model = mobilenet_segnet(n_classes,input_size, encoder_level=4, weights = weights, architecture = architecture)
 
     output_size = model.output_height
     network = Segnet(model,input_size, n_classes, output_size)
@@ -48,12 +48,13 @@ class Segnet(object):
         self._input_size = input_size
         self._output_size = output_size
         #self._norm = 
+
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):
-            print("Loading pre-trained weights in", weight_path)
+            print("Loading pre-trained weights for the whole model: ", weight_path)
             self._network.load_weights(weight_path, by_name=by_name)
         else:
-            print("Fail to load pre-trained weights-starting training from scratch")
+            print("Failed to load pre-trained weights for the whole model. It might be because you didn't specify any or the weight file cannot be found")
 
     def predict(self, image):
         preprocessed_image = prepare_image(image,show=False)

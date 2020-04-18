@@ -10,7 +10,7 @@ from keras.applications.resnet50 import ResNet50
 
 from .mobilenet_sipeed.mobilenet import MobileNet
 
-def create_feature_extractor(architecture, input_size):
+def create_feature_extractor(architecture, input_size, weights = None):
     """
     # Args
         architecture : str
@@ -19,7 +19,6 @@ def create_feature_extractor(architecture, input_size):
     # Returns
         feature_extractor : BaseFeatureExtractor instance
     """
-    weights = False
     if architecture == 'Inception3':
         feature_extractor = Inception3Feature(input_size, weights)
     elif architecture == 'SqueezeNet':
@@ -27,11 +26,11 @@ def create_feature_extractor(architecture, input_size):
     elif architecture == 'MobileNet1_0':
         feature_extractor = MobileNetFeature(input_size, weights, alpha=1)
     elif architecture == 'MobileNet7_5':
-        feature_extractor = MobileNetFeature(input_size, weights,alpha=0.75)
+        feature_extractor = MobileNetFeature(input_size, weights, alpha=0.75)
     elif architecture == 'MobileNet5_0':
-        feature_extractor = MobileNetFeature(input_size, weights,alpha=0.5)
+        feature_extractor = MobileNetFeature(input_size, weights, alpha=0.5)
     elif architecture == 'MobileNet2_5':
-        feature_extractor = MobileNetFeature(input_size, weights,alpha=0.25)
+        feature_extractor = MobileNetFeature(input_size, weights, alpha=0.25)
     elif architecture == 'Full Yolo':
         feature_extractor = FullYoloFeature(input_size, weights)
     elif architecture == 'Tiny Yolo':
@@ -201,7 +200,13 @@ class FullYoloFeature(BaseFeatureExtractor):
         x = LeakyReLU(alpha=0.1)(x)
 
         self.feature_extractor = Model(input_image, x)
-        if weights:
+
+        if weights == 'imagenet':
+            print('Imagenet for YOLO backend are not available yet, defaulting to random weights')
+        elif weights == None:
+            pass
+        else:
+            print('Loaded backend weigths: '+weights)
             self.feature_extractor.load_weights(weights)
 
     def normalize(self, image):
@@ -238,7 +243,13 @@ class TinyYoloFeature(BaseFeatureExtractor):
             x = LeakyReLU(alpha=0.1)(x)
 
         self.feature_extractor = Model(input_image, x)
-        if weights:
+
+        if weights == 'imagenet':
+            print('Imagenet for YOLO backend are not available yet, defaulting to random weights')
+        elif weights == None:
+            pass
+        else:
+            print('Loaded backend weigths: '+weights)
             self.feature_extractor.load_weights(weights)
 
 
@@ -249,7 +260,15 @@ class MobileNetFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights, alpha):
         #input_image = Input(shape=(input_size, input_size, 3))
-        mobilenet = MobileNet(input_shape=(input_size,input_size,3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = 'imagenet', classes = 1000, include_top=False,backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
+        
+        if weights == 'imagenet':
+            mobilenet = MobileNet(input_shape=(input_size,input_size,3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = 'imagenet', classes = 1000, include_top=False,backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
+            print('Successfully loaded imagenet backend weights')
+        else:
+            mobilenet = MobileNet(input_shape=(input_size,input_size,3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = None, include_top=False, backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
+            if weights:
+                print('Loaded backend weigths: '+weights)
+                mobilenet.load_weights(weights)
 
         #x = mobilenet(input_image)
         self.feature_extractor = mobilenet  
@@ -308,8 +327,15 @@ class SqueezeNetFeature(BaseFeatureExtractor):
         x = fire_module(x, fire_id=9, squeeze=64, expand=256)
 
         self.feature_extractor = Model(input_image, x)  
-        if weights:
+        
+        if weights == 'imagenet':
+            print('Imagenet for SqueezeNet backend are not available yet, defaulting to random weights')
+        elif weights == None:
+            pass
+        else:
+            print('Loaded backend weigths: '+weights)
             self.feature_extractor.load_weights(weights)
+
 
     def normalize(self, image):
         image = image[..., ::-1]
@@ -327,12 +353,16 @@ class Inception3Feature(BaseFeatureExtractor):
         #input_image = Input(shape=(input_size, input_size, 3))
 
         inception = InceptionV3(input_shape=(input_size,input_size,3), include_top=False)
-        if weights:
-            inception.load_weights(weights)
         #x = inception(input_image)
 
         self.feature_extractor = inception
-        if weights:
+
+        if weights == 'imagenet':
+            print('Imagenet for Inception3 backend are not available yet, defaulting to random weights')
+        elif weights == None:
+            pass
+        else:
+            print('Loaded backend weigths: '+weights)
             self.feature_extractor.load_weights(weights)
 
     def normalize(self, image):
@@ -345,9 +375,15 @@ class Inception3Feature(BaseFeatureExtractor):
 class VGG16Feature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights):
-        vgg16 = VGG16(input_shape=(input_size, input_size, 3), include_top=False)
-        if weights:
-            vgg16.load_weights(weights)
+
+        if weights == 'imagenet':
+            vgg16 = VGG16(input_shape=(input_size, input_size, 3), weights='imagenet', include_top=False)
+            print('Successfully loaded imagenet backend weights')
+        else:
+            vgg16 = VGG16(input_shape=(input_size, input_size, 3), weights=None, include_top=False)
+            if weights:
+                vgg16.load_weights(weights)
+                print('Loaded backend weigths: ' + weights)
         self.feature_extractor = vgg16
 
     def normalize(self, image):
@@ -363,10 +399,16 @@ class VGG16Feature(BaseFeatureExtractor):
 class ResNet50Feature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights):
-        resnet50 = ResNet50(input_shape=(input_size, input_size, 3), include_top=False, pooling = 'avg')
-        if weights:
-            resnet50.load_weights(weights)
-        resnet50.layers.pop() # remove the average pooling layer
+
+        if weights == 'imagenet':
+            resnet50 = ResNet50(input_shape=(input_size, input_size, 3), weights='imagenet', include_top=False, pooling = None)
+            print('Successfully loaded imagenet backend weights')
+        else:
+            resnet50 = ResNet50(input_shape=(input_size, input_size, 3), include_top=False, pooling = None)
+            if weights:
+                resnet50.load_weights(weights)
+                print('Loaded backend weigths: ' + weights)
+
         self.feature_extractor = Model(resnet50.layers[0].input, resnet50.layers[-1].output)
 
     def normalize(self, image):
