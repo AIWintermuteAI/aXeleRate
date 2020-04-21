@@ -3,10 +3,11 @@
         "type":                 "SegNet",
         "architecture":         "MobileNet",
         "input_size":           224,
-        "n_classes" : 		21
+        "n_classes" : 		20
     },
-    "pretrained" : {
-        "full":   				""
+    "weights" : {
+        "full":   				"",
+        "backend":              "imagenet"
     },
     "train" : {
         "actual_epoch":         1,
@@ -16,6 +17,7 @@
         "valid_image_folder":   "/home/ubuntu/datasets/segmentation/imgs_validation",
         "valid_annot_folder":   "/home/ubuntu/datasets/segmentation/anns_validation",
         "valid_times":          4,
+        "valid_metric":         "val_loss",
         "batch_size":           8,
         "learning_rate":        1e-4,
         "saved_folder":   		"segment",

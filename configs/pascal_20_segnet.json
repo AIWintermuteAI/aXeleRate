@@ -3,10 +3,11 @@
         "type":                 "SegNet",
         "architecture":         "MobileNet7_5",
         "input_size":           224,
-        "n_classes" : 		21
+        "n_classes" : 		20
     },
-    "pretrained" : {
-        "full":   				""
+    "weights" : {
+        "full":   				"",
+        "backend":              "imagenet"
     },
     "train" : {
         "actual_epoch":         50,
@@ -16,6 +17,7 @@
         "valid_image_folder":   "/home/ubuntu/datasets/pascal_20_segmentation/imgs_validation",
         "valid_annot_folder":   "/home/ubuntu/datasets/pascal_20_segmentation/anns_validation",
         "valid_times":          1,
+        "valid_metric":         "val_loss",
         "batch_size":           8,
         "learning_rate":        1e-3,
         "saved_folder":   		"pascal_20",

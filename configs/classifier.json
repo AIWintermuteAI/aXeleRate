@@ -7,8 +7,11 @@
         "labels":               [],
         "dropout" : 		0.5
     },
-    "pretrained" : {
-        "full":   				""
+     "weights" : {
+            "full":   				"",
+            "backend":   		    "imagenet",
+            "save_bottleneck":      false
+        
     },
     "train" : {
         "actual_epoch":         1,
@@ -16,6 +19,7 @@
         "train_times":          4,
         "valid_image_folder":   "/home/ubuntu/datasets/classifier/imgs_validation",
         "valid_times":          4,
+        "valid_metric":         "val_accuracy",
         "batch_size":           4,
         "learning_rate":        1e-4,
         "saved_folder":   		"classifier",
