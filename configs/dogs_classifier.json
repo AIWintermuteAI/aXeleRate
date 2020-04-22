@@ -1,9 +1,9 @@
 {
     "model" : {
         "type":                 "Classifier",
-        "architecture":         "VGG16",
+        "architecture":         "MobileNet5_0",
         "input_size":           224,
-        "fully-connected":      [100,50],
+        "fully-connected":      [],
         "labels":               [],
         "dropout" : 		0.2
     },
@@ -14,15 +14,15 @@
         
     },
     "train" : {
-        "actual_epoch":         50,
+        "actual_epoch":         100,
         "train_image_folder":   "/home/ubuntu/datasets/dogs_classification/imgs",
         "train_times":          1,
         "valid_image_folder":   "/home/ubuntu/datasets/dogs_classification/imgs_validation",
         "valid_times":          1,
         "valid_metric":         "val_accuracy",
-        "batch_size":           4,
+        "batch_size":           16,
         "learning_rate":        1e-3,
-        "saved_folder":   		"classifier",
+        "saved_folder":   		"dogs_classifier",
         "first_trainable_layer": "",
         "augumentation":				true
     },

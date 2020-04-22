@@ -30,7 +30,7 @@ def configs(network_type):
         
         },
         "train" : {
-            "actual_epoch":         1,
+            "actual_epoch":         5,
             "train_image_folder":   "sample_datasets/classifier/imgs",
             "train_times":          1,
             "valid_image_folder":   "sample_datasets/classifier/imgs_validation",
@@ -65,7 +65,7 @@ def configs(network_type):
             "backend":   		    ""
         },
         "train" : {
-            "actual_epoch":         1,
+            "actual_epoch":         5,
             "train_image_folder":   "sample_datasets/detector/imgs",
             "train_annot_folder":   "sample_datasets/detector/anns",
             "train_times":          1,
@@ -97,7 +97,7 @@ def configs(network_type):
             "backend":   		    "imagenet"
         },
             "train" : {
-                "actual_epoch":         1,
+                "actual_epoch":         5,
                 "train_image_folder":   "sample_datasets/segmentation/imgs",
                 "train_annot_folder":   "sample_datasets/segmentation/anns",
                 "train_times":          4,

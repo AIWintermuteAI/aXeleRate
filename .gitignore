@@ -18,4 +18,5 @@ example_scripts/edge_tpu/
 *.h5
 *.tflite
 *.kmodel
-*.png
+*.jpg
+axelerate/networks/common_utils/feature.py

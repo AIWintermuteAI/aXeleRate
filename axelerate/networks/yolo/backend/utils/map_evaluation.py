@@ -39,9 +39,9 @@ class MapEvaluation(keras.callbacks.Callback):
         self._save_name = save_name
         self._tensorboard = tensorboard
 
-        self.loss = []
-        self.val_loss = []
-        self.maps = []
+        self.loss = [0]
+        self.val_loss = [0]
+        self.maps = [0]
         self._save_plot_name = save_plot_name
 
         self.bestMap = 0
@@ -246,17 +246,14 @@ def plot(acc, val_acc, maps, filename):
     plt.plot(val_acc, 'r')
     plt.plot(maps, 'b')
 
-    for i,j in enumerate(acc):
-        plt.annotate("{:.4f}".format(j),xy=(i,j))
+    plt.annotate("{:.4f}".format(acc[-1]),xy=(len(acc)-1,acc[-1]))
 
-    for i,j in enumerate(val_acc):
-        plt.annotate("{:.4f}".format(j),xy=(i,j))
+    plt.annotate("{:.4f}".format(val_acc[-1]),xy=(len(val_acc)-1,val_acc[-1]))
 
-    for i,j in enumerate(maps):
-        plt.annotate("{:.4f}".format(j),xy=(i,j))
+    plt.annotate("{:.4f}".format(maps[-1]),xy=(len(maps)-1,maps[-1]))
 
-    plt.title('Model loss')
-    plt.ylabel('Loss,mAP')
+    plt.title('Training graph')
+    plt.ylabel('Loss, mAP')
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test', 'mAP'], loc='upper left')
     #plt.show(block=False)

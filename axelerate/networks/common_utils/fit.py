@@ -15,17 +15,19 @@ from datetime import datetime
 metrics_dict = {'val_accuracy':['accuracy'],'val_loss':[],'mAP':[]}
 
 class PlotCallback(keras.callbacks.Callback):
-    def __init__(self, filepath):
+    def __init__(self, filepath, metric):
         super(PlotCallback, self).__init__()
         self.filepath = filepath
-        self.loss = [0]
-        self.val_loss = [0]
+        self.metric = metric.split("_")[1]
+        self.val_metric = metric
+        self.values = [0]
+        self.val_values = [0]
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
-        self.loss.append(logs.get("loss"))
-        self.val_loss.append(logs.get("val_loss"))
-        plot(self.loss,self.val_loss,self.filepath)
+        self.values.append(logs.get(self.metric))
+        self.val_values.append(logs.get(self.val_metric))
+        plot(self.values,self.val_values,self.filepath)
 
 def train(model,
          loss_func,
@@ -84,6 +86,7 @@ def train(model,
 
     # 2 create optimizer
     optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    #optimizer = SGD(lr=learning_rate, nesterov=True)
 
     # 3. create loss function
     model.compile(loss=loss_func,optimizer=optimizer,metrics=metrics_dict[metrics])
@@ -105,8 +108,6 @@ def train(model,
     reduce_lr = ReduceLROnPlateau(monitor=metrics, factor=0.2,
                               patience=5, min_lr=0.00001,verbose=1)
 
-    graph = PlotCallback(save_plot_name)
-
     map_evaluator_cb = MapEvaluation(network, valid_batch_gen,
                                      save_best=True,
                                      save_name=save_weights_name,
@@ -117,6 +118,7 @@ def train(model,
     if network.__class__.__name__ == 'YOLO' and metrics =='mAP':
         callbacks = [map_evaluator_cb, ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.00001,verbose=1)]
     else:
+        graph = PlotCallback(save_plot_name,metrics)
         callbacks= [early_stop, checkpoint, reduce_lr, graph] 
 
     # 4. training
@@ -143,17 +145,17 @@ def _print_time(process_time):
     else:
         print("{:d}-mins to train".format(int(process_time/60)))
 
-def plot(acc, val_acc, filename):
+def plot(metric, val_metric, filename):
     plt.figure(figsize=(10,10))
-    plt.plot(acc, 'g')
-    plt.plot(val_acc, 'r')
+    plt.plot(metric, 'g')
+    plt.plot(val_metric, 'r')
 
-    plt.annotate("{:.4f}".format(acc[-1]),xy=(len(acc),acc[-1]))
-    plt.annotate("{:.4f}".format(val_acc[-1]),xy=(len(val_acc),val_acc[-1]))
+    plt.annotate("{:.4f}".format(metric[-1]),xy=(len(metric)-1,metric[-1]))
+    plt.annotate("{:.4f}".format(val_metric[-1]),xy=(len(val_metric)-1,val_metric[-1]))
 
-    plt.title('Model loss')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
+    plt.title('Training graph')
+    #plt.ylabel('Loss')
+    #plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
     #plt.show(block=False)
     #plt.pause(1)
