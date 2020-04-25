@@ -369,11 +369,7 @@ class DenseNet121Feature(BaseFeatureExtractor):
         self.feature_extractor = densenet
 
     def normalize(self, image):
-        image = image / 255.
-        image = image - 0.5
-        image = image * 2.
-
-        return image
+        return DenseNet121.preprocess_input(image)
 
 class NASNetMobileFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
@@ -391,14 +387,8 @@ class NASNetMobileFeature(BaseFeatureExtractor):
         self.feature_extractor = nasnetmobile
 
     def normalize(self, image):
-        #image = image[..., ::-1]
-        image = image.astype('float')
 
-        image[..., 0] -= 103.939
-        image[..., 1] -= 116.779
-        image[..., 2] -= 123.68
-
-        return image 
+        return NASNetMobile.preprocess_input(image)
 
 class ResNet50Feature(BaseFeatureExtractor):
     """docstring for ClassName"""

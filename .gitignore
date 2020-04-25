@@ -19,3 +19,4 @@ example_scripts/edge_tpu/
 *.tflite
 *.kmodel
 *.jpg
+donkey_mark/
