@@ -18,7 +18,7 @@ while(True):
     kpu.memtest()
     img = sensor.snapshot()
     #img = img.rotation_corr(z_rotation=90.0)   uncomment if need rotation correction - only present in full maixpy firmware
-    a = img.pix_to_ai()
+    #a = img.pix_to_ai()
     fmap = kpu.forward(task, img)
     plist=fmap[:]
     pmax=max(plist)
