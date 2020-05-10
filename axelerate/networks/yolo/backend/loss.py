@@ -123,8 +123,9 @@ class _Activator(object):
         """
         # bx = sigmoid(tx) + cx, by = sigmoid(ty) + cy
         batch_size = tf.shape(y_pred)[0]
-        grid_size = tf.shape(y_pred)[1]
-        cell_grid = create_cell_grid(grid_size, batch_size)
+        grid_size_y = tf.shape(y_pred)[1]
+        grid_size_x = tf.shape(y_pred)[2]
+        cell_grid = create_cell_grid(grid_size_y, grid_size_x, batch_size)
         
         pred_box_xy = tf.sigmoid(y_pred[..., :2]) + cell_grid
         pred_box_wh = tf.exp(y_pred[..., 2:4]) * self._anchor_boxes
@@ -167,9 +168,9 @@ class _Activator(object):
         return true_box_xy, true_box_wh, true_box_conf, true_box_class
 
 
-def create_cell_grid(grid_size, batch_size):
-    x_pos = tf.to_float(tf.range(grid_size))
-    y_pos = tf.to_float(tf.range(grid_size))
+def create_cell_grid(grid_size_y, grid_size_x, batch_size):
+    x_pos = tf.to_float(tf.range(grid_size_x))
+    y_pos = tf.to_float(tf.range(grid_size_y))
     xx, yy = tf.meshgrid(x_pos, y_pos)
     xx = tf.expand_dims(xx, -1)
     yy = tf.expand_dims(yy, -1)

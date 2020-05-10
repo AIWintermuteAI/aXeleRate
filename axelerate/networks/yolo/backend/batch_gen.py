@@ -24,7 +24,7 @@ def create_batch_generator(annotations,
         worker : BatchGenerator instance
     """
 
-    img_aug = ImgAugment(input_size, input_size, jitter)
+    img_aug = ImgAugment(input_size[0], input_size[1], jitter)
     yolo_box = _YoloBox(input_size, grid_size)
     netin_gen = _NetinGen(input_size, norm)
     netout_gen = _NetoutGen(grid_size, annotations.n_classes(), anchors)
@@ -137,7 +137,9 @@ class _YoloBox(object):
         # 1. minimax box -> centroid box
         centroid_boxes = to_centroid(boxes).astype(np.float32)
         # 2. image scale -> grid scale
-        norm_boxes = centroid_boxes * (self._grid_size / self._input_size)
+        norm_boxes = np.zeros_like(centroid_boxes)
+        norm_boxes[0::2] = centroid_boxes[0::2] * (self._grid_size[1] / self._input_size[1])
+        norm_boxes[1::2] = centroid_boxes[1::2] * (self._grid_size[0] / self._input_size[0])
         return norm_boxes
 
 
@@ -187,7 +189,7 @@ class _NetoutGen(object):
 
     def _set_tensor_shape(self, grid_size, nb_classes):
         nb_boxes = len(self._anchors)
-        return (grid_size, grid_size, nb_boxes, 4+1+nb_classes)
+        return (grid_size[1], grid_size[0], nb_boxes, 4+1+nb_classes)
 
     def _find_anchor_idx(self, norm_box):
         _, _, center_w, center_h = norm_box

@@ -136,7 +136,8 @@ def centroid_box_iou(box1, box2):
 
 def to_centroid(minmax_boxes):
     """
-    minmax_boxes : (N, 4)
+    minmax_boxes : (N, 4) [50, 100, 200, 150]
+    centroid_boxes: [125. 125. 150.  50.]
     """
     minmax_boxes = minmax_boxes.astype(np.float)
     centroid_boxes = np.zeros_like(minmax_boxes)

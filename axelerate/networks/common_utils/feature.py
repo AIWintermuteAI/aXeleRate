@@ -63,8 +63,7 @@ class BaseFeatureExtractor(object):
 
     def get_output_size(self):
         output_shape = self.feature_extractor.get_output_shape_at(-1)
-        assert output_shape[1] == output_shape[2]
-        return output_shape[1]
+        return output_shape[1:3]
 
     def extract(self, input_image):
         return self.feature_extractor(input_image)
@@ -259,11 +258,11 @@ class TinyYoloFeature(BaseFeatureExtractor):
 class MobileNetFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights, alpha):
-        input_image = Input(shape=(input_size, input_size, 3))
+        input_image = Input(shape=(input_size[0], input_size[1], 3))
         input_shapes_imagenet = [(128, 128,3), (160, 160,3), (192, 192,3), (224, 224,3)]
-        input_shape =(128, 128,3)
+        input_shape =(128,128,3)
         for item in input_shapes_imagenet:
-            if item[0] <= input_size:
+            if item[0] <= input_size[0]:
                 input_shape = item
 
         if weights == 'imagenet':
