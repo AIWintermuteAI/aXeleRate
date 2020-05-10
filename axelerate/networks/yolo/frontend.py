@@ -76,7 +76,7 @@ class YOLO(object):
     def predict(self, image, height, width, threshold=0.3):
         """
         # Args
-            image : 3d-array (BGR ordered)
+            image : 3d-array (RGB ordered)
         
         # Returns
             boxes : array, shape of (N, 4)
@@ -95,9 +95,9 @@ class YOLO(object):
         netout = self._yolo_network.forward(image)
         elapsed_ms = (time.time() - start_time) * 1000
         boxes, probs = self._yolo_decoder.run(netout, threshold)
-        
         if len(boxes) > 0:
             boxes = _to_original_scale(boxes)
+            print(boxes, probs)
             return elapsed_ms, boxes, probs
         else:
             return elapsed_ms, [], []

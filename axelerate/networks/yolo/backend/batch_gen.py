@@ -189,7 +189,7 @@ class _NetoutGen(object):
 
     def _set_tensor_shape(self, grid_size, nb_classes):
         nb_boxes = len(self._anchors)
-        return (grid_size[1], grid_size[0], nb_boxes, 4+1+nb_classes)
+        return (grid_size[0], grid_size[1], nb_boxes, 4+1+nb_classes)
 
     def _find_anchor_idx(self, norm_box):
         _, _, center_w, center_h = norm_box
@@ -198,9 +198,12 @@ class _NetoutGen(object):
     
     def _generate_y(self, best_anchor, obj_indx, box):
         y = np.zeros(self._tensor_shape)
+        max_grid_y = self._tensor_shape[0]-1
+        max_grid_x = self._tensor_shape[1]-1
         grid_x, grid_y, _, _ = box.astype(int)
-        if grid_x > 6: grid_x = 6
-        if grid_y > 6: grid_y = 6
+        if grid_x > max_grid_x: grid_x = max_grid_x
+        if grid_y > max_grid_y: grid_y = max_grid_y
+        
         y[grid_y, grid_x, best_anchor, 0:4] = box
         y[grid_y, grid_x, best_anchor, 4  ] = 1.
         y[grid_y, grid_x, best_anchor, 5+obj_indx] = 1

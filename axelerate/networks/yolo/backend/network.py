@@ -64,8 +64,8 @@ class YoloNetwork(object):
         return self._model
 
     def get_grid_size(self):
-        _, h, w, _, _ = self._model.get_output_shape_at(-1)
-        return (h,w)
+        _, w, h, _, _ = self._model.get_output_shape_at(-1)
+        return (w,h)
 
     def get_normalize_func(self):
         return self._norm
