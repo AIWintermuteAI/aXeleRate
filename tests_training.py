@@ -89,7 +89,7 @@ def configs(network_type):
             "model" : {
                 "type":                 "SegNet",
                 "architecture":         "MobileNet2_5",
-                "input_size":           224,
+                "input_size":           [240,320],
                 "n_classes" : 		20
             },
         "weights" : {

@@ -1,0 +1,30 @@
+{
+    "model" : {
+        "architecture":         "MobileNet",
+        "input_size":           224,
+        "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
+        "labels":               ["sunflower","rose","daisy"],
+        "coord_scale" : 		1.0,
+        "class_scale" : 		1.0,
+        "object_scale" : 		5.0,
+        "no_object_scale" : 	1.0
+    },
+    "pretrained" : {
+        "full":   				""
+    },
+    "train" : {
+        "actual_epoch":         100,
+        "train_image_folder":   "/home/ubuntu/datasets/flower_detection/imgs_train",
+        "train_annot_folder":   "/home/ubuntu/datasets/flower_detection/anns_train",
+        "train_times":          5,
+        "valid_image_folder":   "/home/ubuntu/datasets/flower_detection/imgs_test",
+        "valid_annot_folder":   "/home/ubuntu/datasets/flower_detection/anns_test",
+        "valid_times":          1,
+        "batch_size":           4,
+        "learning_rate":        1e-3,
+        "saved_folder":   		"flowers",
+        "jitter":				true,
+        "first_trainable_layer": "input_1",
+        "is_only_detect" : 		true
+    }
+}

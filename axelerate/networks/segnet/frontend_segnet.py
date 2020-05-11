@@ -32,7 +32,7 @@ def create_segnet(architecture, input_size, n_classes, weights = None):
     elif 'MobileNet' in architecture:
         model = mobilenet_segnet(n_classes,input_size, encoder_level=4, weights = weights, architecture = architecture)
 
-    output_size = model.output_height
+    output_size = (model.output_height,model.output_width)
     network = Segnet(model,input_size, n_classes, output_size)
 
     return network

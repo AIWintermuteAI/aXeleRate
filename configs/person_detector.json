@@ -1,0 +1,36 @@
+{
+        "model":{
+            "type":                 "Detector",
+            "architecture":         "MobileNet7_5",
+            "input_size":           224,
+            "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
+            "labels":               ["person"],
+            "coord_scale" : 		1.0,
+            "class_scale" : 		1.0,
+            "object_scale" : 		5.0,
+            "no_object_scale" : 	1.0
+        },
+    "weights" : {
+        "full":   				"",
+        "backend":              "imagenet"
+    },
+        "train" : {
+            "actual_epoch":         100,
+            "train_image_folder":   "/home/ubuntu/datasets/person_dataset/imgs",
+            "train_annot_folder":   "/home/ubuntu/datasets/person_dataset/anns",
+            "train_times":          1,
+            "valid_image_folder":   "/home/ubuntu/datasets/person_dataset/imgs_validation",
+            "valid_annot_folder":   "/home/ubuntu/datasets/person_dataset/anns_validation",
+            "valid_times":          2,
+            "valid_metric":         "mAP",
+            "batch_size":           16,
+            "learning_rate":        1e-3,
+            "saved_folder":   		"person_detector",
+            "first_trainable_layer": "",
+            "augumentation":				true,
+            "is_only_detect" : 		false
+        },
+        "converter" : {
+            "type":   				["k210"]
+        }
+}

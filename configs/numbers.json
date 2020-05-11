@@ -1,0 +1,34 @@
+{
+    "model" : {
+        "type":                 "Detector",
+        "architecture":         "MobileNet7_5",
+        "input_size":           224,
+        "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
+        "labels":               ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        "coord_scale" : 		1.0,
+        "class_scale" : 		1.0,
+        "object_scale" : 		5.0,
+        "no_object_scale" : 	1.0
+    },
+    "weights" : {
+        "full":   				""
+    },
+    "train" : {
+        "actual_epoch":         100,
+        "train_image_folder":   "/home/ubuntu/datasets/svhn/imgs",
+        "train_annot_folder":   "/home/ubuntu/datasets/svhn/ann",
+        "train_times":          1,
+        "valid_image_folder":   "/home/ubuntu/datasets/svhn/imgs_validation",
+        "valid_annot_folder":   "/home/ubuntu/datasets/svhn/ann_validation",
+        "valid_times":          1,
+        "batch_size":           10,
+        "learning_rate":        1e-4,
+        "saved_folder":   		"numbers",
+        "first_trainable_layer": "",
+        "augumentation":		false,
+        "is_only_detect" : 		false
+    },
+    "converter" : {
+        "type":   				["tflite"]
+            }
+}
