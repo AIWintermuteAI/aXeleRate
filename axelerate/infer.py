@@ -60,7 +60,7 @@ def show_image(filename):
 def prepare_image(img_path, network):
     orig_image = cv2.imread(img_path)
     input_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
-    input_image = cv2.resize(input_image, (network._input_size,network._input_size))
+    input_image = cv2.resize(input_image, (network._input_size[1],network._input_size[0]))
     input_image = network._norm(input_image)
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image

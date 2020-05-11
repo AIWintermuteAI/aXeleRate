@@ -134,12 +134,13 @@ class _YoloBox(object):
             norm_boxes : array, same shape of boxes
                 (cx, cy, w, h)-ordered & rescaled to grid-size
         """
-        # 1. minimax box -> centroid box
+        # 1. [[100, 120, 140, 200]] minimax box -> centroid box
         centroid_boxes = to_centroid(boxes).astype(np.float32)
-        # 2. image scale -> grid scale
+        # 2. [[120. 160.  40.  80.]] image scale -> grid scale [[4.        5.        1.3333334 2.5      ]]
         norm_boxes = np.zeros_like(centroid_boxes)
-        norm_boxes[0::2] = centroid_boxes[0::2] * (self._grid_size[1] / self._input_size[1])
-        norm_boxes[1::2] = centroid_boxes[1::2] * (self._grid_size[0] / self._input_size[0])
+        norm_boxes[:,0::2] = centroid_boxes[:,0::2] * (self._grid_size[0] / self._input_size[0])
+        norm_boxes[:,1::2] = centroid_boxes[:,1::2] * (self._grid_size[1] / self._input_size[1])
+        #print(norm_boxes)
         return norm_boxes
 
 

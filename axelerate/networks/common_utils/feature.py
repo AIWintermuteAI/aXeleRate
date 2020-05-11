@@ -269,7 +269,7 @@ class MobileNetFeature(BaseFeatureExtractor):
             mobilenet = MobileNet(input_shape=input_shape, input_tensor=input_image, alpha = alpha, weights = 'imagenet', include_top=False, backend=keras.backend, layers=keras.layers, models=keras.models, utils=keras.utils)
             print('Successfully loaded imagenet backend weights')
         else:
-            mobilenet = MobileNet(input_shape=(input_size,input_size,3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = None, include_top=False, backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
+            mobilenet = MobileNet(input_shape=(input_size[0],input_size[1],3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = None, include_top=False, backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
             if weights:
                 print('Loaded backend weigths: '+weights)
                 mobilenet.load_weights(weights)

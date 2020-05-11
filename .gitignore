@@ -11,7 +11,6 @@ axelerate/networks/common_utils/ncc_linux_x86_64.tar.xz
 axelerate.egg-info/
 build/
 dist/
-configs/
 person_detector/
 example_scripts/edge_tpu/
 *.txt
@@ -20,3 +19,5 @@ example_scripts/edge_tpu/
 *.kmodel
 *.jpg
 donkey_mark/
+raccoon_detector/
+santa_uno/

@@ -1,0 +1,32 @@
+{
+    "model" : {
+        "type":                 "Classifier",
+        "architecture":         "MobileNet7_5",
+        "input_size":           224,
+        "fully-connected":      [],
+        "labels":               [],
+        "dropout" : 		0.5
+    },
+     "weights" : {
+            "full":   				"",
+            "backend":   		    "imagenet",
+            "save_bottleneck":      false
+        
+    },
+    "train" : {
+        "actual_epoch":         3,
+        "train_image_folder":   "/home/ubuntu/santa_uno_dataset/imgs",
+        "train_times":          1,
+        "valid_image_folder":   "/home/ubuntu/santa_uno_dataset/imgs_validation",
+        "valid_times":          1,
+        "valid_metric":         "val_accuracy",
+        "batch_size":           8,
+        "learning_rate":        1e-4,
+        "saved_folder":   		"santa_uno",
+        "first_trainable_layer": "",
+        "augumentation":				true
+    },
+    "converter" : {
+        "type":   				["k210","tflite"]
+    }
+}
