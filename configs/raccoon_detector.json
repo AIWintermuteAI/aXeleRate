@@ -2,7 +2,7 @@
     "model" : {
         "type":                 "Detector",
         "architecture":         "MobileNet7_5",
-        "input_size":           [448,448],
+        "input_size":           [224,224],
         "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
         "labels":               ["raccoon"],
         "coord_scale" : 		1.0,
@@ -23,7 +23,7 @@
         "valid_annot_folder":   "/home/ubuntu/datasets/raccoon_detector/anns_validation",
         "valid_times":          2,
         "valid_metric":         "mAP",
-        "batch_size":           2,
+        "batch_size":           4,
         "learning_rate":        1e-4,
         "saved_folder":   		"raccoon_detector",
         "first_trainable_layer": "",
