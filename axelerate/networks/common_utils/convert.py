@@ -10,6 +10,7 @@ from tensorflow.python.framework import graph_util
 from tensorflow.python.framework import graph_io
 import urllib.request
 from keras.utils import get_file
+from keras.models import load_model
 
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
 k210_converter_download_path=os.path.join(os.path.dirname(__file__),'ncc_linux_x86_64.tar.xz')
@@ -71,7 +72,8 @@ class Converter(object):
         print(result.returncode)
 
     def convert_tflite(self, model_path, model_layers, target=None):
-
+        model = load_model(model_path,compile=False)
+        model.save(model_path,overwrite=True,include_optimizer=False)
         yolo = 'reshape_1' in model_layers[-1].name
         if yolo and target=='k210': 
             print("Converting to tflite without Reshape layer for K210 Yolo")
