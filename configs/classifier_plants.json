@@ -1,0 +1,32 @@
+{
+        "model" : {
+            "type":                 "Classifier",
+            "architecture":         "MobileNet7_5",
+            "input_size":           [240,320],
+            "fully-connected":      [],
+            "labels":               [],
+            "dropout" : 		0.25
+        },
+     "weights" : {
+            "full":   				"",
+            "backend":   		    "imagenet",
+            "save_bottleneck":      false
+        
+    },
+        "train" : {
+            "actual_epoch":         1,
+            "train_image_folder":   "/home/ubuntu/datasets/plants_dataset/imgs",
+            "train_times":          2,
+            "valid_image_folder":   "/home/ubuntu/datasets/plants_dataset/imgs_validation",
+            "valid_times":          2,
+            "valid_metric":         "val_accuracy",
+            "batch_size":           8,
+            "learning_rate":        1e-5,
+            "saved_folder":   		"plant_classifier",
+            "first_trainable_layer": "",
+            "augumentation":				true
+        },
+        "converter" : {
+            "type":   				["k210"]
+        }
+    }

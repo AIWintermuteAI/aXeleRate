@@ -2,6 +2,8 @@ import os
 import tensorflow as tf
 import numpy as np
 import keras
+#import matplotlib
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 class MapEvaluation(keras.callbacks.Callback):
@@ -247,17 +249,16 @@ def plot(acc, val_acc, maps, filename):
     plt.plot(maps, 'b')
 
     plt.annotate("{:.4f}".format(acc[-1]),xy=(len(acc)-1,acc[-1]))
-
     plt.annotate("{:.4f}".format(val_acc[-1]),xy=(len(val_acc)-1,val_acc[-1]))
-
     plt.annotate("{:.4f}".format(maps[-1]),xy=(len(maps)-1,maps[-1]))
 
     plt.title('Training graph')
     plt.ylabel('Loss, mAP')
     plt.xlabel('Epoch')
     plt.legend(['Train', 'Test', 'mAP'], loc='upper left')
-    #plt.show(block=False)
-    #plt.pause(1)
     plt.savefig(os.path.join(filename))
+    
+    plt.show(block=False)
+    plt.pause(1)
     plt.close()
 

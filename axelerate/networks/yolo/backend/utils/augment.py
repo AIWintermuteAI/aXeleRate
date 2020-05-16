@@ -66,7 +66,7 @@ def make_jitter_on_image(image, boxes):
     #    is_flip = False
 
     aug_pipe = _create_augment_pipeline()
-    #image = aug_pipe.augment_image(image)
+    image = aug_pipe.augment_image(image)
     
     # fix object's position and size
     new_boxes = []

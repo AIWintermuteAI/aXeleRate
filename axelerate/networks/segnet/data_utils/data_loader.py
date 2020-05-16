@@ -205,8 +205,8 @@ class BatchGenerator(Sequence):
             if self.do_augment:
                 im, seg[:, :, 0] = augment_seg(im, seg[:, :, 0] , augmentation_name=self.augmentation_name)
 
-            x_batch.append(get_image_array(im, self.input_size,self.input_size, ordering=IMAGE_ORDERING))
-            y_batch.append(get_segmentation_array(seg, self.n_classes, self.output_size, self.output_size))
+            x_batch.append(get_image_array(im, self.input_size[1],self.input_size[0], ordering=IMAGE_ORDERING))
+            y_batch.append(get_segmentation_array(seg, self.n_classes, self.output_size[1], self.output_size[0]))
 
         x_batch = np.array(x_batch)
         y_batch = np.array(y_batch)

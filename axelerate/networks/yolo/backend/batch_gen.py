@@ -24,7 +24,7 @@ def create_batch_generator(annotations,
         worker : BatchGenerator instance
     """
 
-    img_aug = ImgAugment(input_size, input_size, jitter)
+    img_aug = ImgAugment(input_size[0], input_size[1], jitter)
     yolo_box = _YoloBox(input_size, grid_size)
     netin_gen = _NetinGen(input_size, norm)
     netout_gen = _NetoutGen(grid_size, annotations.n_classes(), anchors)
@@ -134,10 +134,13 @@ class _YoloBox(object):
             norm_boxes : array, same shape of boxes
                 (cx, cy, w, h)-ordered & rescaled to grid-size
         """
-        # 1. minimax box -> centroid box
+        # 1. [[100, 120, 140, 200]] minimax box -> centroid box
         centroid_boxes = to_centroid(boxes).astype(np.float32)
-        # 2. image scale -> grid scale
-        norm_boxes = centroid_boxes * (self._grid_size / self._input_size)
+        # 2. [[120. 160.  40.  80.]] image scale -> grid scale [[4.        5.        1.3333334 2.5      ]]
+        norm_boxes = np.zeros_like(centroid_boxes)
+        norm_boxes[:,0::2] = centroid_boxes[:,0::2] * (self._grid_size[0] / self._input_size[0])
+        norm_boxes[:,1::2] = centroid_boxes[:,1::2] * (self._grid_size[1] / self._input_size[1])
+        #print(norm_boxes)
         return norm_boxes
 
 
@@ -187,7 +190,7 @@ class _NetoutGen(object):
 
     def _set_tensor_shape(self, grid_size, nb_classes):
         nb_boxes = len(self._anchors)
-        return (grid_size, grid_size, nb_boxes, 4+1+nb_classes)
+        return (grid_size[0], grid_size[1], nb_boxes, 4+1+nb_classes)
 
     def _find_anchor_idx(self, norm_box):
         _, _, center_w, center_h = norm_box
@@ -196,9 +199,12 @@ class _NetoutGen(object):
     
     def _generate_y(self, best_anchor, obj_indx, box):
         y = np.zeros(self._tensor_shape)
-        grid_x, grid_y, _, _ = box.astype(int)
-        if grid_x > 6: grid_x = 6
-        if grid_y > 6: grid_y = 6
+        max_grid_y = self._tensor_shape[0]-1
+        max_grid_x = self._tensor_shape[1]-1
+        grid_x, grid_y, _, _ = np.floor(box).astype(int)
+        if grid_x > max_grid_x: grid_x = max_grid_x
+        if grid_y > max_grid_y: grid_y = max_grid_y
+        
         y[grid_y, grid_x, best_anchor, 0:4] = box
         y[grid_y, grid_x, best_anchor, 4  ] = 1.
         y[grid_y, grid_x, best_anchor, 5+obj_indx] = 1

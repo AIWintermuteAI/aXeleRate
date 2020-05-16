@@ -17,8 +17,8 @@ def configs(network_type):
     classifier = {
         "model" : {
             "type":                 "Classifier",
-            "architecture":         "MobileNet2_5",
-            "input_size":           224,
+            "architecture":         "NASNetMobile",
+            "input_size":           [240,320],
             "fully-connected":      [],
             "labels":               [],
             "dropout" : 		    0.5
@@ -51,8 +51,8 @@ def configs(network_type):
     detector = {
         "model":{
             "type":                 "Detector",
-            "architecture":         "MobileNet2_5",
-            "input_size":           224,
+            "architecture":         "Tiny Yolo",
+            "input_size":           [240,320],
             "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
             "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
             "coord_scale" : 		1.0,
@@ -62,7 +62,7 @@ def configs(network_type):
         },
         "weights" : {
             "full":   				"",
-            "backend":   		    ""
+            "backend":   		    None
         },
         "train" : {
             "actual_epoch":         5,
@@ -88,8 +88,8 @@ def configs(network_type):
     segnet = {
             "model" : {
                 "type":                 "SegNet",
-                "architecture":         "MobileNet2_5",
-                "input_size":           224,
+                "architecture":         "ResNet50",
+                "input_size":           [320,240],
                 "n_classes" : 		20
             },
         "weights" : {

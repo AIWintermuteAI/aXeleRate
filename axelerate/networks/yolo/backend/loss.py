@@ -123,8 +123,9 @@ class _Activator(object):
         """
         # bx = sigmoid(tx) + cx, by = sigmoid(ty) + cy
         batch_size = tf.shape(y_pred)[0]
-        grid_size = tf.shape(y_pred)[1]
-        cell_grid = create_cell_grid(grid_size, batch_size)
+        grid_size_y = tf.shape(y_pred)[1]
+        grid_size_x = tf.shape(y_pred)[2]
+        cell_grid = create_cell_grid(grid_size_x, grid_size_y, batch_size)
         
         pred_box_xy = tf.sigmoid(y_pred[..., :2]) + cell_grid
         pred_box_wh = tf.exp(y_pred[..., 2:4]) * self._anchor_boxes
@@ -167,9 +168,9 @@ class _Activator(object):
         return true_box_xy, true_box_wh, true_box_conf, true_box_class
 
 
-def create_cell_grid(grid_size, batch_size):
-    x_pos = tf.to_float(tf.range(grid_size))
-    y_pos = tf.to_float(tf.range(grid_size))
+def create_cell_grid(grid_size_x, grid_size_y, batch_size):
+    x_pos = tf.to_float(tf.range(grid_size_x))
+    y_pos = tf.to_float(tf.range(grid_size_y))
     xx, yy = tf.meshgrid(x_pos, y_pos)
     xx = tf.expand_dims(xx, -1)
     yy = tf.expand_dims(yy, -1)
@@ -179,6 +180,15 @@ def create_cell_grid(grid_size, batch_size):
     grid = tf.tile(grid, (1,1,5,1))             # (7, 7, 5, 2)
     grid = tf.expand_dims(grid, 0)              # (1, 7, 7, 1, 2)
     grid = tf.tile(grid, (batch_size,1,1,1,1))  # (N, 7, 7, 1, 2)
+
+    cell_x = tf.to_float(tf.reshape(tf.tile(tf.range(grid_size_x), [grid_size_y]), (1, grid_size_y, grid_size_x,
+                                                                                      1, 1)))
+    cell_y = tf.to_float(tf.reshape(tf.tile(tf.range(grid_size_y), [grid_size_x]), (1, grid_size_x, grid_size_y,
+                                                                                      1, 1)))
+    cell_y = tf.transpose(cell_y, (0, 2, 1, 3, 4))
+
+    cell_grid = tf.tile(tf.concat([cell_x, cell_y], -1), [batch_size, 1, 1, 5, 1])
+
     return grid
 
 
