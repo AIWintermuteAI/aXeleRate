@@ -71,7 +71,7 @@ class BaseFeatureExtractor(object):
 class FullYoloFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights=None):
-        input_image = Input(shape=(input_size, input_size, 3))
+        input_image = Input(shape=(input_size[0], input_size[1], 3))
 
         # the function to implement the orgnization layer (thanks to github.com/allanzelener/YAD2K)
         def space_to_depth_x2(x):
@@ -214,7 +214,7 @@ class FullYoloFeature(BaseFeatureExtractor):
 class TinyYoloFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights):
-        input_image = Input(shape=(input_size, input_size, 3))
+        input_image = Input(shape=(input_size[0], input_size[1], 3))
 
         # Layer 1
         x = Conv2D(16, (3,3), strides=(1,1), padding='same', name='conv_1', use_bias=False)(input_image)
@@ -311,7 +311,7 @@ class SqueezeNetFeature(BaseFeatureExtractor):
             return x
 
         # define the model of SqueezeNet
-        input_image = Input(shape=(input_size, input_size, 3))
+        input_image = Input(shape=(input_size[0], input_size[1], 3))
 
         x = Conv2D(64, (3, 3), strides=(2, 2), padding='valid', name='conv1')(input_image)
         x = Activation('relu', name='relu_conv1')(x)
@@ -354,7 +354,7 @@ class SqueezeNetFeature(BaseFeatureExtractor):
 class DenseNet121Feature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights):
-        input_image = Input(shape=(input_size, input_size, 3))
+        input_image = Input(shape=(input_size[0], input_size[1], 3))
 
         if weights == 'imagenet':
             densenet = DenseNet121(input_tensor=input_image, include_top=False, weights='imagenet', pooling=None)
@@ -368,12 +368,13 @@ class DenseNet121Feature(BaseFeatureExtractor):
         self.feature_extractor = densenet
 
     def normalize(self, image):
-        return DenseNet121.preprocess_input(image)
+        from keras.applications.densenet import preprocess_input
+        return preprocess_input(image)
 
 class NASNetMobileFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights):
-        input_image = Input(shape=(input_size, input_size, 3))
+        input_image = Input(shape=(input_size[0], input_size[1], 3))
 
         if weights == 'imagenet':
             nasnetmobile = NASNetMobile(input_tensor=input_image, include_top=False, weights='imagenet', pooling=None)
@@ -386,13 +387,13 @@ class NASNetMobileFeature(BaseFeatureExtractor):
         self.feature_extractor = nasnetmobile
 
     def normalize(self, image):
-
-        return NASNetMobile.preprocess_input(image)
+        from keras.applications.nasnet import preprocess_input
+        return preprocess_input(image)
 
 class ResNet50Feature(BaseFeatureExtractor):
     """docstring for ClassName"""
     def __init__(self, input_size, weights):
-        input_image = Input(shape=(input_size, input_size, 3))
+        input_image = Input(shape=(input_size[0], input_size[1], 3))
 
         if weights == 'imagenet':
             resnet50 = ResNet50(input_tensor=input_image, weights='imagenet', include_top=False, pooling = None)
@@ -406,7 +407,7 @@ class ResNet50Feature(BaseFeatureExtractor):
         self.feature_extractor = resnet50
 
     def normalize(self, image):
-        #image = image[..., ::-1]
+        image = image[..., ::-1]
         image = image.astype('float')
 
         image[..., 0] -= 103.939

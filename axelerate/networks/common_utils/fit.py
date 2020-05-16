@@ -160,7 +160,7 @@ def plot(metric, val_metric, filename):
     #plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.savefig(os.path.join(filename))
-    #plt.show(block=False)
-    #plt.pause(1)
-    #plt.close()
+    plt.show(block=False)
+    plt.pause(1)
+    plt.close()
 

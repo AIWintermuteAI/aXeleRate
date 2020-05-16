@@ -66,6 +66,12 @@ def prepare_image(img_path, network):
     return orig_image, input_image
 
 def setup_inference(config,weights,threshold=0.3,path=None):
+    #added for compatibility with < 0.5.7 versions
+    try:
+        input_size = config['model']['input_size'][:]
+    except:
+        input_size = [config['model']['input_size'],config['model']['input_size']]
+
     """make directory to save inference results """
     dirname = os.path.join(os.path.dirname(weights),'Inference_results')
     if os.path.isdir(dirname):
@@ -78,7 +84,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         print('Segmentation')           
         # 1. Construct the model 
         segnet = create_segnet(config['model']['architecture'],
-                                   config['model']['input_size'],
+                                   input_size,
                                    config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
@@ -95,7 +101,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         # 1.Construct the model 
         classifier = create_classifier(config['model']['architecture'],
                                        labels,
-                                       config['model']['input_size'],
+                                       input_size,
                                        config['model']['fully-connected'],
                                        config['model']['dropout'])   
         # 2. Load the pretrained weights (if any) 
@@ -120,7 +126,7 @@ def setup_inference(config,weights,threshold=0.3,path=None):
         # 2. create yolo instance & predict
         yolo = create_yolo(config['model']['architecture'],
                            config['model']['labels'],
-                           config['model']['input_size'],
+                           input_size,
                            config['model']['anchors'])
         yolo.load_weights(weights)
 

@@ -97,7 +97,7 @@ class YOLO(object):
         boxes, probs = self._yolo_decoder.run(netout, threshold)
         if len(boxes) > 0:
             boxes = _to_original_scale(boxes)
-            print(boxes, probs)
+            #print(boxes, probs)
             return elapsed_ms, boxes, probs
         else:
             return elapsed_ms, [], []
