@@ -62,12 +62,19 @@ aXeleRate is still work in progress project. I will be making some changes from 
 :ballot_box_with_check: TODO list:
 
   - [ ] Porting to tf.keras and Tensorflow 2
+  - [ ] Dataset verification (checking for corrupt images and label mismatch)
+  - [ ] Pre-trained ImageNet1000 backend weights for Tiny YOLO, SqueezeNet
   - [ ] Adding support for multi-GPU and Cloud TPU training
   - [ ] Unifiying image augumentation pipeline
   - [X] SegNet to use common encoders(currently SegNet uses it's own feature extractors as encoder part)
+  - [X] Support for custom input_size
+  - [X] mAP evaluation for Object Detection models
 
 ### Acknowledgements
 
   - YOLOv2 Keras code jeongjoonsup and Ngoc Anh Huynh https://github.com/experiencor/keras-yolo2 https://github.com/penny4860/Yolo-digit-detector
   - SegNet Keras code Divam Gupta https://github.com/divamgupta/image-segmentation-keras
   - Big Thank You to creator/maintainers of Keras/Tensorflow
+
+### Donation
+Recently there were a few people that wanted to make a small donation to aXeleRate, because it helped them with their work. I was caught off guard with the question about donations :) I didn't have anything set up, so I quickly created a paypal.me page for them to be able to send money. If aXeleRate was useful in your work, you can donate to the project here https://www.paypal.me/hardwareai . But times are tough now(and always), so if you don't have much to spare, don't feel guilty! aXeleRate is totally open source and free to use.
