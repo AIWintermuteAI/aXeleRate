@@ -16,7 +16,7 @@ def create_datagen(train_folder, valid_folder, batch_size, input_size, project_f
 
     
     if not valid_folder:
-        train_datagen=ImageDataGenerator(preprocessing_function=preprocess_input,validation_split=0.1, **data_gen_args)
+        train_datagen=ImageDataGenerator(preprocessing_function=preprocess_input, validation_split=0.1, **data_gen_args)
         train_generator=train_datagen.flow_from_directory(train_folder,
                                                          target_size=(input_size[0],input_size[1]),
                                                          color_mode='rgb',

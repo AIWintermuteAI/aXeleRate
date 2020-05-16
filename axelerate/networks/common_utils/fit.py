@@ -5,6 +5,8 @@ import tensorflow as tf
 import keras
 import numpy as np
 import warnings
+#import matplotlib
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from axelerate.networks.yolo.backend.utils.map_evaluation import MapEvaluation
@@ -157,8 +159,8 @@ def plot(metric, val_metric, filename):
     #plt.ylabel('Loss')
     #plt.xlabel('Epoch')
     plt.legend(['Train', 'Test'], loc='upper left')
+    plt.savefig(os.path.join(filename))
     #plt.show(block=False)
     #plt.pause(1)
-    plt.savefig(os.path.join(filename))
-    plt.close()
+    #plt.close()
 
