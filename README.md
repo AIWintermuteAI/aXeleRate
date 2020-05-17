@@ -11,7 +11,7 @@ aXeleRate streamlines training and converting computer vision models to be run o
 
 <table>
   <tr>
-    <td>Standford Dog Breed Classification Dataset VGG16 backend + Classifier <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_classifier.ipynb">
+    <td>Standford Dog Breed Classification Dataset NASNetMobile backend + Classifier <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_standford_dog_classifier.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a> </td>
      <td>PASCAL-VOC 2012 Object Detection Dataset MobileNet1_0 backend + YOLOv2 <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_pascal20_detector.ipynb">
@@ -22,7 +22,7 @@ aXeleRate streamlines training and converting computer vision models to be run o
 </a> </td>
   </tr>
   <tr>
-    <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02097209_96.jpg" width=300 height=300></td>
+    <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02106550_7003.jpg" width=300 height=300></td>
     <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2009_001349.jpg" width=300 height=300></td>
     <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2010_001177.jpg" width=250 height=350></td>
   </tr>
