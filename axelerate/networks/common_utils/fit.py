@@ -10,14 +10,14 @@ from axelerate.networks.yolo.backend.utils.map_evaluation import MapEvaluation
 from keras.optimizers import Adam, SGD
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from datetime import datetime
-
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 metrics_dict = {'val_accuracy':['accuracy'],'val_loss':[],'mAP':[]}
 
 class PlotCallback(keras.callbacks.Callback):
     def __init__(self, filepath, metric):
-        import matplotlib
-        matplotlib.use('Agg')
-        import matplotlib.pyplot as plt
+
         super(PlotCallback, self).__init__()
         self.filepath = filepath
         self.metric = metric.split("_")[1]
