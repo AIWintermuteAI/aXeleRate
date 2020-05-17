@@ -31,6 +31,6 @@
         "is_only_detect" : 		false
     },
     "converter" : {
-        "type":   				["tflite"]
+        "type":   				["k210"]
     }
 }
