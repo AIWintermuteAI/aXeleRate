@@ -1,7 +1,10 @@
 from keras.preprocessing.image import ImageDataGenerator
 from keras.applications.mobilenet import preprocess_input
+import matplotlib.pyplot as plt
 import os
-
+import cv2
+import glob
+import random 
 
 def create_datagen(train_folder, valid_folder, batch_size, input_size, project_folder, augumentation):
     if augumentation:
@@ -46,7 +49,8 @@ def create_datagen(train_folder, valid_folder, batch_size, input_size, project_f
                                                          color_mode='rgb',
                                                          batch_size=batch_size,
                                                          class_mode='categorical', 
-				                                         shuffle=True)				                                     
+				                                         shuffle=True)		
+				                                         
     labels = (train_generator.class_indices)
     labels = dict((v,k) for k,v in labels.items())
     fo = open(os.path.join(project_folder,"labels.txt"), "w")
@@ -54,4 +58,28 @@ def create_datagen(train_folder, valid_folder, batch_size, input_size, project_f
         print(v)
         fo.write(v+"\n")
     fo.close()
-    return train_generator, validation_generator
+    return train_generator, validation_generator		
+				                                         
+def visualize_dataset(folder, num_imgs):
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    image_files_list = glob.glob(folder + '/**/*.jpg', recursive=True)
+    random.shuffle(image_files_list)
+    for filename in image_files_list[0:num_imgs]:
+        image = cv2.imread(filename)
+        cv2.putText(image, os.path.dirname(filename).split('/')[-1], (10,30), font, image.shape[1]/700 , (0, 0, 255), 2, True)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) 
+        plt.figure()
+        plt.imshow(image)
+        plt.show(block=False)
+        plt.pause(1)
+        plt.close()
+        print(filename)
+	
+	                              
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--images", type=str)
+    parser.add_argument("--num_imgs", type=int)
+    args = parser.parse_args()
+    visualize_dataset(args.images, args.num_imgs)
