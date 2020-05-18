@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+import numpy as np
+np.random.seed(1337)
 import imgaug as ia
 from imgaug import augmenters as iaa
 from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
 import cv2
-import numpy as np
-np.random.seed(1337)
 
 class ImgAugment(object):
     def __init__(self, w, h, jitter):
@@ -17,8 +17,8 @@ class ImgAugment(object):
         self._jitter = jitter
         self._w = w
         self._h = h
-        
-    def imread(self, img_file, boxes):
+
+    def imread(self, img_file, boxes, labels):
         """
         # Args
             img_file : str
@@ -35,23 +35,42 @@ class ImgAugment(object):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         boxes_ = np.copy(boxes)
+        labels_ = np.copy(labels)
   
         # 2. resize and augment image     
-        image, boxes_ = process_image(image, boxes_, self._w, self._h, self._jitter) 
+        image, boxes_, labels_ = process_image(image, boxes_, labels_, self._w, self._h, self._jitter) 
 
-        return image, boxes_
+        return image, boxes_, labels_
 
 
-def process_image(image, boxes, desired_w, desired_h, augment):
+def _to_bbs(boxes, labels, shape):
+    new_boxes = []
+    for i in range(len(boxes)):
+        x1,y1,x2,y2 = boxes[i]
+        new_box = BoundingBox(x1,y1,x2,y2, labels[i])
+        new_boxes.append(new_box)
+    bbs = BoundingBoxesOnImage(new_boxes, shape)
+    return bbs
+
+def _to_array(bbs):
+    new_boxes = []
+    new_labels = []
+    for bb in bbs.bounding_boxes:
+        x1 = int(bb.x1)
+        x2 = int(bb.x2)
+        y1 = int(bb.y1)
+        y2 = int(bb.y2)
+        label = bb.label
+        new_boxes.append([x1,y1,x2,y2])
+        new_labels.append(label)
+    return new_boxes, new_labels
+
+
+def process_image(image, boxes, labels, desired_w, desired_h, augment):
     
     # resize the image to standard size
     if (desired_w and desired_h) or augment:
-        new_boxes = []
-        for box in boxes:
-            x1,y1,x2,y2 = box
-            new_box = BoundingBox(x1,y1,x2,y2)
-            new_boxes.append(new_box)
-        bbs = BoundingBoxesOnImage(new_boxes, shape=image.shape)
+        bbs = _to_bbs(boxes, labels, image.shape)
 
         if (desired_w and desired_h):
             # Rescale image and bounding boxes
@@ -63,17 +82,16 @@ def process_image(image, boxes, desired_w, desired_h, augment):
             image, bbs = aug_pipe(image=image, bounding_boxes=bbs)
             bbs = bbs.remove_out_of_image().clip_out_of_image()
 
-        new_boxes = []
-        for bb in bbs.bounding_boxes:
-            x1 = int(bb.x1)
-            x2 = int(bb.x2)
-            y1 = int(bb.y1)
-            y2 = int(bb.y2)
-            new_boxes.append([x1,y1,x2,y2])
-        return image, np.array(new_boxes)
+        new_boxes, new_labels = _to_array(bbs)
+        #if len(new_boxes) != len(boxes):
+        #    print(new_boxes)
+        #    print(boxes)
+        #    print("_________________")
+
+        return image, np.array(new_boxes), new_labels
 
     else:
-        return image, np.array(boxes)
+        return image, np.array(boxes), labels
 
 
 def _create_augment_pipeline():
@@ -152,18 +170,18 @@ def visualize_dataset(img_folder, ann_folder, num_imgs = None, img_size=None, ji
         img_file =  os.path.join(img_folder, fname)
 
         aug = ImgAugment(img_size, img_size, jitter=jitter)
-        img, boxes_ = aug.imread(img_file, boxes)
-        #img = img.astype(np.uint8)
+        img, boxes_, labels_ = aug.imread(img_file, boxes, labels)
         
         for i in range(len(boxes_)):
             x1, y1, x2, y2 = boxes_[i]
             cv2.rectangle(img, (x1,y1), (x2,y2), (0,255,0), 3)
             cv2.putText(img, 
-                        '{}'.format(labels[i]), 
+                        '{}'.format(labels_[i]), 
                         (x1, y1 - 13), 
                         cv2.FONT_HERSHEY_SIMPLEX, 
                         1e-3 * img.shape[0], 
                         (255,0,0), 1)
+
         plt.imshow(img)
         plt.show(block=False)
         plt.pause(1)

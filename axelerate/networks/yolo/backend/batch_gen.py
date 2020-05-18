@@ -72,7 +72,7 @@ class BatchGenerator(Sequence):
             fname = self.annotations.fname(self._batch_size*idx + i)
             boxes = self.annotations.boxes(self._batch_size*idx + i)
             labels = self.annotations.code_labels(self._batch_size*idx + i)
-            img, boxes = self._img_aug.imread(fname, boxes)
+            img, boxes, labels = self._img_aug.imread(fname, boxes, labels)
             imgs_list.append(self._netin_gen.run(img))
             annotations = []
             for j in range(len(boxes)):
@@ -97,12 +97,15 @@ class BatchGenerator(Sequence):
             fname = self.annotations.fname(self._batch_size*idx + i)
             boxes = self.annotations.boxes(self._batch_size*idx + i)
             labels = self.annotations.code_labels(self._batch_size*idx + i)
-            
+            #print(labels)
             # 2. read image in fixed size
-            img, boxes = self._img_aug.imread(fname, boxes)
-
-            # 3. grid scaling centroid boxes
-            norm_boxes = self._yolo_box.trans(boxes)
+            img, boxes, labels = self._img_aug.imread(fname, boxes, labels)
+            if len(boxes) > 0:
+                # 3. grid scaling centroid boxes
+                norm_boxes = self._yolo_box.trans(boxes)
+            else:
+                norm_boxes = [[0,0,0,0]]
+                labels = [-1]
             
             # 4. generate x_batch
             x_batch.append(self._netin_gen.run(img))
@@ -199,13 +202,14 @@ class _NetoutGen(object):
     
     def _generate_y(self, best_anchor, obj_indx, box):
         y = np.zeros(self._tensor_shape)
-        max_grid_y = self._tensor_shape[0]-1
-        max_grid_x = self._tensor_shape[1]-1
+        #max_grid_y = self._tensor_shape[0]-1
+        #max_grid_x = self._tensor_shape[1]-1
         grid_x, grid_y, _, _ = np.floor(box).astype(int)
-        if grid_x > max_grid_x: grid_x = max_grid_x
-        if grid_y > max_grid_y: grid_y = max_grid_y
-        
+        #if grid_x > max_grid_x: grid_x = max_grid_x
+        #if grid_y > max_grid_y: grid_y = max_grid_y
+
         y[grid_y, grid_x, best_anchor, 0:4] = box
         y[grid_y, grid_x, best_anchor, 4  ] = 1.
-        y[grid_y, grid_x, best_anchor, 5+obj_indx] = 1
+        if obj_indx != -1: 
+            y[grid_y, grid_x, best_anchor, 5+obj_indx] = 1
         return y
