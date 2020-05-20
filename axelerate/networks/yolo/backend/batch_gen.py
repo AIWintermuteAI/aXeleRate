@@ -202,11 +202,11 @@ class _NetoutGen(object):
     
     def _generate_y(self, best_anchor, obj_indx, box):
         y = np.zeros(self._tensor_shape)
-        #max_grid_y = self._tensor_shape[0]-1
-        #max_grid_x = self._tensor_shape[1]-1
+        max_grid_y = self._tensor_shape[0]-1
+        max_grid_x = self._tensor_shape[1]-1
         grid_x, grid_y, _, _ = np.floor(box).astype(int)
-        #if grid_x > max_grid_x: grid_x = max_grid_x
-        #if grid_y > max_grid_y: grid_y = max_grid_y
+        if grid_x > max_grid_x: grid_x = max_grid_x
+        if grid_y > max_grid_y: grid_y = max_grid_y
 
         y[grid_y, grid_x, best_anchor, 0:4] = box
         y[grid_y, grid_x, best_anchor, 4  ] = 1.
