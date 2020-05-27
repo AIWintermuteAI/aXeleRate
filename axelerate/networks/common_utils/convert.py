@@ -70,6 +70,25 @@ class Converter(object):
         result = subprocess.run([k210_converter_path, "compile",model_path,output_path,"-i","tflite","--dataset",dataset_path])
         print(result.returncode)
 
+    def convert_onnx(self, model_path):
+        model = keras.load_model(model_path)
+        input_names = model.layers[0].get_output_at(0).name.split(':')[0]
+
+        if output_node_names is None:
+           output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
+        print(output_node_names)
+        sess = keras.backend.get_session()
+
+        # The TensorFlow freeze_graph expects a comma-separated string of output node names.
+        output_node_names_tf = ','.join(output_node_names)
+        frozen_graph_def = tf.graph_util.convert_variables_to_constants(sess,sess.graph_def,output_node_names)
+        sess.close()
+
+        onnx_graph = tf2onnx.tfonnx.process_tf_graph(frozen_graph_def, input_names=input_names, output_names=output_node_names)
+        model_proto = onnx_graph.make_model("model")
+        with open("/tmp/model.onnx", "wb") as f:
+           f.write(model_proto.SerializeToString())
+
     def convert_tflite(self, model_path, model_layers, target=None):
 
         yolo = 'reshape_1' in model_layers[-1].name
@@ -104,16 +123,4 @@ class Converter(object):
 
         if 'tflite' in self._converter_type:
             self.convert_tflite(model_path,model_layers)
-
-    def save_frozen_graph(self,model, path, train_date):
-        output_node_names = [node.op.name for node in model.outputs]
-        print(output_node_names)
-        input_node_names = [node.op.name for node in model.inputs]
-        output_layer = model.layers[-1].name+'/BiasAdd'
-        sess = K.get_session()
-        constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph.as_graph_def(), output_node_names)
-        graph_io.write_graph(constant_graph, "" , os.path.join (path, train_date + '.pb'), as_text=False)
-
-    def convert_tensorrt(self):
-        pass
 
