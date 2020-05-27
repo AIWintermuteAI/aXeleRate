@@ -17,7 +17,7 @@ def configs(network_type):
     classifier = {
         "model" : {
             "type":                 "Classifier",
-            "architecture":         "NASNetMobile",
+            "architecture":         "MobileNet5_0",
             "input_size":           [240,320],
             "fully-connected":      [],
             "labels":               [],

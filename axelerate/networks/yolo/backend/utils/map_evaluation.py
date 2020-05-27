@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import keras
 import matplotlib
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 class MapEvaluation(keras.callbacks.Callback):
@@ -29,7 +29,7 @@ class MapEvaluation(keras.callbacks.Callback):
                  save_best=False,
                  save_name=None,
                  tensorboard=None):
-
+                 
         super().__init__()
         self._yolo = yolo
         self._generator = generator
