@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import keras
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 class MapEvaluation(keras.callbacks.Callback):
