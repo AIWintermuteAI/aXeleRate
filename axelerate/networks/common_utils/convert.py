@@ -2,19 +2,18 @@ import tensorflow as tf
 import subprocess
 import os
 import cv2
-import keras.backend as K
+
 import tarfile
 import glob
 import numpy as np
 from tensorflow.python.framework import graph_util
 from tensorflow.python.framework import graph_io
-import urllib.request
-from keras.utils import get_file
-from keras.models import load_model
+import tf2onnx
+import keras
 
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
 k210_converter_download_path=os.path.join(os.path.dirname(__file__),'ncc_linux_x86_64.tar.xz')
-nncase_download_url="https://github.com/kendryte/nncase/releases/download/v0.2.0-beta2/ncc_linux_x86_64.tar.xz"
+nncase_download_url="https://github.com/kendryte/nncase/releases/download/v0.2.0-beta4/ncc_linux_x86_64.tar.xz"
 cwd = os.path.dirname(os.path.realpath(__file__))
 
 class Converter(object):
@@ -27,7 +26,7 @@ class Converter(object):
                 print('K210 Converter ready')
             else:
                 print('Downloading K210 Converter')
-                get_file(k210_converter_download_path,nncase_download_url)         
+                keras.utils.get_file(k210_converter_download_path,nncase_download_url)         
                 tar_file = tarfile.open(k210_converter_download_path)
                 tar_file.extractall(os.path.join(os.path.dirname(__file__),"ncc"))
                 tar_file.close()
@@ -71,33 +70,38 @@ class Converter(object):
         result = subprocess.run([k210_converter_path, "compile",model_path,output_path,"-i","tflite","--dataset",dataset_path])
         print(result.returncode)
 
-    def convert_onnx(self, model_path):
-        model = keras.load_model(model_path)
-        input_names = model.layers[0].get_output_at(0).name.split(':')[0]
-
-        if output_node_names is None:
-           output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
-        print(output_node_names)
-        sess = keras.backend.get_session()
+    def convert_onnx(self, model_path, model_layers):
+        import keras.backend as k
+        k.set_learning_phase(0)
+        #k.clear_session()
+        model = keras.models.load_model(model_path)
+        input_node_names = model.layers[0].get_output_at(0).name.split(':')[0]
+        output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
+        sess = k.get_session()
 
         # The TensorFlow freeze_graph expects a comma-separated string of output node names.
-        output_node_names_tf = ','.join(output_node_names)
-        frozen_graph_def = tf.graph_util.convert_variables_to_constants(sess,sess.graph_def,output_node_names)
-        sess.close()
+        input_node_names_onnx= [model.layers[0].get_output_at(0).name]
+        output_node_names_onnx = [model.layers[-1].get_output_at(0).name]
+        print(output_node_names_onnx)
+        print(input_node_names_onnx)
+        frozen_graph_def = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, output_node_names)
 
-        onnx_graph = tf2onnx.tfonnx.process_tf_graph(frozen_graph_def, input_names=input_names, output_names=output_node_names)
-        model_proto = onnx_graph.make_model("model")
-        with open("/tmp/model.onnx", "wb") as f:
-           f.write(model_proto.SerializeToString())
+        tf.reset_default_graph()
+        with tf.Graph().as_default() as tf_graph:
+            tf.import_graph_def(frozen_graph_def, name='')
+
+            onnx_graph = tf2onnx.tfonnx.process_tf_graph(tf_graph, input_names=input_node_names_onnx, output_names=output_node_names_onnx)
+            model_proto = onnx_graph.make_model("model")
+            with open(model_path.split(".")[0] + '.onnx', "wb") as f:
+               f.write(model_proto.SerializeToString())
+        #sess.close()
 
     def convert_tflite(self, model_path, model_layers, target=None):
-        model = load_model(model_path,compile=False)
-        model.save(model_path,overwrite=True,include_optimizer=False)
         yolo = 'reshape_1' in model_layers[-1].name
         if yolo and target=='k210': 
             print("Converting to tflite without Reshape layer for K210 Yolo")
             output_layer = model_layers[-2].name+'/BiasAdd'
-            converter = tf.lite.TFLiteConverter.from_keras_model_file(model_path,output_arrays=[output_layer])
+            converter = tf.lite.TFLiteConverter.from_keras_model_file(model_path, output_arrays=[output_layer])
 
         elif target == 'edgetpu':
             converter = tf.lite.TFLiteConverter.from_keras_model_file(model_path)
@@ -113,7 +117,9 @@ class Converter(object):
         tflite_model = converter.convert()
         open(os.path.join (model_path.split(".")[0] + '.tflite'), "wb").write(tflite_model)
 
-    def convert_model(self,model_path,model_layers,dataset_path=None):
+    def convert_model(self, model_path, model_layers, dataset_path=None):
+        model = keras.models.load_model(model_path,compile=False)
+        model.save(model_path,overwrite=True,include_optimizer=False)
 
         if 'k210' in self._converter_type:
             self.convert_tflite(model_path,model_layers, 'k210')
@@ -122,6 +128,9 @@ class Converter(object):
         if 'edgetpu' in self._converter_type:
             self.convert_tflite(model_path,model_layers, 'edgetpu')
             self.convert_edgetpu(model_path.split(".")[0] + '.tflite')
+
+        if 'onnx' in self._converter_type:
+            self.convert_onnx(model_path, model_layers)
 
         if 'tflite' in self._converter_type:
             self.convert_tflite(model_path,model_layers)
