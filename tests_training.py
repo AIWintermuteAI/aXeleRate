@@ -17,8 +17,8 @@ def configs(network_type):
     classifier = {
         "model" : {
             "type":                 "Classifier",
-            "architecture":         "MobileNet5_0",
-            "input_size":           [240,320],
+            "architecture":         "Tiny Yolo",
+            "input_size":           [240, 320],
             "fully-connected":      [],
             "labels":               [],
             "dropout" : 		    0.5
@@ -43,7 +43,7 @@ def configs(network_type):
             "augumentation":				True
         },
         "converter" : {
-            "type":   				[]
+            "type":   				['k210']
         }
     }
 
@@ -51,8 +51,8 @@ def configs(network_type):
     detector = {
         "model":{
             "type":                 "Detector",
-            "architecture":         "Tiny Yolo",
-            "input_size":           [240,320],
+            "architecture":         "MobileNet7_5",
+            "input_size":           [320, 240],
             "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
             "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
             "coord_scale" : 		1.0,
@@ -81,15 +81,15 @@ def configs(network_type):
             "is_only_detect" : 		False
         },
         "converter" : {
-            "type":   				[]
+            "type":   				['k210']
         }
     }
 
     segnet = {
             "model" : {
                 "type":                 "SegNet",
-                "architecture":         "ResNet50",
-                "input_size":           [320,240],
+                "architecture":         "MobileNet5_0",
+                "input_size":           224,
                 "n_classes" : 		20
             },
         "weights" : {
@@ -113,7 +113,7 @@ def configs(network_type):
                 "augumentation":		True
             },
             "converter" : {
-                "type":   				[]
+                "type":   				['k210']
             }
         }
 
