@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from sklearn.utils.linear_assignment_ import linear_assignment
-
+from scipy.optimize import linear_sum_assignment as linear_assignment 
+ 
 class BoxMatcher(object):
     """
     # Args
@@ -27,7 +27,8 @@ class BoxMatcher(object):
                                               np.ones((len(boxes2),)))
             else:
                 self._iou_matrix = self._calc(boxes1, boxes2, labels1, labels2)
-            self._match_pairs = linear_assignment(-1*self._iou_matrix)
+            self._match_pairs = np.asarray(linear_assignment(-1*self._iou_matrix))
+            self._match_pairs = np.transpose(self._match_pairs)
     
     def match_idx_of_box1_idx(self, box1_idx):
         """
