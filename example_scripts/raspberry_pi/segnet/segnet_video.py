@@ -12,7 +12,7 @@ import random
 
 from tflite_runtime.interpreter import Interpreter
 from flask import Flask, render_template, request, Response
-from camera_opencv import Camera
+
 
 app = Flask (__name__, static_url_path = '')
 
@@ -145,9 +145,15 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument('--model', help='File path of .tflite file.', required=True)
 parser.add_argument('--labels', help='File path of labels file.', required=True)
 parser.add_argument('--overlay', help='Overlay original image.', default=True)
+parser.add_argument('--source', help='picamera or cv', default='cv')
 args = parser.parse_args()
 
-segnet = Segnet(args.model,args.labels, args.overlay)
+if args.source == "cv":
+    from camera_opencv import Camera
+elif args.source == "picamera":
+    from camera_pi import Camera
+
+segnet = Segnet(args.model, args.labels, args.overlay)
 
 if __name__ == "__main__" :
    app.run (host = '0.0.0.0', port = 5000, debug = True)

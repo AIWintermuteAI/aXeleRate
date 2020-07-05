@@ -7,3 +7,6 @@ dist/
 example_scripts/edge_tpu/
 _configs/
 projects/
+*.tflite
+*.txt
+*.pyc

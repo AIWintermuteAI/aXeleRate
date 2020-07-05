@@ -12,7 +12,6 @@ import numpy as np
 from box import BoundBox, nms_boxes, boxes_to_array, to_minmax, draw_boxes
 from tflite_runtime.interpreter import Interpreter
 from flask import Flask, render_template, request, Response
-from camera_opencv import Camera
 
 app = Flask (__name__, static_url_path = '')
 
@@ -150,8 +149,13 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument('--model', help='File path of .tflite file.', required=True)
 parser.add_argument('--labels', help='File path of labels file.', required=True)
 parser.add_argument('--threshold', help='Confidence threshold.', default=0.3)
+parser.add_argument('--source', help='picamera or cv', default='cv')
 args = parser.parse_args()
 
+if args.source == "cv":
+    from camera_opencv import Camera
+elif args.source == "picamera":
+    from camera_pi import Camera
 detector = Detector(args.labels, args.model, args.threshold)
 
 if __name__ == "__main__" :

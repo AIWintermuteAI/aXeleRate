@@ -52,7 +52,7 @@ class Segnet(object):
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):
             print("Loading pre-trained weights for the whole model: ", weight_path)
-            self._network.load_weights(weight_path, by_name=by_name)
+            self._network.load_weights(weight_path)
         else:
             print("Failed to load pre-trained weights for the whole model. It might be because you didn't specify any or the weight file cannot be found")
 
