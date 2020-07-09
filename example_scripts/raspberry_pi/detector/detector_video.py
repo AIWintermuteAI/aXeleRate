@@ -12,28 +12,32 @@ import numpy as np
 from box import BoundBox, nms_boxes, boxes_to_array, to_minmax, draw_boxes
 from tflite_runtime.interpreter import Interpreter
 from flask import Flask, render_template, request, Response
-from camera_opencv import Camera
 
 app = Flask (__name__, static_url_path = '')
 
 class Detector(object):
+
     def __init__(self, label_file, model_file, threshold):
         self._threshold = float(threshold)
         self.labels = self.load_labels(label_file)
         self.interpreter = Interpreter(model_file)
         self.interpreter.allocate_tensors()
         _, self.input_height, self.input_width, _ = self.interpreter.get_input_details()[0]['shape']
+        self.tensor_index = self.interpreter.get_input_details()[0]['index']
 
     def load_labels(self, path):
         with open(path, 'r') as f:
             return {i: line.strip() for i, line in enumerate(f.read().replace('"','').split(','))}
 
-
-    def set_input_tensor(self, image):
-      """Sets the input tensor."""
-      tensor_index = self.interpreter.get_input_details()[0]['index']
-      input_tensor = self.interpreter.tensor(tensor_index)()[0]
-      input_tensor[:, :] = image
+    def preprocess(self, img):
+        img = cv2.resize(img, (self.input_width, self.input_height))
+        img = img.astype(np.float32)
+        img = img / 255.
+        img = img - 0.5
+        img = img * 2.
+        img = img[:, :, ::-1]
+        img = np.expand_dims(img, 0)
+        return img
 
     def get_output_tensor(self, index):
       """Returns the output tensor at the given index."""
@@ -43,7 +47,8 @@ class Detector(object):
 
     def detect_objects(self, image):
       """Returns a list of detection results, each a dictionary of object info."""
-      self.set_input_tensor(image)
+      img = self.preprocess(image)
+      self.interpreter.set_tensor(self.tensor_index, img)
       self.interpreter.invoke()
       # Get all output details
       boxes = self.get_output_tensor(0)
@@ -52,11 +57,8 @@ class Detector(object):
     def detect(self, original_image):
         self.output_width, self.output_height = original_image.shape[0:2]
         start_time = time.time()
-        image = cv2.resize(original_image, (self.input_width, self.input_height))
-        #image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         results = self.detect_objects(image)
         elapsed_ms = (time.time() - start_time) * 1000
-
         fps  = 1 / elapsed_ms*1000
         print("Estimated frames per second : {0:.2f} Inference time: {1:.2f}".format(fps, elapsed_ms))
 
@@ -150,8 +152,13 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument('--model', help='File path of .tflite file.', required=True)
 parser.add_argument('--labels', help='File path of labels file.', required=True)
 parser.add_argument('--threshold', help='Confidence threshold.', default=0.3)
+parser.add_argument('--source', help='picamera or cv', default='cv')
 args = parser.parse_args()
 
+if args.source == "cv":
+    from camera_opencv import Camera
+elif args.source == "picamera":
+    from camera_pi import Camera
 detector = Detector(args.labels, args.model, args.threshold)
 
 if __name__ == "__main__" :
