@@ -38,12 +38,12 @@ def configs(network_type):
             "valid_metric":         "val_accuracy",
             "batch_size":           4,
             "learning_rate":        1e-4,
-            "saved_folder":   		"/home/ubuntu/space safety/classifier",
+            "saved_folder":   		"classifier",
             "first_trainable_layer": "",
             "augumentation":				True
         },
         "converter" : {
-            "type":   				['k210']
+            "type":   				['k210','tflite_fullin']
         }
     }
 
@@ -75,13 +75,13 @@ def configs(network_type):
             "valid_metric":         "mAP",
             "batch_size":           2,
             "learning_rate":        1e-4,
-            "saved_folder":   		"/home/ubuntu/space safety/detector",
+            "saved_folder":   		"detector",
             "first_trainable_layer": "",
             "augumentation":				True,
             "is_only_detect" : 		False
         },
         "converter" : {
-            "type":   				['k210']
+            "type":   				['k210','tflite_dynamic']
         }
     }
 
@@ -107,7 +107,7 @@ def configs(network_type):
                 "valid_metric":         "val_loss",
                 "batch_size":           8,
                 "learning_rate":        1e-4,
-                "saved_folder":   		"/home/ubuntu/space safety/segment",
+                "saved_folder":   		"segment",
                 "first_trainable_layer": "",
                 "ignore_zero_class":    False,
                 "augumentation":		True
