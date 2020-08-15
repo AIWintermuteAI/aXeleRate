@@ -40,6 +40,15 @@ class Converter(object):
             else:
                 print('Installing Edge TPU Converter')
                 subprocess.Popen(['bash install_edge_tpu_compiler.sh'], shell=True, stdin=subprocess.PIPE, cwd=cwd).communicate()
+                
+        if 'openvino' in converter_type:
+            rc = os.path.isdir('/opt/intel/openvino')
+            if rc:
+                print('OpenVINO Converter ready')
+            else:
+                print('Installing OpenVINO Converter')
+                subprocess.Popen(['bash install_openvino.sh'], shell=True, stdin=subprocess.PIPE, cwd=cwd).communicate()            
+                
         self._converter_type = converter_type
         self._backend = backend
         self._dataset_path=dataset_path
@@ -96,6 +105,25 @@ class Converter(object):
         result = subprocess.run([k210_converter_path, "compile", model_path,output_path,"-i","tflite", "--dataset-format", "raw", "--dataset", folder_name])
         shutil.rmtree(folder_name, ignore_errors=True)
         print(result.returncode)
+
+
+    def convert_pb(self, model_path, model_layers):
+        import keras.backend as k
+        k.clear_session()
+        k.set_learning_phase(0)
+
+        model = keras.models.load_model(model_path, compile=False)
+        input_node_names = model.layers[0].get_output_at(0).name.split(':')[0]
+        output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
+        sess = k.get_session()
+
+        # The TensorFlow freeze_graph expects a comma-separated string of output node names.
+        input_node_names_onnx= [model.layers[0].get_output_at(0).name]
+        output_node_names_onnx = [model.layers[-1].get_output_at(0).name]
+        print(output_node_names_onnx)
+        print(input_node_names_onnx)
+        frozen_graph_def = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, output_node_names)
+        tf.io.write_graph(frozen_graph_def, "", model_path.split(".")[0] + '.pb', as_text=False)
 
     def convert_onnx(self, model_path, model_layers):
         import keras.backend as k
@@ -170,6 +198,9 @@ class Converter(object):
         if 'onnx' in self._converter_type:
             import tf2onnx
             self.convert_onnx(model_path, model_layers)
+            
+        if 'openvino' in self._converter_type:
+            self.convert_pb(model_path, model_layers)
 
         if 'tflite' in self._converter_type:
             self.convert_tflite(model_path,model_layers)
