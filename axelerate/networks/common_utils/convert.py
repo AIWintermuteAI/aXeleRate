@@ -106,7 +106,6 @@ class Converter(object):
         shutil.rmtree(folder_name, ignore_errors=True)
         print(result.returncode)
 
-
     def convert_pb(self, model_path, model_layers):
         import keras.backend as k
         k.clear_session()
@@ -124,6 +123,20 @@ class Converter(object):
         print(input_node_names_onnx)
         frozen_graph_def = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, output_node_names)
         tf.io.write_graph(frozen_graph_def, "", model_path.split(".")[0] + '.pb', as_text=False)
+
+    def convert_ir(self, model_path):
+        bash_command = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --output_dir .".format(model_path.split(".")[0] + '.pb')
+        process = subprocess.Popen(bash_command, shell=True, stdin=subprocess.PIPE, executable='/bin/bash', cwd=cwd)
+        output, error = process.communicate()
+        print(output)
+
+    def convert_oak(self, model_path):
+
+        output_name = os.path.basename(model_path).split(".")[0]+".blob"
+        bash_command = "source /opt/intel/openvino/bin/setupvars.sh && /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/myriad_compile -m {} -o {} -ip U8 -VPU_MYRIAD_PLATFORM VPU_MYRIAD_2480 -VPU_NUMBER_OF_SHAVES 4 -VPU_NUMBER_OF_CMX_SLICES 4".format(model_path.split(".")[0] + '.xml', output_name)
+        process = subprocess.Popen(bash_command, shell=True, stdin=subprocess.PIPE, executable='/bin/bash', cwd=cwd)
+        output, error = process.communicate()
+        print(output)
 
     def convert_onnx(self, model_path, model_layers):
         import keras.backend as k
@@ -200,7 +213,9 @@ class Converter(object):
             self.convert_onnx(model_path, model_layers)
             
         if 'openvino' in self._converter_type:
-            self.convert_pb(model_path, model_layers)
+            #self.convert_pb(model_path, model_layers)
+            #self.convert_ir(model_path)
+            self.convert_oak(model_path)
 
         if 'tflite' in self._converter_type:
             self.convert_tflite(model_path,model_layers)
