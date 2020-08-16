@@ -125,7 +125,7 @@ class Converter(object):
         tf.io.write_graph(frozen_graph_def, "", model_path.split(".")[0] + '.pb', as_text=False)
 
     def convert_ir(self, model_path):
-        bash_command = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --output_dir .".format(model_path.split(".")[0] + '.pb')
+        bash_command = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --mean_values data[127.5,127.5,127.5] --scale_values data[127.5] --output_dir .".format(model_path.split(".")[0] + '.pb')
         process = subprocess.Popen(bash_command, shell=True, stdin=subprocess.PIPE, executable='/bin/bash', cwd=cwd)
         output, error = process.communicate()
         print(output)
@@ -213,8 +213,8 @@ class Converter(object):
             self.convert_onnx(model_path, model_layers)
             
         if 'openvino' in self._converter_type:
-            #self.convert_pb(model_path, model_layers)
-            #self.convert_ir(model_path)
+            self.convert_pb(model_path, model_layers)
+            self.convert_ir(model_path)
             self.convert_oak(model_path)
 
         if 'tflite' in self._converter_type:
