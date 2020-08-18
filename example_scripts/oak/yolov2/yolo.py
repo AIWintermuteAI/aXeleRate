@@ -60,9 +60,8 @@ class Detector(object):
         # decode the output by the network
         netout[..., 4]  = _sigmoid(netout[..., 4])
         netout[..., 5:] = netout[..., 4][..., np.newaxis] * _softmax(netout[..., 5:])
-        print(netout[..., 4])
         netout[..., 5:] *= netout[..., 5:] > self._threshold
-        
+
         for row in range(grid_h):
             for col in range(grid_w):
                 for b in range(nb_box):
@@ -113,7 +112,7 @@ if __name__ == "__main__" :
     "streams": ["metaout", "previewout"],
     "ai": {
         "blob_file": args.model,
-        "blob_file_config": 'yolov2/YOLO_best_mAP.json'
+        "blob_file_config": 'yolov2/YOLO_best_mAP_alt.json'
           }
         })
 
@@ -124,13 +123,10 @@ if __name__ == "__main__" :
         nnet_packets, data_packets = p.get_available_nnet_and_data_packets()
 
         for nnet_packet in nnet_packets:
-            raw_detections = nnet_packet.get_tensor("out")
-            raw_detections.dtype = np.float16
-            NN_outputs = nnet_packet.entries()[0][0]    
+            raw_detections = nnet_packet.get_tensor(0)
+            raw_detections.dtype = np.float16  
             output_shape = [7, 7, 5, 6]
-
-            output = raw_detections[0:len(NN_outputs)]
-            output = np.reshape(output, output_shape)
+            output = np.reshape(raw_detections, output_shape)
             recv = True
             
         for packet in data_packets:
