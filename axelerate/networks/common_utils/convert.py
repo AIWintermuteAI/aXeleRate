@@ -145,13 +145,15 @@ class Converter(object):
         tf.io.write_graph(frozen_graph_def, "", model_path.split(".")[0] + '.pb', as_text=False)
 
     def convert_ir(self, model_path):
-        cmd = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir {}".format(model_path.split(".")[0] + '.pb', model_path.split(".")[0] + '.xml')
+        input_model = model_path.split(".")[0]+".pb"
+        output_dir = os.path.dirname(model_path)
+        cmd = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir {}".format(input_model, output_dir)
         print(cmd)
         result = run_command(cmd)
         print(result)
 
     def convert_oak(self, model_path):
-        output_name = os.path.basename(model_path).split(".")[0]+".blob"
+        output_name = model_path.split(".")[0]+".blob"
         cmd = "source /opt/intel/openvino/bin/setupvars.sh && /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/myriad_compile -m {} -o {} -ip U8 -VPU_MYRIAD_PLATFORM VPU_MYRIAD_2480 -VPU_NUMBER_OF_SHAVES 4 -VPU_NUMBER_OF_CMX_SLICES 4".format(model_path.split(".")[0] + '.xml', output_name)
         print(cmd)
         result = run_command(cmd)
