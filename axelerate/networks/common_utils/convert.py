@@ -10,11 +10,23 @@ import shutil
 import numpy as np
 from tensorflow.python.framework import graph_util
 from tensorflow.python.framework import graph_io
+import shlex
 
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
 k210_converter_download_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),'ncc_linux_x86_64.tar.xz')
 nncase_download_url="https://github.com/kendryte/nncase/releases/download/v0.2.0-beta2/ncc_linux_x86_64.tar.xz"
 cwd = os.path.dirname(os.path.realpath(__file__))
+
+
+def run_command(cmd, cwd=None):
+    with subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, executable='/bin/bash', universal_newlines=True, cwd=cwd) as p:
+        while True:
+            line = p.stdout.readline()
+            if not line:
+                break
+            print(line)    
+        exit_code = p.poll()
+    return exit_code
 
 class Converter(object):
     def __init__(self, converter_type, backend=None, dataset_path=None):
@@ -39,7 +51,9 @@ class Converter(object):
                 print('Edge TPU Converter ready')
             else:
                 print('Installing Edge TPU Converter')
-                subprocess.Popen(['bash install_edge_tpu_compiler.sh'], shell=True, stdin=subprocess.PIPE, cwd=cwd).communicate()
+                cmd = "bash install_edge_tpu_compiler.sh"
+                result = run_command(cmd, cwd)
+                print(result)
                 
         if 'openvino' in converter_type:
             rc = os.path.isdir('/opt/intel/openvino')
@@ -47,7 +61,9 @@ class Converter(object):
                 print('OpenVINO Converter ready')
             else:
                 print('Installing OpenVINO Converter')
-                subprocess.Popen(['bash install_openvino.sh'], shell=True, stdin=subprocess.PIPE, cwd=cwd).communicate()            
+                cmd = "bash install_openvino.sh"
+                result = run_command(cmd, cwd)
+                print(result)       
                 
         self._converter_type = converter_type
         self._backend = backend
@@ -67,7 +83,7 @@ class Converter(object):
             image = cv2.resize(image, (self._img_size[0], self._img_size[1]))
             data = np.array(backend.normalize(image), dtype=np.float32)
             data = np.expand_dims(data, 0)
-            yield [out]
+            yield [data]
 
     def k210_dataset_gen(self):
         num_imgs = None
@@ -94,17 +110,21 @@ class Converter(object):
     def convert_edgetpu(self, model_path):
         output_path = os.path.dirname(model_path)
         print(output_path)
-        result = subprocess.run(["edgetpu_compiler", "--out_dir", output_path, model_path])
-        print(result.returncode)
+        cmd = "edgetpu_compiler --out_dir {} {}".format(output_path, model_path)
+        print(cmd)
+        result = run_command(cmd)
+        print(result)
 
     def convert_k210(self, model_path):
         folder_name = self.k210_dataset_gen()
         output_name = os.path.basename(model_path).split(".")[0]+".kmodel"
         output_path = os.path.join(os.path.dirname(model_path),output_name)
         print(output_path)
-        result = subprocess.run([k210_converter_path, "compile", model_path,output_path,"-i","tflite", "--dataset-format", "raw", "--dataset", folder_name])
+        cmd = "{} compile {} {} -i tflite --dataset-format raw --dataset {}".format(k210_converter_path, model_path, output_path, folder_name)
+        print(cmd)
+        result = run_command(cmd)
         shutil.rmtree(folder_name, ignore_errors=True)
-        print(result.returncode)
+        print(result)
 
     def convert_pb(self, model_path, model_layers):
         import keras.backend as k
@@ -125,18 +145,17 @@ class Converter(object):
         tf.io.write_graph(frozen_graph_def, "", model_path.split(".")[0] + '.pb', as_text=False)
 
     def convert_ir(self, model_path):
-        bash_command = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --mean_values data[127.5,127.5,127.5] --scale_values data[127.5] --output_dir .".format(model_path.split(".")[0] + '.pb')
-        process = subprocess.Popen(bash_command, shell=True, stdin=subprocess.PIPE, executable='/bin/bash', cwd=cwd)
-        output, error = process.communicate()
-        print(output)
+        cmd = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir .".format(model_path.split(".")[0] + '.pb')
+        print(cmd)
+        result = run_command(cmd)
+        print(result)
 
     def convert_oak(self, model_path):
-
         output_name = os.path.basename(model_path).split(".")[0]+".blob"
-        bash_command = "source /opt/intel/openvino/bin/setupvars.sh && /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/myriad_compile -m {} -o {} -ip U8 -VPU_MYRIAD_PLATFORM VPU_MYRIAD_2480 -VPU_NUMBER_OF_SHAVES 4 -VPU_NUMBER_OF_CMX_SLICES 4".format(model_path.split(".")[0] + '.xml', output_name)
-        process = subprocess.Popen(bash_command, shell=True, stdin=subprocess.PIPE, executable='/bin/bash', cwd=cwd)
-        output, error = process.communicate()
-        print(output)
+        cmd = "source /opt/intel/openvino/bin/setupvars.sh && /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/myriad_compile -m {} -o {} -ip U8 -VPU_MYRIAD_PLATFORM VPU_MYRIAD_2480 -VPU_NUMBER_OF_SHAVES 4 -VPU_NUMBER_OF_CMX_SLICES 4".format(model_path.split(".")[0] + '.xml', output_name)
+        print(cmd)
+        result = run_command(cmd)
+        print(result)
 
     def convert_onnx(self, model_path, model_layers):
         import keras.backend as k
@@ -199,6 +218,7 @@ class Converter(object):
         model_layers = model.layers
         self._img_size = model.inputs[0].shape[1:3]
         model.save(model_path, overwrite=True, include_optimizer=False)
+        model_path = os.path.abspath(model_path)
 
         if 'k210' in self._converter_type:
             self.convert_tflite(model_path, model_layers, 'k210')
