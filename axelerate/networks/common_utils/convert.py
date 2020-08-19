@@ -145,7 +145,7 @@ class Converter(object):
         tf.io.write_graph(frozen_graph_def, "", model_path.split(".")[0] + '.pb', as_text=False)
 
     def convert_ir(self, model_path):
-        cmd = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir .".format(model_path.split(".")[0] + '.pb')
+        cmd = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir {}".format(model_path.split(".")[0] + '.pb', model_path.split(".")[0] + '.xml')
         print(cmd)
         result = run_command(cmd)
         print(result)
