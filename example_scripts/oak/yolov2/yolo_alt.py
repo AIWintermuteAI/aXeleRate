@@ -35,7 +35,7 @@ class Detector(object):
         
         if len(boxes) > 0:
             boxes = _to_original_scale(boxes)
-            print(boxes)
+            #print(boxes)
             original_image = draw_boxes(original_image, boxes, probs, self.labels)
         return original_image
 
@@ -54,32 +54,30 @@ class Detector(object):
                 coordinate scale is normalized [0, 1]
             probs : array, shape of (N, nb_classes)
         """
-        nb_box, grid_h, grid_w = netout.shape[1:]
+        grid_h, grid_w, nb_box = netout.shape[:3]
         boxes = []
         
         # decode the output by the network
-        netout[4, ...]  = _sigmoid(netout[4, ...])
-        netout[5:, ...] = netout[4, ...][np.newaxis, ...] * _softmax(netout[5:, ...])
-        print(netout[5:, ...])
-        netout[5:, ...] *= netout[5:, ...] > self._threshold
-
+        netout[..., 4]  = _sigmoid(netout[..., 4])
+        netout[..., 5:] = netout[..., 4][..., np.newaxis] * _softmax(netout[..., 5:])
+        netout[..., 5:] *= netout[..., 5:] > self._threshold
+        
         for row in range(grid_h):
             for col in range(grid_w):
                 for b in range(nb_box):
                     # from 4th element onwards are confidence and class classes
-                    classes = netout[5:, b, row,col]
-
+                    classes = netout[row,col,b,5:]
+                    
                     if np.sum(classes) > 0:
                         # first 4 elements are x, y, w, and h
-                        x, y, w, h = netout[:4, b, row,col]
+                        x, y, w, h = netout[row,col,b,:4]
 
                         x = (col + _sigmoid(x)) / grid_w # center position, unit: image width
                         y = (row + _sigmoid(y)) / grid_h # center position, unit: image height
                         w = anchors[2 * b + 0] * np.exp(w) / grid_w # unit: image width
                         h = anchors[2 * b + 1] * np.exp(h) / grid_h # unit: image height
-                        confidence = netout[4, b, row,col]
+                        confidence = netout[row,col,b,4]
                         box = BoundBox(x, y, w, h, confidence, classes)
-
                         boxes.append(box)
         
         boxes = nms_boxes(boxes, len(classes), nms_threshold, self._threshold)
@@ -128,6 +126,9 @@ if __name__ == "__main__" :
             raw_detections = nnet_packet.get_tensor(0)
             raw_detections.dtype = np.float16
             raw_detections = np.squeeze(raw_detections)
+            output_shape = [5, 6, 7, 7]
+            output = np.reshape(raw_detections, output_shape)
+            output = np.transpose(output, (2, 3, 0, 1))
             recv = True
             
         for packet in data_packets:
@@ -138,7 +139,7 @@ if __name__ == "__main__" :
                 data2 = data[2, :, :]
                 frame = cv2.merge([data0, data1, data2])
                 if recv:
-                    frame = detector.parse(frame, raw_detections)
+                    frame = detector.parse(frame, output)
                 cv2.imshow('previewout', frame)
 
         if cv2.waitKey(1) == ord('q'):
