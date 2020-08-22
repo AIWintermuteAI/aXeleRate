@@ -144,10 +144,11 @@ class Converter(object):
         frozen_graph_def = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, output_node_names)
         tf.io.write_graph(frozen_graph_def, "", model_path.split(".")[0] + '.pb', as_text=False)
 
-    def convert_ir(self, model_path):
+    def convert_ir(self, model_path, model_layers):
         input_model = model_path.split(".")[0]+".pb"
         output_dir = os.path.dirname(model_path)
-        cmd = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --batch 1 --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir {}".format(input_model, output_dir)
+        output_layer = model_layers[-2].name+'/BiasAdd'
+        cmd = "source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model {} --output {} --batch 1 --reverse_input_channels --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir {}".format(input_model, output_layer, output_dir)
         print(cmd)
         result = run_command(cmd)
         print(result)
@@ -236,7 +237,7 @@ class Converter(object):
             
         if 'openvino' in self._converter_type:
             self.convert_pb(model_path, model_layers)
-            self.convert_ir(model_path)
+            self.convert_ir(model_path, model_layers)
             self.convert_oak(model_path)
 
         if 'tflite' in self._converter_type:
