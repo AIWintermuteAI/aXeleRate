@@ -26,7 +26,7 @@ argparser = argparse.ArgumentParser(
 
 argparser.add_argument(
     '-c',
-    '--conf',
+    '--config',
     default="configs/from_scratch.json",
     help='path to configuration file')
 
@@ -164,4 +164,4 @@ def setup_training(config_file=None,config_dict=None):
 
 if __name__ == '__main__':
     args = argparser.parse_args()
-    setup_training(args.conf)
+    setup_training(args.config)

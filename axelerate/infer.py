@@ -34,7 +34,7 @@ argparser = argparse.ArgumentParser(
 
 argparser.add_argument(
     '-c',
-    '--conf',
+    '--config',
     help='path to configuration file')
 
 argparser.add_argument(
@@ -168,6 +168,6 @@ def setup_inference(config,weights,threshold=0.3,path=None):
 if __name__ == '__main__':
     # 1. extract arguments
     args = argparser.parse_args()
-    with open(args.conf) as config_buffer:
+    with open(args.config) as config_buffer:
         config = json.loads(config_buffer.read())
-    setup_inference(config,args.weights,args.threshold)
+    setup_inference(config, args.weights, args.threshold)
