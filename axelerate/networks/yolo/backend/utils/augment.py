@@ -30,9 +30,13 @@ class ImgAugment(object):
                 jittered & resized bounding box
         """
         # 1. read image file
-
-        image = cv2.imread(img_file)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        try:
+            image = cv2.imread(img_file)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        except:
+            print("This image has an annotation file, but cannot be open. Check the integrity of your dataset.", img_file)
+            raise
+        
 
         boxes_ = np.copy(boxes)
         labels_ = np.copy(labels)

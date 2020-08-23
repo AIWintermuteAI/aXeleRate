@@ -125,6 +125,10 @@ class YOLO(object):
                                                                      valid_ann_folder,
                                                                      is_only_detect=False)
         # 1. get batch generator
+        valid_batch_size = len(valid_annotations)*valid_times
+        if valid_batch_size < batch_size: 
+            raise ValueError("Not enough validation images: batch size {} is larger than {} validation images. Add more validation images or decrease batch size!".format(batch_size, valid_batch_size))
+        
         train_batch_generator = self._get_batch_generator(train_annotations, batch_size, train_times, jitter=jitter)
         valid_batch_generator = self._get_batch_generator(valid_annotations, batch_size, valid_times, jitter=False)
         
