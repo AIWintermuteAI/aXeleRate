@@ -152,7 +152,10 @@ def visualize_dataset(img_folder, ann_folder, num_imgs = None, img_size=None, ji
     from axelerate.networks.yolo.backend.utils.annotation import PascalVocXmlParser
     import matplotlib.pyplot as plt
     import matplotlib
-    matplotlib.use('TkAgg')
+    try:
+        matplotlib.use('TkAgg')
+    except:
+        pass
     parser = PascalVocXmlParser()
     for ann in os.listdir(ann_folder)[:num_imgs]:
         annotation_file = os.path.join(ann_folder, ann)
