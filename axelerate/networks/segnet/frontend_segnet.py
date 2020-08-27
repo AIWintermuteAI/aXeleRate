@@ -33,7 +33,7 @@ def create_segnet(architecture, input_size, n_classes, weights = None):
         model = mobilenet_segnet(n_classes,input_size, encoder_level=4, weights = weights, architecture = architecture)
 
     output_size = (model.output_height,model.output_width)
-    network = Segnet(model,input_size, n_classes, output_size)
+    network = Segnet(model, input_size, n_classes, base_model.normalize, output_size)
 
     return network
 
@@ -42,12 +42,13 @@ class Segnet(object):
                  network,
                  input_size,
                  n_classes,
+                 norm,
                  output_size):
         self._network = network       
         self._n_classes = n_classes
         self._input_size = input_size
         self._output_size = output_size
-        #self._norm = 
+        self._norm = norm
 
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):
@@ -57,9 +58,9 @@ class Segnet(object):
             print("Failed to load pre-trained weights for the whole model. It might be because you didn't specify any or the weight file cannot be found")
 
     def predict(self, image):
-        preprocessed_image = prepare_image(image,show=False)
+        preprocessed_image = prepare_image(image, show=False)
         pred = model.predict(preprocessed_image)
-        predicted_class_indices=np.argmax(pred,axis=1)
+        predicted_class_indices=np.argmax(pred, axis=1)
         predictions = [labels[k] for k in predicted_class_indices]
         return predictions
 
@@ -87,10 +88,11 @@ class Segnet(object):
             loss_k = masked_categorical_crossentropy
         else:
             loss_k = 'categorical_crossentropy'
-        train_generator = create_batch_generator(img_folder, ann_folder, self._input_size, self._output_size, self._n_classes,
-                                                 batch_size,train_times,do_augment)
-        if valid_img_folder:
-            validation_generator = create_batch_generator(valid_img_folder, valid_ann_folder, self._input_size,self._output_size, self._n_classes,batch_size,valid_times,False)
+        train_generator = create_batch_generator(img_folder, ann_folder, self._input_size, 
+                          self._output_size, self._n_classes,batch_size, train_times, do_augment, self._norm)
+
+        validation_generator = create_batch_generator(valid_img_folder, valid_ann_folder, self._input_size, 
+                               self._output_size, self._n_classes, batch_size, valid_times, False, self._norm)
         
-        return train(self._network,loss_k,train_generator,validation_generator,learning_rate, nb_epoch, project_folder, first_trainable_layer, self, metrics)
+        return train(self._network, loss_k, train_generator, validation_generator, learning_rate, nb_epoch, project_folder, first_trainable_layer, self, metrics)
     

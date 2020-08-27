@@ -248,8 +248,7 @@ def _augment_seg(img, seg , augmentation_name="aug_all"  ):
     # Augment the input image
     image_aug = aug_det.augment_image(img)
 
-    segmap = ia.SegmentationMapOnImage(
-        seg, nb_classes=np.max(seg) + 1, shape=img.shape)
+    segmap = ia.SegmentationMapOnImage(seg, nb_classes=np.max(seg) + 1, shape=img.shape)
     segmap_aug = aug_det.augment_segmentation_maps(segmap)
     segmap_aug = segmap_aug.get_arr_int()
 
@@ -268,5 +267,5 @@ def _try_n_times(fn, n, *args, **kargs):
     return fn(*args, **kargs)
 
 
-def augment_seg(img, seg , augmentation_name="aug_all"  ):
+def augment_seg(img, seg , augmentation_name="aug_all"):
     return _try_n_times(_augment_seg, IMAGE_AUGMENTATION_NUM_TRIES, img, seg , augmentation_name=augmentation_name )

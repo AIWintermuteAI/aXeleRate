@@ -2,7 +2,7 @@ import os
 import numpy as np
 np.random.seed(1337)
 from keras.utils import Sequence
-
+from axelerate.networks.common_utils.augment import process_image_segmentation
 import glob
 import itertools
 import random
@@ -69,8 +69,7 @@ def get_pairs_from_paths(images_path, segs_path, ignore_non_matching=False):
     return return_value
 
 
-def get_image_array(image_input, width, height, imgNorm="sub_mean",
-                  ordering='channels_first'):
+def get_image_array(image_input, norm, ordering='channels_first'):
     """ Load image array from input """
     if type(image_input) is np.ndarray:
         # It is already an array, use it as it is
@@ -82,14 +81,7 @@ def get_image_array(image_input, width, height, imgNorm="sub_mean",
     else:
         raise DataLoaderError("get_image_array: Can't process input type {0}".format(str(type(image_input))))
 
-
-
-    img = cv2.resize(img, (width, height))
-    img = img.astype(np.float32)
-    img = img / 255.
-    img = img - 0.5
-    img = img * 2.
-    img = img[:, :, ::-1]
+    img = norm(img)
 
     if ordering == 'channels_first':
         img = np.rollaxis(img, 2, 0)
@@ -175,8 +167,8 @@ class BatchGenerator(Sequence):
     def __init__(self,
                  images_path, segs_path, batch_size,
                  n_classes,input_size, output_size, repeat_times,
-                 do_augment=False,augmentation_name="aug_all"):
-        self.augmentation_name = augmentation_name
+                 do_augment=False, norm=None):
+        self.norm = norm
         self.n_classes = n_classes
         self.input_size = input_size
         self.output_size = output_size
@@ -200,12 +192,12 @@ class BatchGenerator(Sequence):
         y_batch= []
         for i in range(self._batch_size):
             im, seg = next(self.zipped)
-            im = cv2.imread(im, 1)
+            im = cv2.imread(im, 1)[...,::-1]
             seg = cv2.imread(seg, 1)
-            if self.do_augment:
-                im, seg[:, :, 0] = augment_seg(im, seg[:, :, 0] , augmentation_name=self.augmentation_name)
 
-            x_batch.append(get_image_array(im, self.input_size[1],self.input_size[0], ordering=IMAGE_ORDERING))
+            im, seg = process_image_segmentation(img, seg, self.input_size[1], self.input_size[0], self.do_augment)
+
+            x_batch.append(get_image_array(im, self.norm, ordering=IMAGE_ORDERING))
             y_batch.append(get_segmentation_array(seg, self.n_classes, self.output_size[1], self.output_size[0]))
 
         x_batch = np.array(x_batch)
