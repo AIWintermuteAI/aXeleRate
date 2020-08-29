@@ -80,7 +80,7 @@ def get_image_array(image_input, norm, ordering='channels_first'):
         img = cv2.imread(image_input, 1)
     else:
         raise DataLoaderError("get_image_array: Can't process input type {0}".format(str(type(image_input))))
-
+        
     img = norm(img)
 
     if ordering == 'channels_first':
@@ -88,10 +88,10 @@ def get_image_array(image_input, norm, ordering='channels_first'):
     return img
 
 
-def get_segmentation_array(image_input, nClasses, width, height, no_reshape=True):
+def get_segmentation_array(image_input, nClasses, no_reshape=True):
     """ Load segmentation array from input """
 
-    seg_labels = np.zeros((height, width, nClasses))
+    seg_labels = np.zeros((image_input.shape[0], image_input.shape[1], nClasses))
 
     if type(image_input) is np.ndarray:
         # It is already an array, use it as it is
@@ -103,7 +103,6 @@ def get_segmentation_array(image_input, nClasses, width, height, no_reshape=True
     else:
         raise DataLoaderError("get_segmentation_array: Can't process input type {0}".format(str(type(image_input))))
 
-    img = cv2.resize(img, (width, height), interpolation=cv2.INTER_NEAREST)
     img = img[:, :, 0]
 
     for c in range(nClasses):
@@ -155,11 +154,12 @@ def create_batch_generator(images_path, segs_path,
                            n_classes=51,
                            batch_size=8,
                            repeat_times=1,
-                           do_augment=False):
+                           do_augment=False,
+                           norm=None):
 
     worker = BatchGenerator(images_path, segs_path, batch_size,
                  n_classes, input_size, output_size, repeat_times, 
-                 do_augment)
+                 do_augment, norm)
     return worker
 
 
@@ -191,14 +191,14 @@ class BatchGenerator(Sequence):
         x_batch = []
         y_batch= []
         for i in range(self._batch_size):
-            im, seg = next(self.zipped)
-            im = cv2.imread(im, 1)[...,::-1]
+            img, seg = next(self.zipped)
+            img = cv2.imread(img, 1)[...,::-1]
             seg = cv2.imread(seg, 1)
 
-            im, seg = process_image_segmentation(img, seg, self.input_size[1], self.input_size[0], self.do_augment)
+            im, seg = process_image_segmentation(img, seg, self.input_size[0], self.input_size[1], self.output_size[0], self.output_size[1], self.do_augment)
 
             x_batch.append(get_image_array(im, self.norm, ordering=IMAGE_ORDERING))
-            y_batch.append(get_segmentation_array(seg, self.n_classes, self.output_size[1], self.output_size[0]))
+            y_batch.append(get_segmentation_array(seg, self.n_classes))
 
         x_batch = np.array(x_batch)
         y_batch = np.array(y_batch)

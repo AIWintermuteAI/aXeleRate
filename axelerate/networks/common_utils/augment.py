@@ -115,15 +115,15 @@ def process_image_classification(image, desired_w, desired_h, augment):
         
     return image
 
-def process_image_segmentation(image, segmap, desired_w, desired_h, augment):
+def process_image_segmentation(image, segmap, input_w, input_h, output_w, output_h, augment):
     # resize the image to standard size
-    if (desired_w and desired_h) or augment:
+    if (input_w and input_h) or augment:
         segmap = SegmentationMapsOnImage(segmap, shape=image.shape)
 
-        if (desired_w and desired_h):
+        if (input_w and input_h):
             # Rescale image and segmaps
-            image = ia.imresize_single_image(image, (desired_w, desired_h))
-            segmap = segmap.resize((desired_w, desired_h), interpolation="nearest")
+            image = ia.imresize_single_image(image, (input_w, input_h))
+            segmap = segmap.resize((output_w, output_h), interpolation="nearest")
 
         if augment:
             aug_pipe = _create_augment_pipeline()

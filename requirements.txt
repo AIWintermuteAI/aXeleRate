@@ -1,7 +1,7 @@
 tensorflow>=1.15.0,<2.0.0
 keras==2.3.1
-imgaug>=0.2.9
-opencv-python>=4.1.2.30
+imgaug==0.4
+opencv-python==4.1.2.30
 Pillow
 requests
 tqdm

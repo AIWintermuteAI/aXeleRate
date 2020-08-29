@@ -120,7 +120,7 @@ class Converter(object):
         output_name = os.path.basename(model_path).split(".")[0]+".kmodel"
         output_path = os.path.join(os.path.dirname(model_path),output_name)
         print(output_path)
-        cmd = "{} compile {} {} -i tflite --dataset-format raw --dataset {}".format(k210_converter_path, model_path, output_path, folder_name)
+        cmd = '{} compile "{}" "{}" -i tflite --dataset-format raw --dataset "{}"'.format(k210_converter_path, model_path, output_path, folder_name)
         print(cmd)
         result = run_command(cmd)
         shutil.rmtree(folder_name, ignore_errors=True)
@@ -148,14 +148,14 @@ class Converter(object):
         input_model = model_path.split(".")[0]+".pb"
         output_dir = os.path.dirname(model_path)
         output_layer = model_layers[-2].name+'/BiasAdd'
-        cmd = 'source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model "{}" --output {} --batch 1 --reverse_input_channels --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir {}'.format(input_model, output_layer, output_dir)
+        cmd = 'source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model "{}" --output {} --batch 1 --reverse_input_channels --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir "{}"'.format(input_model, output_layer, output_dir)
         print(cmd)
         result = run_command(cmd)
         print(result)
 
     def convert_oak(self, model_path):
         output_name = model_path.split(".")[0]+".blob"
-        cmd = 'source /opt/intel/openvino/bin/setupvars.sh && /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/myriad_compile -m "{}" -o {} -ip U8 -VPU_MYRIAD_PLATFORM VPU_MYRIAD_2480 -VPU_NUMBER_OF_SHAVES 4 -VPU_NUMBER_OF_CMX_SLICES 4'.format(model_path.split(".")[0] + '.xml', output_name)
+        cmd = 'source /opt/intel/openvino/bin/setupvars.sh && /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/myriad_compile -m "{}" -o "{}" -ip U8 -VPU_MYRIAD_PLATFORM VPU_MYRIAD_2480 -VPU_NUMBER_OF_SHAVES 4 -VPU_NUMBER_OF_CMX_SLICES 4'.format(model_path.split(".")[0] + '.xml', output_name)
         print(cmd)
         result = run_command(cmd)
         print(result)

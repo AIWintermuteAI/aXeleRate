@@ -107,6 +107,7 @@ def resnet50_segnet(n_classes, input_size, encoder_level, weights):
 
     model = _segnet(n_classes, encoder_input, encoder_output, input_size, encoder_level=encoder_level)
     model.model_name = "resnet50_segnet"
+    model.normalize = encoder.normalize
     return model
 
 
@@ -115,8 +116,9 @@ def mobilenet_segnet(n_classes, input_size, encoder_level, weights, architecture
     encoder = create_feature_extractor(architecture, input_size, weights)
     encoder_output = encoder.feature_extractor.layers[mobilenet[encoder_level]].output
     encoder_input = encoder.feature_extractor.inputs[0]
-
+    
     model = _segnet(n_classes, encoder_input, encoder_output, input_size, encoder_level=encoder_level)
     model.model_name = "mobilenet_segnet"
+    model.normalize = encoder.normalize
     return model
 

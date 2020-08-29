@@ -6,7 +6,7 @@ import os
 import numpy as np
 
 from axelerate.networks.common_utils.feature import create_feature_extractor
-from axelerate.networks.classifier.data_gen import create_datagen
+from axelerate.networks.classifier.batch_gen import create_datagen
 from axelerate.networks.common_utils.fit import train
 from keras.models import Model, load_model
 from keras.layers import Dense, GlobalAveragePooling2D, Dropout
