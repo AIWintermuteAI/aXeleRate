@@ -101,24 +101,26 @@ def train(model,
                        mode='auto', 
                        verbose=1,
                        restore_best_weights=True)
+                       
     checkpoint = ModelCheckpoint(save_weights_name, 
                                  monitor=metrics, 
                                  verbose=1, 
                                  save_best_only=True, 
                                  mode='auto', 
                                  period=1)
+                                 
     reduce_lr = ReduceLROnPlateau(monitor=metrics, factor=0.2,
-                              patience=5, min_lr=0.00001,verbose=1)
+                              patience=10, min_lr=0.00001,verbose=1)
 
     map_evaluator_cb = MapEvaluation(network, valid_batch_gen,
                                      save_best=True,
                                      save_name=save_weights_name,
                                      save_plot_name=save_plot_name,
-                                     iou_threshold=0.7,
+                                     iou_threshold=0.5,
                                      score_threshold=0.3)
 
     if network.__class__.__name__ == 'YOLO' and metrics =='mAP':
-        callbacks = [map_evaluator_cb, ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.00001,verbose=1)]
+        callbacks = [map_evaluator_cb, ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.00001,verbose=1)]
     else:
         graph = PlotCallback(save_plot_name,metrics)
         callbacks= [early_stop, checkpoint, reduce_lr, graph] 

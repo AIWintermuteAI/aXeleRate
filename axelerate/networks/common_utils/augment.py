@@ -242,7 +242,7 @@ def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_
 
     try:
         # Get image-segmentation pairs
-        img_seg_pairs = get_pairs_from_paths(images_path, segs_path, ignore_non_matching=ignore_non_matching)
+        img_seg_pairs = get_pairs_from_paths(images_path, segs_path, ignore_non_matching=True)
         # Get the colors for the classes
         colors = class_colors
 

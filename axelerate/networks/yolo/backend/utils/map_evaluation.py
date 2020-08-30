@@ -21,8 +21,8 @@ class MapEvaluation(keras.callbacks.Callback):
     """
 
     def __init__(self, yolo, generator,
-                 iou_threshold=0.7,
-                 score_threshold=0.5,
+                 iou_threshold=0.5,
+                 score_threshold=0.3,
                  save_path=None,
                  save_plot_name=None,
                  period=1,
