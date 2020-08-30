@@ -9,6 +9,8 @@ import cv2
 import os
 import glob
 import random
+import matplotlib.pyplot as plt
+import matplotlib
 
 class ImgAugment(object):
     def __init__(self, w, h, jitter):
@@ -288,8 +290,6 @@ def visualize_classification_dataset(img_folder, num_imgs = None, img_size=None,
 
 if __name__ == '__main__':
     import argparse
-    import matplotlib.pyplot as plt
-    import matplotlib
     parser = argparse.ArgumentParser()
     parser.add_argument("--type", type=str)
     parser.add_argument("--images", type=str)
