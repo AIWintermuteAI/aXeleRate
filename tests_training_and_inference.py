@@ -127,7 +127,7 @@ argparser.add_argument(
     '-a',
     '--arch',
     type=bool,
-    default=True,
+    default=False,
     help='test all architectures?')
 
 argparser.add_argument(

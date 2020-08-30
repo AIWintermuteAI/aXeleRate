@@ -18,7 +18,6 @@ except ImportError:
 
 
 from ..models.config import IMAGE_ORDERING
-from .augmentation import augment_seg
 
 DATA_LOADER_SEED = 0
 
@@ -81,7 +80,8 @@ def get_image_array(image_input, norm, ordering='channels_first'):
     else:
         raise DataLoaderError("get_image_array: Can't process input type {0}".format(str(type(image_input))))
         
-    img = norm(img)
+    if norm:
+        img = norm(img)
 
     if ordering == 'channels_first':
         img = np.rollaxis(img, 2, 0)

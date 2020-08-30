@@ -46,7 +46,7 @@ class ImgAugment(object):
         labels_ = np.copy(labels)
   
         # 2. resize and augment image     
-        image, boxes_, labels_ = process_image(image, boxes_, labels_, self._w, self._h, self._jitter) 
+        image, boxes_, labels_ = process_image_detection(image, boxes_, labels_, self._w, self._h, self._jitter) 
 
         return image, boxes_, labels_
 

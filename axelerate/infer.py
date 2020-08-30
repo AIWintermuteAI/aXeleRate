@@ -13,7 +13,7 @@ from axelerate.networks.yolo.backend.utils.box import draw_scaled_boxes
 from axelerate.networks.yolo.backend.utils.annotation import parse_annotation
 from axelerate.networks.yolo.backend.utils.eval.fscore import count_true_positives, calc_score
 from axelerate.networks.segnet.frontend_segnet import create_segnet
-from axelerate.networks.segnet.predict import predict_multiple, evaluate
+from axelerate.networks.segnet.predict import predict
 from axelerate.networks.classifier.frontend_classifier import get_labels,create_classifier
 
 import os
@@ -88,9 +88,11 @@ def setup_inference(config,weights,threshold=0.3,path=None):
                                    config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
-        predict_multiple(segnet._network, inp_dir=config['train']['valid_image_folder'], out_dir=dirname, overlay_img=True)
-        print(evaluate(segnet._network, inp_images_dir=config['train']['valid_image_folder'], annotations_dir=config['train']['valid_annot_folder']))
-
+        for filename in os.listdir(config['train']['valid_image_folder']):
+            filepath = os.path.join(config['train']['valid_image_folder'],filename)
+            orig_image, input_image = prepare_image(filepath, segnet)
+            out_fname = os.path.join(dirname, os.path.basename(filename))
+            predict(model=segnet._network, inp=input_image, out_fname=out_fname)
 
     if config['model']['type']=='Classifier':
         print('Classifier')    

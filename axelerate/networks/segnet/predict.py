@@ -47,19 +47,16 @@ def model_from_checkpoint_path(checkpoints_path):
 
 
 def get_colored_segmentation_image(seg_arr, n_classes, colors=class_colors):
-    output_height = seg_arr.shape[0]
-    output_width = seg_arr.shape[1]
-
+    output_height = seg_arr.shape[1]
+    output_width = seg_arr.shape[0]
+    seg_arr = seg_arr.transpose(1, 0)
     seg_img = np.zeros((output_height, output_width, 3))
-
     for c in range(n_classes):
         seg_img[:, :, 0] += ((seg_arr[:, :] == c)*(colors[c][0])).astype('uint8')
         seg_img[:, :, 1] += ((seg_arr[:, :] == c)*(colors[c][1])).astype('uint8')
         seg_img[:, :, 2] += ((seg_arr[:, :] == c)*(colors[c][2])).astype('uint8')
 
     return seg_img 
-
-
 
 def get_legends(class_names,  colors=class_colors): 
     
@@ -76,7 +73,7 @@ def get_legends(class_names,  colors=class_colors):
         
     return legend    
 
-def overlay_seg_image( inp_img , seg_img  ):
+def overlay_seg_image(inp_img , seg_img):
     orininal_h = inp_img.shape[0]
     orininal_w = inp_img.shape[1]
     seg_img = cv2.resize(seg_img, (orininal_w, orininal_h))
@@ -106,24 +103,21 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None ,
     if n_classes is None:
         n_classes = np.max(seg_arr)
 
-    seg_img = get_colored_segmentation_image(seg_arr, n_classes , colors=colors )
+    seg_img = get_colored_segmentation_image(seg_arr, n_classes , colors=colors)
 
     if not inp_img is None:
         orininal_h = inp_img.shape[0]
         orininal_w = inp_img.shape[1]
         seg_img = cv2.resize(seg_img, (orininal_w, orininal_h))
 
-
     if (not prediction_height is None) and  (not prediction_width is None):
         seg_img = cv2.resize(seg_img, (prediction_width, prediction_height ))
         if not inp_img is None:
             inp_img = cv2.resize(inp_img, (prediction_width, prediction_height ))
 
-
     if overlay_img:
         assert not inp_img is None
         seg_img = overlay_seg_image(inp_img , seg_img)
-
 
     if show_legends:
         assert not class_names is None
@@ -133,37 +127,17 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None ,
 
     return seg_img
 
-
-
-
 def predict(model=None, inp=None, out_fname=None, checkpoints_path=None, overlay_img=False,
     class_names=None, show_legends=False, colors=class_colors, prediction_width=None, prediction_height=None):
 
-    if model is None and (checkpoints_path is not None):
-        model = model_from_checkpoint_path(checkpoints_path)
-
-    assert (inp is not None)
-    assert((type(inp) is np.ndarray) or isinstance(inp, six.string_types)
-           ), "Input should be the CV image or the input file name"
-
-    if isinstance(inp, six.string_types):
-        inp = cv2.imread(inp)
-
-    assert len(inp.shape) == 3, "Image should be h,w,3 "
-    orininal_h = inp.shape[0]
-    orininal_w = inp.shape[1]
-
-    output_width = model.output_width
-    output_height = model.output_height
-    input_width = model.input_width
-    input_height = model.input_height
     n_classes = model.n_classes
 
-    x = get_image_array(inp, input_width, input_height, ordering=IMAGE_ORDERING)
-    pr = model.predict(np.array([x]))[0]
+    pr = model.predict(inp)
+    pr = np.squeeze(pr)
+
     #pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
     pr = pr.argmax(axis=2)
-    seg_img = visualize_segmentation(pr, inp, n_classes=n_classes, colors=colors, overlay_img=overlay_img, show_legends=show_legends, class_names=class_names, prediction_width=prediction_width, prediction_height=prediction_height)
+    seg_img = visualize_segmentation(pr, n_classes=n_classes, colors=colors)
 
     if out_fname is not None:
         cv2.imwrite(out_fname, seg_img)
