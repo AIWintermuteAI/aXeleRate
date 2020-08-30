@@ -11,7 +11,7 @@ import os
 
 def create_datagen(train_folder, valid_folder, batch_size, input_size, project_folder, augumentation, norm):
 
-    train_datagen=ImageDataAugmentor(preprocess_input=norm, process_image = process_image_classification, augment = augumentation)
+    train_datagen=ImageDataAugmentor(preprocess_input=  norm, process_image = process_image_classification, augment = augumentation)
     validation_datagen=ImageDataAugmentor(preprocess_input = norm, process_image = process_image_classification, augment = False)
     
     train_generator=train_datagen.flow_from_directory(train_folder,

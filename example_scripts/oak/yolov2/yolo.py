@@ -6,7 +6,7 @@ import time
 import numpy as np
 
 IOU_THRESHOLD = 0.1
-labels = ['null', 'raccoon']
+labels = ['null', 'kangaroo']
 GREEN = '\033[1;32m'
 RED = '\033[1;31m'
 NOCOLOR = '\033[0m'
@@ -195,8 +195,8 @@ def show_tiny_yolo(results, original_img, is_depth=0):
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--model', help='File path of .tflite file.', required=True)
-parser.add_argument('--labels', help='File path of labels file.', required=True)
-parser.add_argument('--threshold', help='Confidence threshold.', default=0.6)
+parser.add_argument('--config', help='File path of config file.', required=True)
+parser.add_argument('--threshold', help='Confidence threshold.', default=0.4)
 args = parser.parse_args()
 
 if __name__ == "__main__" :
@@ -208,7 +208,7 @@ if __name__ == "__main__" :
     "streams": ["metaout", "previewout"],
     "ai": {
         "blob_file": args.model,
-        "blob_file_config": 'yolov2/YOLO_best_mAP_alt.json'
+        "blob_file_config": 'YOLO_best_mAP.json'
           }
         })
 
@@ -222,8 +222,6 @@ if __name__ == "__main__" :
             raw_detections = nnet_packet.get_tensor(0)
             raw_detections.dtype = np.float16  
             raw_detections = np.squeeze(raw_detections)
-            #output_shape = [7, 7, 5, 6]
-            #output = np.reshape(raw_detections, output_shape)
             recv = True
             
         for packet in data_packets:
@@ -234,7 +232,7 @@ if __name__ == "__main__" :
                 data2 = data[2, :, :]
                 frame = cv2.merge([data0, data1, data2])
                 if recv:
-                    filtered_objects = post_processing(raw_detections, ['raccoon'], 0.3)
+                    filtered_objects = post_processing(raw_detections, ['kangaroo'], args.threshold)
                     frame = show_tiny_yolo(filtered_objects, frame, 0)
                 cv2.imshow('previewout', frame)
 

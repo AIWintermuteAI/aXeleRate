@@ -215,7 +215,7 @@ def visualize_detection_dataset(img_folder, ann_folder, num_imgs = None, img_siz
         #plt.pause(1)
         #plt.close()
 
-def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_size=None, do_augment=False, n_classes=255, ignore_non_matching=False, no_show=False):
+def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_size=None, do_augment=False, n_classes=255):
 
     from axelerate.networks.segnet.data_utils.data_loader import get_pairs_from_paths, DATA_LOADER_SEED, class_colors, DataLoaderError
 
