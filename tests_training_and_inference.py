@@ -139,7 +139,7 @@ argparser.add_argument(
 
 args = argparser.parse_args()
 
-archs = ["MobileNet7_5"]
+archs = ['ResNet50']
 converters = [""]
 errors = []
 

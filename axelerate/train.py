@@ -6,6 +6,8 @@ import argparse
 import os
 import sys
 import json
+import matplotlib
+
 from axelerate.networks.yolo.frontend import create_yolo, get_object_labels
 from axelerate.networks.classifier.frontend_classifier import create_classifier, get_labels
 from axelerate.networks.segnet.frontend_segnet import create_segnet
@@ -31,6 +33,11 @@ argparser.add_argument(
     help='path to configuration file')
 
 def train_from_config(config,project_folder):
+    try:
+        matplotlib.use('Agg')
+    except:
+        pass
+
     #added for compatibility with < 0.5.7 versions
     try:
         input_size = config['model']['input_size'][:]
