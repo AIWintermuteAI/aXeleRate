@@ -17,14 +17,14 @@ aXeleRate streamlines training and converting computer vision models to be run o
      <td>PASCAL-VOC 2012 Object Detection Dataset MobileNet1_0 backend + YOLOv2 <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_pascal20_detector.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a> </td>
-     <td>PASCAL-VOC 2012 Semantic Segmentation MobileNet7_5 backend + Segnet-Basic <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_test_segnet.ipynb">
+     <td>Human parsing Semantic Segmentation MobileNet5_0 backend + Segnet-Basic <a href="https://colab.research.google.com/github/AIWintermuteAI/aXeleRate/blob/master/resources/aXeleRate_human_segmentation.ipynb">
   <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
 </a> </td>
   </tr>
   <tr>
     <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/n02106550_7003.jpg" width=300 height=300></td>
     <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2009_001349.jpg" width=300 height=300></td>
-    <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/2010_001177.jpg" width=250 height=350></td>
+    <td><img src="https://raw.githubusercontent.com/AIWintermuteAI/aXeleRate/master/resources/66.jpg" width=250 height=350></td>
   </tr>
  </table>
 
@@ -34,12 +34,11 @@ TL;DR
 
 aXeleRate is meant for people who need to run computer vision applications(image classification, object detection, semantic segmentation) on the edge devices with hardware acceleration. It has easy configuration process through config file or config dictionary(for Google Colab) and automatic conversion of the best model for training session into the required file format. You put the properly formatted data in, start the training script and (hopefully) come back to see a converted model that is ready for deployment on your device!
 
-
 ### :wrench: Key Features
   - Supports multiple computer vision models: object detection(YOLOv2), image classification, semantic segmentation(SegNet-basic)
-  - Different feature extractors to be used with the above network types: Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50, and Inception3. 
+  - Different feature extractors to be used with the above network types: Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, NASNetMobile, ResNet50, and DenseNet121. 
   - Automatic conversion of the best model for the training session. aXeleRate will download the suitable converter automatically.
-  - Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
+  - Currently supports trained model conversion to: .kmodel(K210), .tflite formats, .tflite(Edge TPU), .onnx(for later on-device optimization with TensorRT).
   - Model version control made easier. Keras model files and converted models are saved in the project folder, grouped by the training date. Training history is saved as .png graph in the model folder.
   - Two modes of operation: locally, with train.py script and .json config file and remote, tailored for Google Colab, with module import and dictionary config.
 
@@ -52,6 +51,8 @@ pip install axelerate
 Daily development version:
 
 pip install git+https://github.com/AIWintermuteAI/aXeleRate
+
+If installing in Anaconda environment, make sure you have necessary CUDA/CUDNN version installed in that environment to use GPU for training.
 
 ###  :computer: Project Story
 

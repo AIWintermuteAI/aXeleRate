@@ -66,12 +66,11 @@ def prepare_image(img_path, network):
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image
 
-def setup_inference(config,weights,threshold=0.3,path=None):
+def setup_inference(config, weights,threshold=0.3, path=None):
     try:
         matplotlib.use('TkAgg')
     except:
         pass
-
     #added for compatibility with < 0.5.7 versions
     try:
         input_size = config['model']['input_size'][:]
@@ -189,6 +188,26 @@ def setup_inference(config,weights,threshold=0.3,path=None):
 
 if __name__ == '__main__':
     # 1. extract arguments
+
+    argparser = argparse.ArgumentParser(
+        description='Run inference script')
+
+    argparser.add_argument(
+        '-c',
+        '--config',
+        help='path to configuration file')
+
+    argparser.add_argument(
+        '-t',
+        '--threshold',
+        default=0.3,
+        help='detection threshold')
+
+    argparser.add_argument(
+        '-w',
+        '--weights',
+        help='trained weight files')
+
     args = argparser.parse_args()
     with open(args.config) as config_buffer:
         config = json.loads(config_buffer.read())

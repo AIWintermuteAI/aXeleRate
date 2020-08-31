@@ -142,7 +142,7 @@ def train_from_config(config,project_folder):
     converter.convert_model(model_path)    
     return model_path
 
-def setup_training(config_file=None,config_dict=None):
+def setup_training(config_file=None, config_dict=None):
     """make directory to save weights & its configuration """
     if config_file:
         with open(config_file) as config_buffer:
@@ -163,5 +163,15 @@ def setup_training(config_file=None,config_dict=None):
 
 
 if __name__ == '__main__':
+
+    argparser = argparse.ArgumentParser(
+        description='Train and validate YOLO_v2 model on any dataset')
+
+    argparser.add_argument(
+        '-c',
+        '--config',
+        default="configs/classifer.json",
+        help='path to configuration file')
+
     args = argparser.parse_args()
-    setup_training(args.config)
+    setup_training(config_file=args.config)
