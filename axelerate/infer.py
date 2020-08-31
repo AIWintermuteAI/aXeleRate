@@ -4,6 +4,7 @@ import argparse
 import json
 import cv2
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
@@ -66,6 +67,11 @@ def prepare_image(img_path, network):
     return orig_image, input_image
 
 def setup_inference(config,weights,threshold=0.3,path=None):
+    try:
+        matplotlib.use('TkAgg')
+    except:
+        pass
+
     #added for compatibility with < 0.5.7 versions
     try:
         input_size = config['model']['input_size'][:]
@@ -117,8 +123,22 @@ def setup_inference(config,weights,threshold=0.3,path=None):
             orig_image, input_image = prepare_image(filename, classifier)
             prediction_time, img_class, prob = classifier.predict(input_image)
             inference_time.append(prediction_time)
-            print(orig_image.shape)
-            cv2.putText(orig_image, "{}:{:.2f}".format(img_class[0], prob[0]), (10,30), font, orig_image.shape[1]/700 , (0, 0, 255), 2, True)
+            
+            # label shape and colorization
+            text = "{}:{:.2f}".format(img_class[0], prob[0])
+            background_color = (70, 120, 70) # grayish green background for text
+            text_color = (255, 255, 255)   # white text
+
+            size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
+            left = 10
+            top = 30 - size[1]
+            right = left + size[0]
+            bottom = top + size[1]
+
+            # set up the colored rectangle background for text
+            cv2.rectangle(orig_image, (left - 1, top - 5),(right + 1, bottom + 1), background_color, -1)
+            # set up text
+            cv2.putText(orig_image, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
             cv2.imwrite(output_path, orig_image)
             show_image(output_path)
             print("{}:{}".format(img_class[0], prob[0]))

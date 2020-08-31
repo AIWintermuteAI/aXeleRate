@@ -227,7 +227,7 @@ def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_
     def _get_colored_segmentation_image(img, seg, colors, n_classes, img_size, do_augment=False):
         """ Return a colored segmented image """
 
-        img, seg = process_image_segmentation(img, seg, img_size, img_size, do_augment)
+        img, seg = process_image_segmentation(img, seg, img_size, img_size, img_size, img_size, do_augment)
         seg_img = np.zeros_like(seg)
 
         for c in range(n_classes):
@@ -304,5 +304,3 @@ if __name__ == '__main__':
         visualize_segmentation_dataset(args.images, args.annotations, args.num_imgs, args.img_size, args.aug)
     if args.type == 'classification':
         visualize_classification_dataset(args.images, args.num_imgs, args.img_size, args.aug)
-
-

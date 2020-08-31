@@ -44,8 +44,6 @@ def model_from_checkpoint_path(checkpoints_path):
     model.load_weights(latest_weights)
     return model
 
-
-
 def get_colored_segmentation_image(seg_arr, n_classes, colors=class_colors):
     output_height = seg_arr.shape[1]
     output_width = seg_arr.shape[0]
@@ -55,7 +53,7 @@ def get_colored_segmentation_image(seg_arr, n_classes, colors=class_colors):
         seg_img[:, :, 0] += ((seg_arr[:, :] == c)*(colors[c][0])).astype('uint8')
         seg_img[:, :, 1] += ((seg_arr[:, :] == c)*(colors[c][1])).astype('uint8')
         seg_img[:, :, 2] += ((seg_arr[:, :] == c)*(colors[c][2])).astype('uint8')
-
+    seg_img = seg_img.astype('uint8')
     return seg_img 
 
 def get_legends(class_names,  colors=class_colors): 
@@ -93,9 +91,8 @@ def concat_lenends(  seg_img , legend_img  ):
 
     return out_img
 
-
-def visualize_segmentation(seg_arr, inp_img=None, n_classes=None , 
-    colors=class_colors, class_names=None,overlay_img=False, show_legends=False , 
+def visualize_segmentation(seg_arr, inp_img=None, n_classes=None, 
+    colors=class_colors, class_names=None, overlay_img=False, show_legends=False , 
     prediction_width=None, prediction_height=None):
     
     print("Found the following classes in the segmentation image:", np.unique(seg_arr))
@@ -123,7 +120,7 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None ,
         assert not class_names is None
         legend_img = get_legends(class_names , colors=colors )
 
-        seg_img = concat_lenends( seg_img , legend_img )
+        seg_img = concat_lenends(seg_img, legend_img)
 
     return seg_img
 
