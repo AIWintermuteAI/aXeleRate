@@ -21,9 +21,9 @@
         "batch_size":           8,
         "learning_rate":        1e-4,
         "saved_folder":   		"segment",
-        "first_trainable_layer": "0",
+        "first_trainable_layer": "",
         "ignore_zero_class":    false,
-        "augumentation":				true
+        "augumentation":		true
     },
     "converter" : {
         "type":   				["k210","tflite"]

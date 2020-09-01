@@ -27,10 +27,10 @@
         "learning_rate":        1e-3,
         "saved_folder":   		"kangaroo_detector",
         "first_trainable_layer": "",
-        "augumentation":				true,
+        "augumentation":		true,
         "is_only_detect" : 		false
     },
     "converter" : {
-        "type":   				["tflite"]
+        "type":   				["openvino"]
     }
 }

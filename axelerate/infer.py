@@ -21,7 +21,7 @@ import os
 import glob
 import tensorflow as tf
 
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
+gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
 config = tf.ConfigProto(gpu_options=gpu_options)
 config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
@@ -95,9 +95,9 @@ def setup_inference(config, weights,threshold=0.3, path=None):
         segnet.load_weights(weights)
         for filename in os.listdir(config['train']['valid_image_folder']):
             filepath = os.path.join(config['train']['valid_image_folder'],filename)
-            orig_image, input_image = prepare_image(filepath, segnet)
+            orig_image, input_arr = prepare_image(filepath, segnet)
             out_fname = os.path.join(dirname, os.path.basename(filename))
-            predict(model=segnet._network, inp=input_image, out_fname=out_fname)
+            predict(model=segnet._network, inp=input_arr, image = orig_image, out_fname=out_fname)
 
     if config['model']['type']=='Classifier':
         print('Classifier')    
