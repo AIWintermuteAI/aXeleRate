@@ -14,7 +14,7 @@ import shlex
 
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
 k210_converter_download_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),'ncc_linux_x86_64.tar.xz')
-nncase_download_url="https://github.com/kendryte/nncase/releases/download/v0.2.0-beta2/ncc_linux_x86_64.tar.xz"
+nncase_download_url="https://github.com/kendryte/nncase/releases/download/v0.2.0-beta4/ncc_linux_x86_64.tar.xz"
 cwd = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -70,7 +70,7 @@ class Converter(object):
         self._dataset_path=dataset_path
 
     def edgetpu_dataset_gen(self):
-        num_imgs = None
+        num_imgs = 300
         image_files_list = []
         from axelerate.networks.common_utils.feature import create_feature_extractor
         backend = create_feature_extractor(self._backend, [self._img_size[0], self._img_size[1]])
@@ -86,7 +86,7 @@ class Converter(object):
             yield [data]
 
     def k210_dataset_gen(self):
-        num_imgs = None
+        num_imgs = 300
         image_files_list = []
         from axelerate.networks.common_utils.feature import create_feature_extractor
         backend = create_feature_extractor(self._backend, [self._img_size[0], self._img_size[1]])
@@ -219,7 +219,7 @@ class Converter(object):
     def convert_model(self, model_path):
         model = keras.models.load_model(model_path, compile=False)
         model_layers = model.layers
-        self._img_size = model.inputs[0].shape[1:3]
+        self._img_size = model.input_shape[1:3]
         model.save(model_path, overwrite=True, include_optimizer=False)
         model_path = os.path.abspath(model_path)
 
