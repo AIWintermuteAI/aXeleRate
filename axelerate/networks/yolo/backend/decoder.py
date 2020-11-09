@@ -1,4 +1,3 @@
-
 import numpy as np
 from axelerate.networks.yolo.backend.utils.box import BoundBox
 from axelerate.networks.yolo.backend.utils.box import BoundBox, nms_boxes, boxes_to_array

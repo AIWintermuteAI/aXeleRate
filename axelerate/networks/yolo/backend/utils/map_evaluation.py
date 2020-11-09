@@ -1,12 +1,12 @@
 import os
 import tensorflow as tf
 import numpy as np
-import keras
+import tensorflow.keras
 import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-class MapEvaluation(keras.callbacks.Callback):
+class MapEvaluation(tensorflow.keras.callbacks.Callback):
     """ Evaluate a given dataset using a given model.
         code originally from https://github.com/fizyr/keras-retinanet
 
@@ -48,7 +48,7 @@ class MapEvaluation(keras.callbacks.Callback):
 
         self.bestMap = 0
 
-        if not isinstance(self._tensorboard, keras.callbacks.TensorBoard) and self._tensorboard is not None:
+        if not isinstance(self._tensorboard, tensorflow.keras.callbacks.TensorBoard) and self._tensorboard is not None:
             raise ValueError("Tensorboard object must be a instance from keras.callbacks.TensorBoard")
 
     def on_epoch_end(self, epoch, logs={}):

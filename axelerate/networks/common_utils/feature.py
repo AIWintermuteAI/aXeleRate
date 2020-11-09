@@ -1,12 +1,11 @@
-import keras
-from keras.models import Model
 import tensorflow as tf
-from keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda
-from keras.layers.advanced_activations import LeakyReLU
-from keras.layers.merge import concatenate
-from keras.applications import DenseNet121
-from keras.applications import NASNetMobile
-from keras.applications import ResNet50
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda
+from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.layers import Concatenate
+from tensorflow.keras.applications import DenseNet121
+from tensorflow.keras.applications import NASNetMobile
+from tensorflow.keras.applications import ResNet50
 
 from .mobilenet_sipeed.mobilenet import MobileNet
 
@@ -62,7 +61,7 @@ class BaseFeatureExtractor(object):
         return input_shape[1]
 
     def get_output_size(self):
-        output_shape = self.feature_extractor.get_output_shape_at(-1)
+        output_shape = self.feature_extractor.outputs[0].shape
         return output_shape[1:3]
 
     def extract(self, input_image):
@@ -266,10 +265,10 @@ class MobileNetFeature(BaseFeatureExtractor):
                 input_shape = item
 
         if weights == 'imagenet':
-            mobilenet = MobileNet(input_shape=input_shape, input_tensor=input_image, alpha = alpha, weights = 'imagenet', include_top=False, backend=keras.backend, layers=keras.layers, models=keras.models, utils=keras.utils)
+            mobilenet = MobileNet(input_shape=input_shape, input_tensor=input_image, alpha = alpha, weights = 'imagenet', include_top=False, backend=tf.keras.backend, layers=tf.keras.layers, models=tf.keras.models, utils=tf.keras.utils)
             print('Successfully loaded imagenet backend weights')
         else:
-            mobilenet = MobileNet(input_shape=(input_size[0],input_size[1],3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = None, include_top=False, backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
+            mobilenet = MobileNet(input_shape=(input_size[0],input_size[1],3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = None, include_top=False, backend=tf.keras.backend, layers=tf.keras.layers,models=tf.keras.models,utils=tf.keras.utils)
             if weights:
                 print('Loaded backend weigths: '+weights)
                 mobilenet.load_weights(weights)
@@ -368,7 +367,7 @@ class DenseNet121Feature(BaseFeatureExtractor):
         self.feature_extractor = densenet
 
     def normalize(self, image):
-        from keras.applications.densenet import preprocess_input
+        from tf.keras.applications.densenet import preprocess_input
         return preprocess_input(image)
 
 class NASNetMobileFeature(BaseFeatureExtractor):
@@ -387,7 +386,7 @@ class NASNetMobileFeature(BaseFeatureExtractor):
         self.feature_extractor = nasnetmobile
 
     def normalize(self, image):
-        from keras.applications.nasnet import preprocess_input
+        from tf.keras.applications.nasnet import preprocess_input
         return preprocess_input(image)
 
 class ResNet50Feature(BaseFeatureExtractor):

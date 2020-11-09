@@ -8,7 +8,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-from keras import backend as K 
+from tensorflow.keras import backend as K 
 from axelerate.networks.yolo.frontend import create_yolo
 from axelerate.networks.yolo.backend.utils.box import draw_boxes
 from axelerate.networks.yolo.backend.utils.annotation import parse_annotation
@@ -20,11 +20,6 @@ from axelerate.networks.classifier.frontend_classifier import get_labels,create_
 import os
 import glob
 import tensorflow as tf
-
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=1)
-config = tf.ConfigProto(gpu_options=gpu_options)
-config.gpu_options.allow_growth = True
-session = tf.Session(config=config)
 
 K.clear_session()
 

@@ -8,9 +8,9 @@ import numpy as np
 from axelerate.networks.common_utils.feature import create_feature_extractor
 from axelerate.networks.classifier.batch_gen import create_datagen
 from axelerate.networks.common_utils.fit import train
-from keras.models import Model, load_model
-from keras.layers import Dense, GlobalAveragePooling2D, Dropout
-from keras.applications.mobilenet import preprocess_input
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
+from tensorflow.keras.applications.mobilenet import preprocess_input
 
 def get_labels(directory):
     labels = sorted(os.listdir(directory))

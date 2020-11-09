@@ -11,7 +11,7 @@ from axelerate.networks.common_utils.fit import train
 from axelerate.networks.segnet.models.segnet import mobilenet_segnet, squeezenet_segnet, full_yolo_segnet, tiny_yolo_segnet, vgg16_segnet, resnet50_segnet
 
 def masked_categorical_crossentropy(gt , pr ):
-    from keras.losses import categorical_crossentropy
+    from tensorflow.keras.losses import categorical_crossentropy
     mask = 1-  gt[: , : , 0 ] 
     return categorical_crossentropy( gt , pr )*mask
 

@@ -1,5 +1,4 @@
 import tensorflow as tf
-import keras
 import subprocess
 import os
 import cv2
@@ -38,7 +37,7 @@ class Converter(object):
                 print('K210 Converter ready')
             else:
                 print('Downloading K210 Converter')
-                _path = keras.utils.get_file(k210_converter_download_path, nncase_download_url)     
+                _path = tf.keras.utils.get_file(k210_converter_download_path, nncase_download_url)     
                 print(_path)    
                 tar_file = tarfile.open(k210_converter_download_path)
                 tar_file.extractall(os.path.join(os.path.dirname(__file__),"ncc"))
@@ -127,11 +126,11 @@ class Converter(object):
         print(result)
 
     def convert_pb(self, model_path, model_layers):
-        import keras.backend as k
+        import tensorflow.keras.backend as k
         k.clear_session()
         k.set_learning_phase(0)
 
-        model = keras.models.load_model(model_path, compile=False)
+        model = tf.keras.models.load_model(model_path, compile=False)
         input_node_names = model.layers[0].get_output_at(0).name.split(':')[0]
         output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
         sess = k.get_session()
@@ -161,11 +160,11 @@ class Converter(object):
         print(result)
 
     def convert_onnx(self, model_path, model_layers):
-        import keras.backend as k
+        import tensorflow.keras.backend as k
         k.clear_session()
         k.set_learning_phase(0)
 
-        model = keras.models.load_model(model_path, compile=False)
+        model = tf.keras.models.load_model(model_path, compile=False)
         input_node_names = model.layers[0].get_output_at(0).name.split(':')[0]
         output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
         sess = k.get_session()
@@ -217,7 +216,7 @@ class Converter(object):
         open(os.path.join (model_path.split(".")[0] + '.tflite'), "wb").write(tflite_model)
 
     def convert_model(self, model_path):
-        model = keras.models.load_model(model_path, compile=False)
+        model = tf.keras.models.load_model(model_path, compile=False)
         model_layers = model.layers
         self._img_size = model.input_shape[1:3]
         model.save(model_path, overwrite=True, include_optimizer=False)

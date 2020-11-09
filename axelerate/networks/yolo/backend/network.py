@@ -3,8 +3,8 @@ import numpy as np
 import cv2
 import os
 import time
-from keras.models import Model
-from keras.layers import Reshape, Conv2D, Input, Lambda
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Reshape, Conv2D, Input, Lambda
 from axelerate.networks.common_utils.feature import create_feature_extractor
 
 def create_yolo_network(architecture,
@@ -64,7 +64,7 @@ class YoloNetwork(object):
         return self._model
 
     def get_grid_size(self):
-        _, w, h, _, _ = self._model.get_output_shape_at(-1)
+        _, w, h, _, _ = self._model.outputs[0].shape
         return (w,h)
 
     def get_normalize_func(self):

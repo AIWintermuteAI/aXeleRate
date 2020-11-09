@@ -2,7 +2,6 @@ import numpy as np
 
 EPS = 1e-12
 
-
 def get_iou(gt, pr, n_classes):
     class_wise = np.zeros(n_classes)
     for cl in range(n_classes):

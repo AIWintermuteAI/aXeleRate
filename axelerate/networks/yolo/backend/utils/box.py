@@ -1,9 +1,6 @@
-
 import numpy as np
 import cv2
 
-
-# Todo : BoundBox & its related method extraction
 class BoundBox:
     def __init__(self, x, y, w, h, c = None, classes = None):
         self.x     = x
