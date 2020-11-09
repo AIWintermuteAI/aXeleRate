@@ -45,9 +45,8 @@ def model_from_checkpoint_path(checkpoints_path):
     return model
 
 def get_colored_segmentation_image(seg_arr, n_classes, colors=class_colors):
-    output_height = seg_arr.shape[1]
-    output_width = seg_arr.shape[0]
-    seg_arr = seg_arr.transpose(1, 0)
+    output_height = seg_arr.shape[0]
+    output_width = seg_arr.shape[1]
     seg_img = np.zeros((output_height, output_width, 3))
     for c in range(n_classes):
         seg_img[:, :, 0] += ((seg_arr[:, :] == c)*(colors[c][0])).astype('uint8')
@@ -114,7 +113,7 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
 
     if overlay_img:
         assert not inp_img is None
-        seg_img = overlay_seg_image(inp_img , seg_img)
+        seg_img = overlay_seg_image(inp_img, seg_img)
 
     if show_legends:
         assert not class_names is None
@@ -124,7 +123,7 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
 
     return seg_img
 
-def predict(model=None, inp=None, out_fname=None, checkpoints_path=None, overlay_img=False,
+def predict(model=None, inp=None, out_fname=None, image = None, overlay_img=False,
     class_names=None, show_legends=False, colors=class_colors, prediction_width=None, prediction_height=None):
 
     n_classes = model.n_classes
@@ -134,7 +133,7 @@ def predict(model=None, inp=None, out_fname=None, checkpoints_path=None, overlay
 
     #pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
     pr = pr.argmax(axis=2)
-    seg_img = visualize_segmentation(pr, n_classes=n_classes, colors=colors)
+    seg_img = visualize_segmentation(pr, inp_img=image, n_classes=n_classes, overlay_img=True, colors=colors)
 
     if out_fname is not None:
         cv2.imwrite(out_fname, seg_img)

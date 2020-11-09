@@ -211,9 +211,9 @@ def visualize_detection_dataset(img_folder, ann_folder, num_imgs = None, img_siz
                         (255,0,0), 1)
 
         plt.imshow(img)
-        plt.show(block=True)
-        #plt.pause(1)
-        #plt.close()
+        plt.show(block=False)
+        plt.pause(1)
+        plt.close()
 
 def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_size=None, do_augment=False, n_classes=255):
 
@@ -255,13 +255,11 @@ def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_
             fig = plt.figure(figsize=(14,7))
             ax1 = fig.add_subplot(1,2,1)
             ax1.imshow(img)
-            #ax2 = fig.add_subplot(1,3,2)
-            #ax2.imshow(seg)
             ax3 = fig.add_subplot(1,2,2)
             ax3.imshow(seg_img)
-            plt.show(block=True)
-            #plt.pause(1)
-            #plt.close()
+            plt.show(block=False)
+            plt.pause(1)
+            plt.close()
     except DataLoaderError as e:
         print("Found error during data loading\n{0}".format(str(e)))
         return False
@@ -282,9 +280,9 @@ def visualize_classification_dataset(img_folder, num_imgs = None, img_size=None,
         cv2.putText(image, os.path.dirname(filename).split('/')[-1], (10,30), font, image.shape[1]/700 , (255, 0, 0), 2, True)
         plt.figure()
         plt.imshow(image)
-        plt.show(block=True)
-        #plt.pause(1)
-        #plt.close()
+        plt.show(block=False)
+        plt.pause(1)
+        plt.close()
         print(filename)
 
 

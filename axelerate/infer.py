@@ -79,15 +79,12 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
                                    config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
-        
-        valid_image_folder = config['train']['valid_image_folder']
-        image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
-        
-        for i in range(len(image_files_list)):
-            img_path = image_files_list[i]
-            orig_image, input_image = prepare_image(img_path, segnet)
-            out_fname = os.path.join(dirname, os.path.basename(img_path))
-            predict(model=segnet._network, inp=input_image, out_fname=out_fname)
+        for filename in os.listdir(config['train']['valid_image_folder']):
+            filepath = os.path.join(config['train']['valid_image_folder'],filename)
+            orig_image, input_arr = prepare_image(filepath, segnet)
+            out_fname = os.path.join(dirname, os.path.basename(filename))
+            predict(model=segnet._network, inp=input_arr, image = orig_image, out_fname=out_fname)
+
 
     if config['model']['type']=='Classifier':
         print('Classifier')    

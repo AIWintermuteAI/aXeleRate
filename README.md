@@ -6,7 +6,7 @@
 
 <hr>
 <p align="center">
-aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized for both the workflow on local machine and on Google Colab. Currently supports trained model conversion to: .kmodel(K210), .tflite formats. Support planned for: .tflite(Edge TPU), .pb(TF-TRT optimized).
+aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized for both the workflow on local machine and on Google Colab. Currently supports trained model conversion to: .kmodel(K210), .tflite format(full integer and dymaic range quantization support available), OpenVINO IR model format. Experimental support: Google Edge TPU, TensorRT.
 </p>
 
 <table>
@@ -38,7 +38,7 @@ aXeleRate is meant for people who need to run computer vision applications(image
   - Supports multiple computer vision models: object detection(YOLOv2), image classification, semantic segmentation(SegNet-basic)
   - Different feature extractors to be used with the above network types: Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, NASNetMobile, ResNet50, and DenseNet121. 
   - Automatic conversion of the best model for the training session. aXeleRate will download the suitable converter automatically.
-  - Currently supports trained model conversion to: .kmodel(K210), .tflite formats, .tflite(Edge TPU), .onnx(for later on-device optimization with TensorRT).
+  - Currently supports trained model conversion to: .kmodel(K210), .tflite format(full integer and dymaic range quantization support available), .tflite(Edge TPU), .onnx(for later on-device optimization with TensorRT), OpenVINO IR model and .blob (for inference with Movidius chipes, such as OpenCV AI Kit).
   - Model version control made easier. Keras model files and converted models are saved in the project folder, grouped by the training date. Training history is saved as .png graph in the model folder.
   - Two modes of operation: locally, with train.py script and .json config file and remote, tailored for Google Colab, with module import and dictionary config.
 
@@ -66,7 +66,7 @@ aXeleRate is still work in progress project. I will be making some changes from 
   - [ ] Dataset verification (checking for corrupt images and label mismatch)
   - [ ] Pre-trained ImageNet1000 backend weights for Tiny YOLO, SqueezeNet
   - [ ] Adding support for multi-GPU and Cloud TPU training
-  - [ ] Unifiying image augumentation pipeline
+  - [X] Unifiying image augumentation pipeline
   - [X] SegNet to use common encoders(currently SegNet uses it's own feature extractors as encoder part)
   - [X] Support for custom input_size
   - [X] mAP evaluation for Object Detection models

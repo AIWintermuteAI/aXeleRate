@@ -10,7 +10,7 @@ from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from datetime import datetime
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 metrics_dict = {'val_accuracy':['accuracy'],'val_loss':[],'mAP':[]}
 

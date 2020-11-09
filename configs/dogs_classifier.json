@@ -1,11 +1,11 @@
 {
     "model" : {
         "type":                 "Classifier",
-        "architecture":         "MobileNet5_0",
+        "architecture":         "NASNetMobile",
         "input_size":           224,
         "fully-connected":      [],
         "labels":               [],
-        "dropout" : 		0.2
+        "dropout" : 		    0.2
     },
      "weights" : {
             "full":   				"",
@@ -24,7 +24,7 @@
         "learning_rate":        1e-3,
         "saved_folder":   		"dogs_classifier",
         "first_trainable_layer": "",
-        "augumentation":				true
+        "augumentation":		 true
     },
     "converter" : {
         "type":   				["tflite"]

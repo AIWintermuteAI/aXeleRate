@@ -27,7 +27,7 @@
         "learning_rate":        1e-4,
         "saved_folder":   		"detector",
         "first_trainable_layer": "",
-        "augumentation":				true,
+        "augumentation":		true,
         "is_only_detect" : 		false
     },
     "converter" : {

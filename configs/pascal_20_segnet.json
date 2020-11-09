@@ -3,7 +3,7 @@
         "type":                 "SegNet",
         "architecture":         "MobileNet7_5",
         "input_size":           224,
-        "n_classes" : 		20
+        "n_classes" : 		    20
     },
     "weights" : {
         "full":   				"",
@@ -23,7 +23,7 @@
         "saved_folder":   		"pascal_20",
         "first_trainable_layer": "0",
         "ignore_zero_class":    false,
-        "augumentation":				true
+        "augumentation":		true
     },
     "converter" : {
         "type":   				["tflite"]
