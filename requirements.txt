@@ -6,3 +6,4 @@ requests
 tqdm
 sklearn
 matplotlib
+pascal_voc_writer

@@ -93,7 +93,6 @@ class Converter(object):
         for ext in ['/**/*.jpg', '/**/*.jpeg', '/**/*.png']: image_files_list.extend(image_search(ext))
         temp_folder = os.path.join(os.path.dirname(__file__),'tmp')
         os.mkdir(temp_folder)
-        print(image_files_list)
         for filename in image_files_list[:num_imgs]:
             image = cv2.imread(filename)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -119,7 +118,7 @@ class Converter(object):
         output_name = os.path.basename(model_path).split(".")[0]+".kmodel"
         output_path = os.path.join(os.path.dirname(model_path),output_name)
         print(output_path)
-        cmd = '{} compile "{}" "{}" -i tflite --dataset-format raw --dataset "{}"'.format(k210_converter_path, model_path, output_path, folder_name)
+        cmd = '{} compile "{}" "{}" -i tflite --weights-quantize-threshold 1000 --dataset-format raw --dataset "{}"'.format(k210_converter_path, model_path, output_path, folder_name)
         print(cmd)
         result = run_command(cmd)
         shutil.rmtree(folder_name, ignore_errors=True)
@@ -186,15 +185,15 @@ class Converter(object):
                f.write(model_proto.SerializeToString())
         #sess.close()
 
-    def convert_tflite(self, model_path, model_layers, target=None):
-        yolo = 'reshape_1' in model_layers[-1].name
+    def convert_tflite(self, model, model_layers, target=None):
+        yolo = 'reshape' in model_layers[-1].name
         if yolo and target=='k210': 
             print("Converting to tflite without Reshape layer for K210 Yolo")
-            output_layer = model_layers[-2].name+'/BiasAdd'
-            converter = tf.lite.TFLiteConverter.from_keras_model_file(model_path, output_arrays=[output_layer])
+            model= tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
+            converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
         elif target == 'edgetpu':
-            converter = tf.lite.TFLiteConverter.from_keras_model_file(model_path)
+            converter = tf.lite.TFLiteConverter.from_keras_model(model)
             converter.optimizations = [tf.lite.Optimize.DEFAULT]
             converter.representative_dataset = self.edgetpu_dataset_gen
             converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
@@ -202,45 +201,44 @@ class Converter(object):
             converter.inference_output_type = tf.uint8
 
         elif target == 'tflite_dynamic':
-            converter = tf.lite.TFLiteConverter.from_keras_model_file(model_path)
+            converter = tf.lite.TFLiteConverter.from_keras_model(model)
             converter.optimizations = [tf.lite.Optimize.DEFAULT]
             
         elif target == 'tflite_fullint':
-            converter = tf.lite.TFLiteConverter.from_keras_model_file(model_path)
+            converter = tf.lite.TFLiteConverter.from_keras_model(model)
             converter.optimizations = [tf.lite.Optimize.DEFAULT]            
             converter.representative_dataset = self.edgetpu_dataset_gen
             
         else:
-            converter = tf.lite.TFLiteConverter.from_keras_model_file(model_path)
+            converter = tf.lite.TFLiteConverter.from_keras_model(model)
         tflite_model = converter.convert()
-        open(os.path.join (model_path.split(".")[0] + '.tflite'), "wb").write(tflite_model)
+        open(os.path.join (self.model_path.split(".")[0] + '.tflite'), "wb").write(tflite_model)
 
     def convert_model(self, model_path):
         model = tf.keras.models.load_model(model_path, compile=False)
         model_layers = model.layers
         self._img_size = model.input_shape[1:3]
-        model.save(model_path, overwrite=True, include_optimizer=False)
-        model_path = os.path.abspath(model_path)
+        self.model_path = os.path.abspath(model_path)
 
         if 'k210' in self._converter_type:
-            self.convert_tflite(model_path, model_layers, 'k210')
-            self.convert_k210(model_path.split(".")[0] + '.tflite')
+            self.convert_tflite(model, model_layers, 'k210')
+            self.convert_k210(self.model_path.split(".")[0] + '.tflite')
 
         if 'edgetpu' in self._converter_type:
-            self.convert_tflite(model_path,model_layers, 'edgetpu')
+            self.convert_tflite(model, model_layers, 'edgetpu')
             self.convert_edgetpu(model_path.split(".")[0] + '.tflite')
 
         if 'onnx' in self._converter_type:
             import tf2onnx
-            self.convert_onnx(model_path, model_layers)
+            self.convert_onnx(model, model_layers)
             
         if 'openvino' in self._converter_type:
-            self.convert_pb(model_path, model_layers)
-            self.convert_ir(model_path, model_layers)
+            self.convert_pb(model, model_layers)
+            self.convert_ir(model, model_layers)
             self.convert_oak(model_path)
 
         if 'tflite' in self._converter_type:
-            self.convert_tflite(model_path,model_layers)
+            self.convert_tflite(model, model_layers)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Keras model conversion to .kmodel, .tflite, or .onnx")
