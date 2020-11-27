@@ -23,7 +23,7 @@ def create_classifier(architecture, labels, input_size, layers, dropout, weights
             x=Dropout(dropout)(x)
         x=Dense(layers[-1],activation='relu')(x)
     preds=Dense(len(labels),activation='softmax')(x)
-    model=Model(inputs=base_model.feature_extractor.inputs[0],outputs=preds)
+    model=Model(inputs=base_model.feature_extractor.inputs[0],outputs=preds, name='classifier')
 
     bottleneck_layer = None
     if save_bottleneck:
@@ -44,7 +44,6 @@ class Classifier(object):
         self._input_size = input_size
         self._bottleneck_layer = bottleneck_layer
         self._norm = norm
-
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):
             print("Loading pre-trained weights for the whole model: ", weight_path)

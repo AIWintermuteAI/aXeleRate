@@ -1,17 +1,18 @@
 import argparse
 import json
 from axelerate import setup_training, setup_inference
-from keras import backend as K 
+import tensorflow.python.keras.backend as K
 from termcolor import colored
 import traceback
 import time 
+
 def configs(network_type):
 
     classifier = {
         "model" : {
             "type":                 "Classifier",
             "architecture":         "Tiny Yolo",
-            "input_size":           [320,240],
+            "input_size":           [224,224],
             "fully-connected":      [],
             "labels":               [],
             "dropout" : 		    0.5
@@ -45,7 +46,7 @@ def configs(network_type):
         "model":{
             "type":                 "Detector",
             "architecture":         "MobileNet7_5",
-            "input_size":           [320, 240],
+            "input_size":           224,
             "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
             "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
             "coord_scale" : 		1.0,
@@ -82,7 +83,7 @@ def configs(network_type):
             "model" : {
                 "type":                 "SegNet",
                 "architecture":         "MobileNet5_0",
-                "input_size":           [320,240],
+                "input_size":           [224,224],
                 "n_classes" : 		20
             },
         "weights" : {
@@ -163,7 +164,9 @@ for item in configs(args.type):
                 print(colored(str(e), 'red'))
                 time.sleep(2)
                 errors.append(item['model']['type'] + " " + arch + " " + converter + " " + str(e))
-print(errors)
+
+for error in errors:
+    print(error)
 
 
 

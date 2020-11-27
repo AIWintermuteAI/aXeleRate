@@ -15,9 +15,9 @@
     },
     "train" : {
         "actual_epoch":         1,
-        "train_image_folder":   "/home/ubuntu/datasets/classifier/imgs",
+        "train_image_folder":   "sample_datasets/classifier/imgs",
         "train_times":          4,
-        "valid_image_folder":   "/home/ubuntu/datasets/classifier/imgs_validation",
+        "valid_image_folder":   "sample_datasets/classifier/imgs_validation",
         "valid_times":          4,
         "valid_metric":         "val_accuracy",
         "batch_size":           4,

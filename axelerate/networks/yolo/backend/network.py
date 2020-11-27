@@ -38,7 +38,7 @@ class YoloNetwork(object):
                                kernel_initializer='lecun_normal')(feature_extractor.feature_extractor.outputs[0])
         output_tensor = Reshape((grid_size_x, grid_size_y, nb_box, 4 + 1 + nb_classes))(output_tensor)
     
-        model = Model(feature_extractor.feature_extractor.inputs[0], output_tensor)
+        model = Model(feature_extractor.feature_extractor.inputs[0], output_tensor, name='yolo')
         self._norm = feature_extractor.normalize
         self._model = model
         self._init_layer()

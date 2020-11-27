@@ -186,11 +186,18 @@ class Converter(object):
         #sess.close()
 
     def convert_tflite(self, model, model_layers, target=None):
-        yolo = 'reshape' in model_layers[-1].name
-        if yolo and target=='k210': 
-            print("Converting to tflite without Reshape layer for K210 Yolo")
-            model= tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
-            converter = tf.lite.TFLiteConverter.from_keras_model(model)
+        model_type = model.name
+        if target=='k210': 
+            if model_type == 'yolo':
+                print("Converting to tflite without Reshape layer for K210 Yolo")
+                model= tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
+                converter = tf.lite.TFLiteConverter.from_keras_model(model)
+            elif model_type == 'segnet':   
+                print("Converting to tflite with old converter for K210 Segnet")
+                converter = tf.lite.TFLiteConverter.from_keras_model(model)
+                converter.experimental_new_converter = False
+            else:
+                converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
         elif target == 'edgetpu':
             converter = tf.lite.TFLiteConverter.from_keras_model(model)
@@ -211,6 +218,7 @@ class Converter(object):
             
         else:
             converter = tf.lite.TFLiteConverter.from_keras_model(model)
+
         tflite_model = converter.convert()
         open(os.path.join (self.model_path.split(".")[0] + '.tflite'), "wb").write(tflite_model)
 
