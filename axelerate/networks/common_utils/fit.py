@@ -69,7 +69,6 @@ def train(model,
 
     # 2 create optimizer
     optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
-    #optimizer = SGD(lr=learning_rate, nesterov=True)
 
     # 3. create loss function
     model.compile(loss=loss_func,optimizer=optimizer,metrics=metrics_dict[metrics])

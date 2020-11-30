@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow.python.keras.backend as k
 import subprocess
 import os
 import cv2
@@ -15,7 +16,6 @@ k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
 k210_converter_download_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),'ncc_linux_x86_64.tar.xz')
 nncase_download_url="https://github.com/kendryte/nncase/releases/download/v0.2.0-beta4/ncc_linux_x86_64.tar.xz"
 cwd = os.path.dirname(os.path.realpath(__file__))
-
 
 def run_command(cmd, cwd=None):
     with subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, executable='/bin/bash', universal_newlines=True, cwd=cwd) as p:
@@ -124,26 +124,8 @@ class Converter(object):
         shutil.rmtree(folder_name, ignore_errors=True)
         print(result)
 
-    def convert_pb(self, model_path, model_layers):
-        import tensorflow.keras.backend as k
-        k.clear_session()
-        k.set_learning_phase(0)
-
-        model = tf.keras.models.load_model(model_path, compile=False)
-        input_node_names = model.layers[0].get_output_at(0).name.split(':')[0]
-        output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
-        sess = k.get_session()
-
-        # The TensorFlow freeze_graph expects a comma-separated string of output node names.
-        input_node_names_onnx= [model.layers[0].get_output_at(0).name]
-        output_node_names_onnx = [model.layers[-1].get_output_at(0).name]
-        print(output_node_names_onnx)
-        print(input_node_names_onnx)
-        frozen_graph_def = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, output_node_names)
-        tf.io.write_graph(frozen_graph_def, "", model_path.split(".")[0] + '.pb', as_text=False)
-
     def convert_ir(self, model_path, model_layers):
-        input_model = model_path.split(".")[0]+".pb"
+        input_model = os.path.join(model_path.split(".")[0], "saved_model.pb")
         output_dir = os.path.dirname(model_path)
         output_layer = model_layers[-2].name+'/BiasAdd'
         cmd = 'source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model "{}" --output {} --batch 1 --reverse_input_channels --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir "{}"'.format(input_model, output_layer, output_dir)
@@ -158,12 +140,8 @@ class Converter(object):
         result = run_command(cmd)
         print(result)
 
-    def convert_onnx(self, model_path, model_layers):
-        import tensorflow.keras.backend as k
-        k.clear_session()
-        k.set_learning_phase(0)
+    def convert_onnx(self, model, model_layers):
 
-        model = tf.keras.models.load_model(model_path, compile=False)
         input_node_names = model.layers[0].get_output_at(0).name.split(':')[0]
         output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
         sess = k.get_session()
@@ -187,12 +165,12 @@ class Converter(object):
 
     def convert_tflite(self, model, model_layers, target=None):
         model_type = model.name
+        if model_type == 'yolo':
+            model = tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
+            print("Converting to tflite without Reshape")
+            
         if target=='k210': 
-            if model_type == 'yolo':
-                print("Converting to tflite without Reshape layer for K210 Yolo")
-                model= tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
-                converter = tf.lite.TFLiteConverter.from_keras_model(model)
-            elif model_type == 'segnet':   
+            if model_type == 'segnet':   
                 print("Converting to tflite with old converter for K210 Segnet")
                 converter = tf.lite.TFLiteConverter.from_keras_model(model)
                 converter.experimental_new_converter = False
@@ -223,6 +201,8 @@ class Converter(object):
         open(os.path.join (self.model_path.split(".")[0] + '.tflite'), "wb").write(tflite_model)
 
     def convert_model(self, model_path):
+        k.clear_session()
+        k.set_learning_phase(0)
         model = tf.keras.models.load_model(model_path, compile=False)
         model_layers = model.layers
         self._img_size = model.input_shape[1:3]
@@ -241,12 +221,12 @@ class Converter(object):
             self.convert_onnx(model, model_layers)
             
         if 'openvino' in self._converter_type:
-            self.convert_pb(model, model_layers)
-            self.convert_ir(model, model_layers)
+            model.save(model_path.split(".")[0])
+            self.convert_ir(model_path, model_layers)
             self.convert_oak(model_path)
 
         if 'tflite' in self._converter_type:
-            self.convert_tflite(model, model_layers)
+            self.convert_tflite(model, model_layers, self._converter_type)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Keras model conversion to .kmodel, .tflite, or .onnx")

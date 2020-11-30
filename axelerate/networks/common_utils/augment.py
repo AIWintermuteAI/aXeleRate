@@ -9,8 +9,6 @@ import cv2
 import os
 import glob
 import random
-import matplotlib.pyplot as plt
-import matplotlib
 
 class ImgAugment(object):
     def __init__(self, w, h, jitter):
@@ -147,7 +145,7 @@ def _create_augment_pipeline():
         [
             # apply the following augmenters to most images
             iaa.Fliplr(0.5),  # horizontally flip 50% of all images
-            #iaa.Flipud(0.2),  # vertically flip 20% of all images
+            iaa.Flipud(0.2),  # vertically flip 20% of all images
 
             # execute 0 to 5 of the following (less important) augmenters per image
             # don't execute all of them, as that would often be way too strong
@@ -287,6 +285,8 @@ def visualize_classification_dataset(img_folder, num_imgs = None, img_size=None,
 
 
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
+    import matplotlib
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--type", type=str)

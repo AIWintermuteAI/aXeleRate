@@ -147,7 +147,7 @@ errors = []
 if args.arch:
     archs = ['Full Yolo', 'Tiny Yolo', 'MobileNet1_0', 'MobileNet7_5', 'MobileNet5_0', 'MobileNet2_5', 'SqueezeNet', 'NASNetMobile', 'ResNet50', 'DenseNet121']
 if args.conv:
-    converters = ['k210', 'tflite_fullin', 'tflite_dynamic', 'edgetpu', 'openvino', 'onnx']
+    converters = ['k210', 'tflite_fullint', 'tflite_dynamic', 'edgetpu', 'openvino', 'onnx']
 
 for item in configs(args.type):
     for arch in archs:

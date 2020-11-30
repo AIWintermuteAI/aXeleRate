@@ -5,7 +5,6 @@ import os
 import glob
 import six
 
-
 def find_latest_checkpoint(checkpoints_path, fail_safe=True):
 
     def get_epoch_number_from_path(path):

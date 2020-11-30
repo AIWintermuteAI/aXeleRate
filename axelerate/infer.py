@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import argparse
 import json
 import cv2
@@ -15,7 +13,6 @@ from axelerate.networks.yolo.backend.utils.annotation import parse_annotation
 from axelerate.networks.segnet.frontend_segnet import create_segnet
 from axelerate.networks.segnet.predict import predict
 from axelerate.networks.classifier.frontend_classifier import get_labels, create_classifier
-from pascal_voc_writer import Writer
 from shutil import copyfile
 
 import os
@@ -37,7 +34,6 @@ def show_image(filename):
 
 def create_ann(filename, image, boxes, right_label, label_list):
     copyfile(filename, 'test_img/'+os.path.basename(filename))
-    print(image.shape)
     writer = Writer(filename, image.shape[0], image.shape[1])
     for i in range(len(right_label)):
     	writer.addObject(label_list[right_label[i]], boxes[i][0], boxes[i][1], boxes[i][2], boxes[i][3])
@@ -84,7 +80,7 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
             orig_image, input_arr = prepare_image(filepath, segnet)
             out_fname = os.path.join(dirname, os.path.basename(filename))
             predict(model=segnet._network, inp=input_arr, image = orig_image, out_fname=out_fname)
-
+            show_image(out_fname)
 
     if config['model']['type']=='Classifier':
         print('Classifier')    
@@ -199,6 +195,10 @@ if __name__ == '__main__':
         help='whether to save bboxes to annotations')
 
     args = argparser.parse_args()
+    
+    if args.create_dataset:
+        from pascal_voc_writer import Writer
+        
     with open(args.config) as config_buffer:
         config = json.loads(config_buffer.read())
     setup_inference(config, args.weights, args.threshold, args.create_dataset)

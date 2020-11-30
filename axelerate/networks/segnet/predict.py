@@ -13,20 +13,9 @@ from axelerate.networks.segnet.train import find_latest_checkpoint
 from axelerate.networks.segnet.data_utils.data_loader import get_image_array, get_segmentation_array, DATA_LOADER_SEED, class_colors, get_pairs_from_paths
 from axelerate.networks.segnet.models.config import IMAGE_ORDERING
 from . import metrics
-import matplotlib.pyplot as plt
 import six
 
-
 random.seed(DATA_LOADER_SEED)
-
-def show_image(image):
-    #image = mpimg.imread(filename)
-    plt.figure()
-    plt.imshow(image)
-    plt.show(block=False)
-    plt.pause(1)
-    plt.close()
-    #print(filename)
 
 def model_from_checkpoint_path(checkpoints_path):
 
@@ -137,7 +126,6 @@ def predict(model=None, inp=None, out_fname=None, image = None, overlay_img=Fals
 
     if out_fname is not None:
         cv2.imwrite(out_fname, seg_img)
-        show_image(seg_img)
 
     return pr
 
@@ -219,5 +207,3 @@ def evaluate( model=None , inp_images=None , annotations=None,inp_images_dir=Non
     frequency_weighted_IU = np.sum(cl_wise_score*n_pixels_norm)
     mean_IU = np.mean(cl_wise_score)
     return {"frequency_weighted_IU":frequency_weighted_IU , "mean_IU":mean_IU , "class_wise_IU":cl_wise_score }
-
-

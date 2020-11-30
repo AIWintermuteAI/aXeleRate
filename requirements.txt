@@ -7,3 +7,5 @@ tqdm
 sklearn
 matplotlib
 pascal_voc_writer
+tf2onnx
+defusedxml
