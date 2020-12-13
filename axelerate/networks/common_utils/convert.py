@@ -1,5 +1,5 @@
 import tensorflow as tf
-import tensorflow.python.keras.backend as k
+import tensorflow.keras.backend as k
 import subprocess
 import os
 import cv2
@@ -8,8 +8,8 @@ import tarfile
 import glob
 import shutil
 import numpy as np
-from tensorflow.python.framework import graph_util
-from tensorflow.python.framework import graph_io
+#from tensorflow.python.framework import graph_util
+#from tensorflow.python.framework import graph_io
 import shlex
 
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")

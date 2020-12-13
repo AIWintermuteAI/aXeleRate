@@ -1,7 +1,7 @@
 import argparse
 import json
 from axelerate import setup_training, setup_inference
-import tensorflow.python.keras.backend as K
+import tensorflow.keras.backend as K
 from termcolor import colored
 import traceback
 import time 
