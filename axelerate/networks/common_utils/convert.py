@@ -182,8 +182,8 @@ class Converter(object):
             converter.optimizations = [tf.lite.Optimize.DEFAULT]
             converter.representative_dataset = self.edgetpu_dataset_gen
             converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-            converter.inference_input_type = tf.uint8
-            converter.inference_output_type = tf.uint8
+            #converter.inference_input_type = tf.uint8
+            #converter.inference_output_type = tf.uint8
 
         elif target == 'tflite_dynamic':
             converter = tf.lite.TFLiteConverter.from_keras_model(model)
