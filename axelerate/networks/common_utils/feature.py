@@ -335,7 +335,7 @@ class SqueezeNetFeature(BaseFeatureExtractor):
         elif weights == None:
             pass
         else:
-            print('Loaded backend weigths: '+weights)
+            print('Loaded backend weigths: '+ weights)
             self.feature_extractor.load_weights(weights)
 
 

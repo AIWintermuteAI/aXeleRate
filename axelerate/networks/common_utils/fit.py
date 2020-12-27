@@ -107,7 +107,7 @@ def train(model,
     warm_up_lr = WarmUpCosineDecayScheduler(learning_rate_base=learning_rate,
                                             total_steps=len(train_batch_gen)*nb_epoch,
                                             warmup_learning_rate=0.0,
-                                            warmup_steps=len(train_batch_gen)*3,
+                                            warmup_steps=len(train_batch_gen)*min(3, nb_epoch-1),
                                             hold_base_rate_steps=0,
                                             verbose=1)
 
@@ -125,8 +125,9 @@ def train(model,
                         validation_steps = len(valid_batch_gen),
                         callbacks        = callbacks,                        
                         verbose          = 1,
-                        workers          = 2,
-                        max_queue_size   = 4)
+                        workers          = 4,
+                        max_queue_size   = 10,
+                        use_multiprocessing = True)
     except KeyboardInterrupt:
         model.save(save_weights_name_ctrlc, overwrite=True, include_optimizer=False)
         return model.layers, save_weights_name_ctrlc 

@@ -166,7 +166,7 @@ def _create_augment_pipeline():
     return aug_pipe
 
 
-def visualize_detection_dataset(img_folder, ann_folder, num_imgs = None, img_size=None, jitter=None):
+def visualize_detection_dataset(img_folder, ann_folder, num_imgs = None, img_size=None, augment=None):
     import matplotlib.pyplot as plt
     import matplotlib
     from axelerate.networks.yolo.backend.utils.annotation import PascalVocXmlParser
@@ -176,7 +176,7 @@ def visualize_detection_dataset(img_folder, ann_folder, num_imgs = None, img_siz
         pass
 
     parser = PascalVocXmlParser()
-    aug = ImgAugment(img_size, img_size, jitter=jitter)
+    aug = ImgAugment(img_size, img_size, jitter=augment)
     for ann in os.listdir(ann_folder)[:num_imgs]:
         annotation_file = os.path.join(ann_folder, ann)
         fname = parser.get_fname(annotation_file)
@@ -200,7 +200,7 @@ def visualize_detection_dataset(img_folder, ann_folder, num_imgs = None, img_siz
         plt.pause(1)
         plt.close()
 
-def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_size=None, do_augment=False, n_classes=255):
+def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_size=None, augment=False, n_classes=255):
     import matplotlib.pyplot as plt
     import matplotlib
     from axelerate.networks.segnet.data_utils.data_loader import get_pairs_from_paths, DATA_LOADER_SEED, class_colors, DataLoaderError
@@ -237,7 +237,7 @@ def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_
             img = cv2.imread(im_fn)[...,::-1]
             seg = cv2.imread(seg_fn)
             print("Found the following classes in the segmentation image:", np.unique(seg))
-            img, seg_img = _get_colored_segmentation_image(img, seg, colors, n_classes, img_size, do_augment=do_augment)
+            img, seg_img = _get_colored_segmentation_image(img, seg, colors, n_classes, img_size, do_augment=augment)
             fig = plt.figure(figsize=(14,7))
             ax1 = fig.add_subplot(1,2,1)
             ax1.imshow(img)
@@ -250,7 +250,7 @@ def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_
         print("Found error during data loading\n{0}".format(str(e)))
         return False
 
-def visualize_classification_dataset(img_folder, num_imgs = None, img_size=None, jitter=None):
+def visualize_classification_dataset(img_folder, num_imgs = None, img_size=None, augment=None):
     import matplotlib.pyplot as plt
     import matplotlib
     try:
@@ -264,7 +264,7 @@ def visualize_classification_dataset(img_folder, num_imgs = None, img_size=None,
     random.shuffle(image_files_list)
     for filename in image_files_list[0:num_imgs]:
         image = cv2.imread(filename)[...,::-1]
-        image = process_image_classification(image, img_size, img_size, jitter)
+        image = process_image_classification(image, img_size, img_size, augment)
         cv2.putText(image, os.path.dirname(filename).split('/')[-1], (10,30), font, image.shape[1]/700 , (255, 0, 0), 2, True)
         plt.figure()
         plt.imshow(image)

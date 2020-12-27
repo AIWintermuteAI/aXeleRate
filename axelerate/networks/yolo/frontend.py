@@ -7,7 +7,6 @@ import time
 import numpy as np
 
 from axelerate.networks.common_utils.fit import train
-
 from axelerate.networks.yolo.backend.decoder import YoloDecoder
 from axelerate.networks.yolo.backend.loss import YoloLoss
 from axelerate.networks.yolo.backend.network import create_yolo_network
