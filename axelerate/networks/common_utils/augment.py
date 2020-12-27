@@ -133,47 +133,32 @@ def process_image_segmentation(image, segmap, input_w, input_h, output_w, output
 
 
 def _create_augment_pipeline():
-    
-    # augmentors by https://github.com/aleju/imgaug
-    sometimes = lambda aug: iaa.Sometimes(0.2, aug)
 
-    # Define our sequence of augmentation steps that will be applied to every image
-    # All augmenters with per_channel=0.5 will sample one value _per image_
-    # in 50% of all cases. In all other cases they will sample new values
-    # _per channel_.
+    sometimes = lambda aug: iaa.Sometimes(0.1, aug)
+
     aug_pipe = iaa.Sequential(
         [
-            # apply the following augmenters to most images
-            iaa.Fliplr(0.5),  # horizontally flip 50% of all images
-            iaa.Flipud(0.2),  # vertically flip 20% of all images
+            iaa.Fliplr(0.5), 
+            iaa.Flipud(0.2), 
+            iaa.Affine(translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)}),
+            iaa.OneOf([iaa.Affine(scale=(0.8, 1.2)),
+                        iaa.Affine(rotate=(-10, 10)),
+                        iaa.Affine(shear=(-10, 10))]),
 
-            # execute 0 to 5 of the following (less important) augmenters per image
-            # don't execute all of them, as that would often be way too strong
-            iaa.SomeOf((0, 2),
-                       [iaa.Affine(scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},),
-                        iaa.Affine(translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},),
-                        iaa.Affine(rotate=(-15, 15),),
-                        iaa.Affine(shear=(-15, 15)),
-                           iaa.OneOf([
-                               iaa.GaussianBlur((0, 3.0)),  # blur images with a sigma between 0 and 3.0
+                        sometimes(iaa.OneOf([
+                               iaa.GaussianBlur((0, 3.0)),
                                iaa.AverageBlur(k=(2, 7)),
-                               # blur image using local means (kernel sizes between 2 and 7)
                                iaa.MedianBlur(k=(3, 11)),
-                               # blur image using local medians (kernel sizes between 2 and 7)
-                           ]),
-                           iaa.Sharpen(alpha=(0, 1.0), lightness=(0.75, 1.5)),  # sharpen images
-                           iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255), per_channel=0.5),
-                           # add gaussian noise
-                           iaa.OneOf([
-                               iaa.Dropout((0.01, 0.1), per_channel=0.5),  # randomly remove up to 10% of the pixels
+                           ])),
+                           sometimes(iaa.Sharpen(alpha=(0, 1.0), lightness=(0.75, 1.5))),
+                           sometimes(iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255), per_channel=0.5)),
+                           sometimes(iaa.OneOf([
+                               iaa.Dropout((0.01, 0.1), per_channel=0.5),
                                iaa.CoarseDropout((0.03, 0.15), size_percent=(0.02, 0.05), per_channel=0.2),
-                           ]),
-                           iaa.Add((-10, 10), per_channel=0.5),  # change brightness of images
-                           iaa.Multiply((0.5, 1.5), per_channel=0.5),  # change brightness of images
-                           iaa.ContrastNormalization((0.5, 2.0), per_channel=0.5),  # improve or worsen the contrast
-                       ],
-                       random_order=True
-                       )
+                           ])),
+                           sometimes(iaa.Add((-10, 10), per_channel=0.5)),  
+                           sometimes(iaa.Multiply((0.5, 1.5), per_channel=0.5)), 
+                           sometimes(iaa.ContrastNormalization((0.5, 2.0), per_channel=0.5)) 
         ],
         random_order=True
     )
@@ -182,6 +167,8 @@ def _create_augment_pipeline():
 
 
 def visualize_detection_dataset(img_folder, ann_folder, num_imgs = None, img_size=None, jitter=None):
+    import matplotlib.pyplot as plt
+    import matplotlib
     from axelerate.networks.yolo.backend.utils.annotation import PascalVocXmlParser
     try:
         matplotlib.use('TkAgg')
@@ -214,7 +201,8 @@ def visualize_detection_dataset(img_folder, ann_folder, num_imgs = None, img_siz
         plt.close()
 
 def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_size=None, do_augment=False, n_classes=255):
-
+    import matplotlib.pyplot as plt
+    import matplotlib
     from axelerate.networks.segnet.data_utils.data_loader import get_pairs_from_paths, DATA_LOADER_SEED, class_colors, DataLoaderError
 
     try:
@@ -263,6 +251,8 @@ def visualize_segmentation_dataset(images_path, segs_path, num_imgs = None, img_
         return False
 
 def visualize_classification_dataset(img_folder, num_imgs = None, img_size=None, jitter=None):
+    import matplotlib.pyplot as plt
+    import matplotlib
     try:
         matplotlib.use('TkAgg')
     except:
@@ -285,8 +275,6 @@ def visualize_classification_dataset(img_folder, num_imgs = None, img_size=None,
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    import matplotlib
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--type", type=str)

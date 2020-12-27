@@ -6,6 +6,7 @@ import numpy as np
 import warnings
 
 from axelerate.networks.yolo.backend.utils.map_evaluation import MapEvaluation
+from axelerate.networks.common_utils.callbacks import WarmUpCosineDecayScheduler
 from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from datetime import datetime
@@ -71,7 +72,7 @@ def train(model,
     optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
     # 3. create loss function
-    model.compile(loss=loss_func,optimizer=optimizer,metrics=metrics_dict[metrics])
+    model.compile(loss=loss_func, optimizer=optimizer, metrics=metrics_dict[metrics])
     model.summary()
 
     #4 create callbacks   
@@ -103,10 +104,17 @@ def train(model,
                                      score_threshold=0.3,
                                      tensorboard=tensorboard_callback)
 
+    warm_up_lr = WarmUpCosineDecayScheduler(learning_rate_base=learning_rate,
+                                            total_steps=len(train_batch_gen)*nb_epoch,
+                                            warmup_learning_rate=0.0,
+                                            warmup_steps=len(train_batch_gen)*3,
+                                            hold_base_rate_steps=0,
+                                            verbose=1)
+
     if network.__class__.__name__ == 'YOLO' and metrics =='mAP':
-        callbacks = [tensorboard_callback, map_evaluator_cb, ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.00001,verbose=1)]
+        callbacks = [tensorboard_callback, map_evaluator_cb, warm_up_lr]
     else:
-        callbacks= [early_stop, checkpoint, reduce_lr, tensorboard_callback] 
+        callbacks= [early_stop, checkpoint, warm_up_lr, tensorboard_callback] 
 
     # 4. training
     try:
