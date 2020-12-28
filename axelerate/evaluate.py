@@ -13,7 +13,7 @@ from axelerate.networks.yolo.backend.utils.annotation import parse_annotation
 from axelerate.networks.yolo.backend.utils.eval.fscore import count_true_positives, calc_score
 from axelerate.networks.segnet.frontend_segnet import create_segnet
 from axelerate.networks.segnet.predict import predict
-from axelerate.networks.classifier.frontend_classifier import get_labels,create_classifier
+from axelerate.networks.classifier.frontend_classifier import get_labels, create_classifier
 
 import os
 import glob
@@ -40,7 +40,7 @@ def prepare_image(img_path, network):
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image
 
-def setup_inference(config, weights,threshold=0.3, path=None):
+def setup_evaluation(config, weights,threshold=0.3, path=None):
     try:
         matplotlib.use('TkAgg')
     except:
@@ -52,7 +52,7 @@ def setup_inference(config, weights,threshold=0.3, path=None):
         input_size = [config['model']['input_size'],config['model']['input_size']]
 
     """make directory to save inference results """
-    dirname = os.path.join(os.path.dirname(weights),'Inference_results')
+    dirname = os.path.join(os.path.dirname(weights),'Evaluation_results')
     if os.path.isdir(dirname):
         print("Folder {} is already exists. Image files in directory might be overwritten".format(dirname))
     else:
@@ -164,7 +164,7 @@ if __name__ == '__main__':
     # 1. extract arguments
 
     argparser = argparse.ArgumentParser(
-        description='Run inference script')
+        description='Run evaluation script')
 
     argparser.add_argument(
         '-c',

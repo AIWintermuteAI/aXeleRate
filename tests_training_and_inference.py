@@ -1,6 +1,6 @@
 import argparse
 import json
-from axelerate import setup_training, setup_inference
+from axelerate import setup_training, setup_evaluation
 import tensorflow.keras.backend as K
 from termcolor import colored
 import traceback
@@ -158,7 +158,7 @@ for item in configs(args.type):
                 print(json.dumps(item, indent=4, sort_keys=False))
                 model_path = setup_training(config_dict=item)
                 K.clear_session()
-                setup_inference(item, model_path)
+                setup_evaluation(item, model_path)
             except Exception as e:
                 traceback.print_exc()
                 print(colored(str(e), 'red'))

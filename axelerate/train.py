@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
-
+import shutil
 import numpy as np
 np.random.seed(111)
 import argparse
 import os
+import time
 import sys
 import json
 import matplotlib
@@ -141,6 +141,7 @@ def train_from_config(config,project_folder):
                                            config['train']['first_trainable_layer'],
                                            config['train']['valid_metric'])
     # 4 Convert the model
+    time.sleep(2)
     converter.convert_model(model_path)    
     return model_path
 
@@ -160,7 +161,7 @@ def setup_training(config_file=None, config_dict=None):
     else:
         print("Project folder {} is created.".format(dirname, dirname))
         os.makedirs(dirname)
-    #print("Weight file and Config file will be saved in \"{}\"".format(dirname))
+
     return(train_from_config(config, dirname))
 
 
@@ -177,3 +178,4 @@ if __name__ == '__main__':
 
     args = argparser.parse_args()
     setup_training(config_file=args.config)
+    shutil.rmtree("logs", ignore_errors=True)

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+import shutil
 import os
 import time
 import tensorflow as tf
@@ -77,7 +77,7 @@ def train(model,
 
     #4 create callbacks   
     
-    logdir = os.path.join(path, "logs")
+    logdir = os.path.join("logs")
     tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
     
     early_stop = EarlyStopping(monitor=metrics, 
@@ -129,9 +129,12 @@ def train(model,
                         max_queue_size   = 10,
                         use_multiprocessing = True)
     except KeyboardInterrupt:
+        print("Saving model and copying logs")
         model.save(save_weights_name_ctrlc, overwrite=True, include_optimizer=False)
+        shutil.copytree("logs", os.path.join(path, "logs"))  
         return model.layers, save_weights_name_ctrlc 
-
+        
+    shutil.copytree("logs", os.path.join(path, "logs"))
     _print_time(time.time()-train_start)
     return model.layers, save_weights_name
 
