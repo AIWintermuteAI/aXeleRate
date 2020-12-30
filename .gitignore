@@ -4,7 +4,6 @@ axelerate/networks/common_utils/ncc_linux_x86_64.tar.xz
 axelerate.egg-info/
 build/
 dist/
-example_scripts/edge_tpu/
 _configs/
 projects/
 *.tflite

@@ -5,7 +5,7 @@
 
 from .directory_iterator import DirectoryIterator
 from axelerate.networks.common_utils.augment import process_image_classification
-from keras.utils import Sequence
+from tensorflow.keras.utils import Sequence
 import cv2
 import os
 

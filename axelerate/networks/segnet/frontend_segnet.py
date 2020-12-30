@@ -1,38 +1,34 @@
-# -*- coding: utf-8 -*-
-# This module is responsible for communicating with the outside of the yolo package.
-# Outside the package, someone can use yolo detector accessing with this module.
-
 import os
 import numpy as np
 
 from axelerate.networks.segnet.data_utils.data_loader import create_batch_generator, verify_segmentation_dataset
 from axelerate.networks.common_utils.feature import create_feature_extractor
 from axelerate.networks.common_utils.fit import train
-from axelerate.networks.segnet.models.segnet import mobilenet_segnet, squeezenet_segnet, full_yolo_segnet, tiny_yolo_segnet, vgg16_segnet, resnet50_segnet
+from axelerate.networks.segnet.models.segnet import mobilenet_segnet, squeezenet_segnet, full_yolo_segnet, tiny_yolo_segnet, nasnetmobile_segnet, resnet50_segnet, densenet121_segnet
 
 def masked_categorical_crossentropy(gt , pr ):
-    from keras.losses import categorical_crossentropy
+    from tensorflow.keras.losses import categorical_crossentropy
     mask = 1-  gt[: , : , 0 ] 
     return categorical_crossentropy( gt , pr )*mask
 
 def create_segnet(architecture, input_size, n_classes, weights = None):
 
-    if architecture == 'Inception3':
-        raise Exception('Inception3 not supported with SegNet! Only support Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50 at the moment!')
+    if architecture == 'NASNetMobile':
+        model = nasnetmobile_segnet(n_classes, input_size, encoder_level=4, weights = weights)
     elif architecture == 'SqueezeNet':
-        model = squeezenet_segnet(n_classes,input_size, encoder_level=4, weights = weights)
+        model = squeezenet_segnet(n_classes, input_size, encoder_level=4, weights = weights)
     elif architecture == 'Full Yolo':
-        model = full_yolo_segnet(n_classes,input_size, encoder_level=4, weights = weights)
+        model = full_yolo_segnet(n_classes, input_size, encoder_level=4, weights = weights)
     elif architecture == 'Tiny Yolo':
-        model = tiny_yolo_segnet(n_classes,input_size, encoder_level=4, weights = weights)
-    elif architecture == 'VGG16':
-        model = vgg16_segnet(n_classes,input_size, encoder_level=4, weights = weights)
+        model = tiny_yolo_segnet(n_classes, input_size, encoder_level=4, weights = weights)
+    elif architecture == 'DenseNet121':
+        model = densenet121_segnet(n_classes, input_size, encoder_level=4, weights = weights)
     elif architecture == 'ResNet50':
-        model = resnet50_segnet(n_classes,input_size, encoder_level=4, weights = weights)
+        model = resnet50_segnet(n_classes, input_size, encoder_level=4, weights = weights)
     elif 'MobileNet' in architecture:
-        model = mobilenet_segnet(n_classes,input_size, encoder_level=4, weights = weights, architecture = architecture)
+        model = mobilenet_segnet(n_classes, input_size, encoder_level=4, weights = weights, architecture = architecture)
 
-    output_size = (model.output_height,model.output_width)
+    output_size = (model.output_height, model.output_width)
     network = Segnet(model, input_size, n_classes, model.normalize, output_size)
 
     return network

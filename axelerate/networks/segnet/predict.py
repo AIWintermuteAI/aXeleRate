@@ -7,26 +7,15 @@ import cv2
 import numpy as np
 np.set_printoptions(threshold=np.inf)
 from tqdm import tqdm
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 
 from axelerate.networks.segnet.train import find_latest_checkpoint
 from axelerate.networks.segnet.data_utils.data_loader import get_image_array, get_segmentation_array, DATA_LOADER_SEED, class_colors, get_pairs_from_paths
 from axelerate.networks.segnet.models.config import IMAGE_ORDERING
 from . import metrics
-import matplotlib.pyplot as plt
 import six
 
-
 random.seed(DATA_LOADER_SEED)
-
-def show_image(image):
-    #image = mpimg.imread(filename)
-    plt.figure()
-    plt.imshow(image)
-    plt.show(block=False)
-    plt.pause(1)
-    plt.close()
-    #print(filename)
 
 def model_from_checkpoint_path(checkpoints_path):
 
@@ -91,7 +80,7 @@ def concat_lenends(  seg_img , legend_img  ):
     return out_img
 
 def visualize_segmentation(seg_arr, inp_img=None, n_classes=None, 
-    colors=class_colors, class_names=None, overlay_img=False, show_legends=False , 
+    colors=class_colors, class_names=None, overlay_img=False, show_legends=False, 
     prediction_width=None, prediction_height=None):
     
     print("Found the following classes in the segmentation image:", np.unique(seg_arr))
@@ -106,11 +95,11 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
         orininal_w = inp_img.shape[1]
         seg_img = cv2.resize(seg_img, (orininal_w, orininal_h))
 
-    if (not prediction_height is None) and  (not prediction_width is None):
+    if (not prediction_height is None) and (not prediction_width is None):
         seg_img = cv2.resize(seg_img, (prediction_width, prediction_height ))
         if not inp_img is None:
-            inp_img = cv2.resize(inp_img, (prediction_width, prediction_height ))
-
+            inp_img = cv2.resize(inp_img, (prediction_width, prediction_height))
+            
     if overlay_img:
         assert not inp_img is None
         seg_img = overlay_seg_image(inp_img, seg_img)
@@ -133,11 +122,11 @@ def predict(model=None, inp=None, out_fname=None, image = None, overlay_img=Fals
 
     #pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
     pr = pr.argmax(axis=2)
+
     seg_img = visualize_segmentation(pr, inp_img=image, n_classes=n_classes, overlay_img=True, colors=colors)
 
     if out_fname is not None:
         cv2.imwrite(out_fname, seg_img)
-        show_image(seg_img)
 
     return pr
 
@@ -219,5 +208,3 @@ def evaluate( model=None , inp_images=None , annotations=None,inp_images_dir=Non
     frequency_weighted_IU = np.sum(cl_wise_score*n_pixels_norm)
     mean_IU = np.mean(cl_wise_score)
     return {"frequency_weighted_IU":frequency_weighted_IU , "mean_IU":mean_IU , "class_wise_IU":cl_wise_score }
-
-

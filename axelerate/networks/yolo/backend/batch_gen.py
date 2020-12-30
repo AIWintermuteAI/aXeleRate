@@ -3,7 +3,7 @@ import os
 import numpy as np
 np.random.seed(1337)
 
-from keras.utils import Sequence
+from tensorflow.keras.utils import Sequence
 from axelerate.networks.common_utils.augment import ImgAugment
 from axelerate.networks.yolo.backend.utils.box import to_centroid, create_anchor_boxes, find_match_box
 from axelerate.networks.common_utils.fit import train

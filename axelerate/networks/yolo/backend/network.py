@@ -3,8 +3,8 @@ import numpy as np
 import cv2
 import os
 import time
-from keras.models import Model
-from keras.layers import Reshape, Conv2D, Input, Lambda
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Reshape, Conv2D, Input, Lambda
 from axelerate.networks.common_utils.feature import create_feature_extractor
 
 def create_yolo_network(architecture,
@@ -38,7 +38,7 @@ class YoloNetwork(object):
                                kernel_initializer='lecun_normal')(feature_extractor.feature_extractor.outputs[0])
         output_tensor = Reshape((grid_size_x, grid_size_y, nb_box, 4 + 1 + nb_classes))(output_tensor)
     
-        model = Model(feature_extractor.feature_extractor.inputs[0], output_tensor)
+        model = Model(feature_extractor.feature_extractor.inputs[0], output_tensor, name='yolo')
         self._norm = feature_extractor.normalize
         self._model = model
         self._init_layer()
@@ -53,8 +53,8 @@ class YoloNetwork(object):
 
         layer.set_weights([new_kernel, new_bias])
 
-    def load_weights(self, weight_path):
-        self._model.load_weights(weight_path)
+    def load_weights(self, weight_path, by_name):
+        self._model.load_weights(weight_path, by_name=by_name)
         
     def forward(self, image):
         netout = self._model.predict(image)[0]
@@ -64,7 +64,7 @@ class YoloNetwork(object):
         return self._model
 
     def get_grid_size(self):
-        _, w, h, _, _ = self._model.get_output_shape_at(-1)
+        _, w, h, _, _ = self._model.outputs[0].shape
         return (w,h)
 
     def get_normalize_func(self):

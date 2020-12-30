@@ -1,17 +1,18 @@
 import argparse
 import json
-from axelerate import setup_training, setup_inference
-from keras import backend as K 
+from axelerate import setup_training, setup_evaluation
+import tensorflow.keras.backend as K
 from termcolor import colored
 import traceback
 import time 
+
 def configs(network_type):
 
     classifier = {
         "model" : {
             "type":                 "Classifier",
             "architecture":         "Tiny Yolo",
-            "input_size":           [320,240],
+            "input_size":           [224,224],
             "fully-connected":      [],
             "labels":               [],
             "dropout" : 		    0.5
@@ -45,7 +46,7 @@ def configs(network_type):
         "model":{
             "type":                 "Detector",
             "architecture":         "MobileNet7_5",
-            "input_size":           [320, 240],
+            "input_size":           224,
             "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
             "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
             "coord_scale" : 		1.0,
@@ -82,7 +83,7 @@ def configs(network_type):
             "model" : {
                 "type":                 "SegNet",
                 "architecture":         "MobileNet5_0",
-                "input_size":           [320,240],
+                "input_size":           [224,224],
                 "n_classes" : 		20
             },
         "weights" : {
@@ -146,7 +147,7 @@ errors = []
 if args.arch:
     archs = ['Full Yolo', 'Tiny Yolo', 'MobileNet1_0', 'MobileNet7_5', 'MobileNet5_0', 'MobileNet2_5', 'SqueezeNet', 'NASNetMobile', 'ResNet50', 'DenseNet121']
 if args.conv:
-    converters = ['k210', 'tflite_fullin', 'tflite_dynamic', 'edgetpu', 'openvino', 'onnx']
+    converters = ['k210', 'tflite_fullint', 'tflite_dynamic', 'edgetpu', 'openvino', 'onnx']
 
 for item in configs(args.type):
     for arch in archs:
@@ -157,13 +158,15 @@ for item in configs(args.type):
                 print(json.dumps(item, indent=4, sort_keys=False))
                 model_path = setup_training(config_dict=item)
                 K.clear_session()
-                setup_inference(item, model_path)
+                setup_evaluation(item, model_path)
             except Exception as e:
                 traceback.print_exc()
                 print(colored(str(e), 'red'))
                 time.sleep(2)
                 errors.append(item['model']['type'] + " " + arch + " " + converter + " " + str(e))
-print(errors)
+
+for error in errors:
+    print(error)
 
 
 

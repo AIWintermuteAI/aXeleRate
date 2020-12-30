@@ -10,10 +10,10 @@ from tensorflow.keras import backend as K
 from axelerate.networks.yolo.frontend import create_yolo
 from axelerate.networks.yolo.backend.utils.box import draw_boxes
 from axelerate.networks.yolo.backend.utils.annotation import parse_annotation
+from axelerate.networks.yolo.backend.utils.eval.fscore import count_true_positives, calc_score
 from axelerate.networks.segnet.frontend_segnet import create_segnet
 from axelerate.networks.segnet.predict import predict
 from axelerate.networks.classifier.frontend_classifier import get_labels, create_classifier
-from shutil import copyfile
 
 import os
 import glob
@@ -22,7 +22,7 @@ import tensorflow as tf
 K.clear_session()
 
 DEFAULT_THRESHOLD = 0.3
-    
+
 def show_image(filename):
     image = mpimg.imread(filename)
     plt.figure()
@@ -32,14 +32,6 @@ def show_image(filename):
     plt.close()
     print(filename)
 
-def create_ann(filename, image, boxes, right_label, label_list):
-    copyfile(filename, 'test_img/'+os.path.basename(filename))
-    writer = Writer(filename, image.shape[0], image.shape[1])
-    for i in range(len(right_label)):
-    	writer.addObject(label_list[right_label[i]], boxes[i][0], boxes[i][1], boxes[i][2], boxes[i][3])
-    name = os.path.basename(filename).split('.')
-    writer.save('test_ann/'+name[0]+'.xml')
-
 def prepare_image(img_path, network):
     orig_image = cv2.imread(img_path)
     input_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
@@ -48,7 +40,7 @@ def prepare_image(img_path, network):
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image
 
-def setup_inference(config, weights, threshold=0.3, create_dataset=None):
+def setup_evaluation(config, weights,threshold=0.3, path=None):
     try:
         matplotlib.use('TkAgg')
     except:
@@ -60,7 +52,7 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         input_size = [config['model']['input_size'],config['model']['input_size']]
 
     """make directory to save inference results """
-    dirname = os.path.join(os.path.dirname(weights),'Inference_results')
+    dirname = os.path.join(os.path.dirname(weights),'Evaluation_results')
     if os.path.isdir(dirname):
         print("Folder {} is already exists. Image files in directory might be overwritten".format(dirname))
     else:
@@ -76,33 +68,29 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
         for filename in os.listdir(config['train']['valid_image_folder']):
-            filepath = os.path.join(config['train']['valid_image_folder'],filename)
-            orig_image, input_arr = prepare_image(filepath, segnet)
-            out_fname = os.path.join(dirname, os.path.basename(filename))
-            predict(model=segnet._network, inp=input_arr, image = orig_image, out_fname=out_fname)
-            show_image(out_fname)
-
+            filepath = os.path.join(config['train']['valid_image_folder'], filename)
+            orig_image, input_image = prepare_image(filepath, segnet)
+            output_path = os.path.join(dirname, os.path.basename(filename))
+            predict(model=segnet._network, inp=input_image, image = orig_image, out_fname=output_path)
+            #show_image(output_path)
+            
     if config['model']['type']=='Classifier':
         print('Classifier')    
         if config['model']['labels']:
             labels = config['model']['labels']
         else:
             labels = get_labels(config['train']['train_image_folder'])
-            
         # 1.Construct the model 
         classifier = create_classifier(config['model']['architecture'],
                                        labels,
                                        input_size,
                                        config['model']['fully-connected'],
-                                       config['model']['dropout'])  
-                                        
+                                       config['model']['dropout'])   
         # 2. Load the pretrained weights (if any) 
         classifier.load_weights(weights)
-        
         font = cv2.FONT_HERSHEY_SIMPLEX
         valid_image_folder = config['train']['valid_image_folder']
         image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
-        
         inference_time = []
         for filename in image_files_list:
             output_path = os.path.join(dirname, os.path.basename(filename))
@@ -126,7 +114,7 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
             # set up text
             cv2.putText(orig_image, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
             cv2.imwrite(output_path, orig_image)
-            show_image(output_path)
+            #show_image(output_path)
             print("{}:{}".format(img_class[0], prob[0]))
         if len(inference_time)>1:
             print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
@@ -138,30 +126,38 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
                            input_size,
                            config['model']['anchors'])
         yolo.load_weights(weights)
-        
-        valid_image_folder = config['train']['valid_image_folder']
-        image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
-        
+
+        # 3. read image
+        annotations = parse_annotation(config['train']['valid_annot_folder'],
+                                       config['train']['valid_image_folder'],
+                                       config['model']['labels'],
+                                       is_only_detect=config['train']['is_only_detect'])
+
+        n_true_positives = 0
+        n_truth = 0
+        n_pred = 0
         inference_time = []
-        for i in range(len(image_files_list)):
-            img_path = image_files_list[i]
+        for i in range(len(annotations)):
+            img_path = annotations.fname(i)
             img_fname = os.path.basename(img_path)
+            true_boxes = annotations.boxes(i)
+            true_labels = annotations.code_labels(i)
 
             orig_image, input_image = prepare_image(img_path, yolo)
             height, width = orig_image.shape[:2]
             prediction_time, boxes, probs = yolo.predict(input_image, height, width, float(threshold))
             inference_time.append(prediction_time)
-            labels = np.argmax(probs, axis=1) if len(probs) > 0 else []
-             
+            labels = np.argmax(probs, axis=1) if len(probs) > 0 else [] 
             # 4. save detection result
             orig_image = draw_boxes(orig_image, boxes, probs, config['model']['labels'])
             output_path = os.path.join(dirname, os.path.split(img_fname)[-1])
-            if len(probs) > 0 and create_dataset:
-                create_ann(img_path, orig_image, boxes, labels, config['model']['labels'])
             cv2.imwrite(output_path, orig_image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
-            show_image(output_path)
-
+            #show_image(output_path)
+            n_true_positives += count_true_positives(boxes, true_boxes, labels, true_labels)
+            n_truth += len(true_boxes)
+            n_pred += len(boxes)
+        print(calc_score(n_true_positives, n_truth, n_pred))
         if len(inference_time)>1:
             print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
 
@@ -169,7 +165,7 @@ if __name__ == '__main__':
     # 1. extract arguments
 
     argparser = argparse.ArgumentParser(
-        description='Run inference script')
+        description='Run evaluation script')
 
     argparser.add_argument(
         '-c',
@@ -186,19 +182,8 @@ if __name__ == '__main__':
         '-w',
         '--weights',
         help='trained weight files')
-        
-    argparser.add_argument(
-        '-d',
-        '--create_dataset',
-        action='store_true',
-        default=False,
-        help='whether to save bboxes to annotations')
 
     args = argparser.parse_args()
-    
-    if args.create_dataset:
-        from pascal_voc_writer import Writer
-        
     with open(args.config) as config_buffer:
         config = json.loads(config_buffer.read())
-    setup_inference(config, args.weights, args.threshold, args.create_dataset)
+    setup_evaluation(config, args.weights, args.threshold)

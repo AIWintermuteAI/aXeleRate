@@ -1,8 +1,8 @@
 from types import MethodType
 
-from keras.models import *
-from keras.layers import *
-import keras.backend as K
+from tensorflow.keras.models import *
+from tensorflow.keras.layers import *
+import tensorflow.keras.backend as K
 from tqdm import tqdm
 
 from .config import IMAGE_ORDERING
@@ -89,13 +89,12 @@ def get_segmentation_model(input, output):
         #o = (Reshape((output_height*output_width, -1)))(o)
 
     o = (Activation('softmax'))(o)
-    model = Model(img_input, o)
+    model = Model(img_input, o, name = "segnet")
     model.output_width = output_width
     model.output_height = output_height
     model.n_classes = n_classes
     model.input_height = input_height
     model.input_width = input_width
-    model.model_name = ""
 
     model.train = MethodType(train, model)
     model.predict_segmentation = MethodType(predict, model)

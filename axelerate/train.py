@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
-
+import shutil
 import numpy as np
 np.random.seed(111)
 import argparse
 import os
+import time
 import sys
 import json
 import matplotlib
@@ -17,11 +17,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '4'
 import tensorflow as tf
 
 tf.get_logger().setLevel('ERROR')
-
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.9)
-config = tf.ConfigProto(gpu_options=gpu_options)
-config.gpu_options.allow_growth = True
-session = tf.Session(config=config)
 
 argparser = argparse.ArgumentParser(
     description='Train and validate YOLO_v2 model on any dataset')
@@ -146,6 +141,7 @@ def train_from_config(config,project_folder):
                                            config['train']['first_trainable_layer'],
                                            config['train']['valid_metric'])
     # 4 Convert the model
+    time.sleep(2)
     converter.convert_model(model_path)    
     return model_path
 
@@ -165,7 +161,7 @@ def setup_training(config_file=None, config_dict=None):
     else:
         print("Project folder {} is created.".format(dirname, dirname))
         os.makedirs(dirname)
-    #print("Weight file and Config file will be saved in \"{}\"".format(dirname))
+
     return(train_from_config(config, dirname))
 
 
@@ -182,3 +178,4 @@ if __name__ == '__main__':
 
     args = argparser.parse_args()
     setup_training(config_file=args.config)
+    shutil.rmtree("logs", ignore_errors=True)

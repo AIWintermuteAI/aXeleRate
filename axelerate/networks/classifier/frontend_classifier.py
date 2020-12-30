@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-# This module is responsible for communicating with the outside of the yolo package.
-# Outside the package, someone can use yolo detector accessing with this module.
 import time
 import os
 import numpy as np
@@ -8,9 +5,9 @@ import numpy as np
 from axelerate.networks.common_utils.feature import create_feature_extractor
 from axelerate.networks.classifier.batch_gen import create_datagen
 from axelerate.networks.common_utils.fit import train
-from keras.models import Model, load_model
-from keras.layers import Dense, GlobalAveragePooling2D, Dropout
-from keras.applications.mobilenet import preprocess_input
+from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
+from tensorflow.keras.applications.mobilenet import preprocess_input
 
 def get_labels(directory):
     labels = sorted(os.listdir(directory))
@@ -26,7 +23,7 @@ def create_classifier(architecture, labels, input_size, layers, dropout, weights
             x=Dropout(dropout)(x)
         x=Dense(layers[-1],activation='relu')(x)
     preds=Dense(len(labels),activation='softmax')(x)
-    model=Model(inputs=base_model.feature_extractor.inputs[0],outputs=preds)
+    model=Model(inputs=base_model.feature_extractor.inputs[0],outputs=preds, name='classifier')
 
     bottleneck_layer = None
     if save_bottleneck:
@@ -47,7 +44,6 @@ class Classifier(object):
         self._input_size = input_size
         self._bottleneck_layer = bottleneck_layer
         self._norm = norm
-
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):
             print("Loading pre-trained weights for the whole model: ", weight_path)

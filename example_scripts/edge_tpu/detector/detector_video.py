@@ -1,22 +1,19 @@
-import io
-import re
-import time
 import argparse
-import cv2
+import io
+import time
 import numpy as np
+import cv2
 
 from box import BoundBox, nms_boxes, boxes_to_array, to_minmax, draw_boxes
-from tflite_runtime.interpreter import Interpreter
-from flask import Flask, render_template, request, Response
-
-app = Flask (__name__, static_url_path = '')
+#from tflite_runtime.interpreter import Interpreter
+import tflite_runtime.interpreter as tflite
 
 class Detector(object):
 
     def __init__(self, label_file, model_file, threshold):
         self._threshold = float(threshold)
         self.labels = self.load_labels(label_file)
-        self.interpreter = Interpreter(model_file)
+        self.interpreter = tflite.Interpreter(model_file, experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
         self.interpreter.allocate_tensors()
         _, self.input_height, self.input_width, _ = self.interpreter.get_input_details()[0]['shape']
         self.tensor_index = self.interpreter.get_input_details()[0]['index']
@@ -47,13 +44,15 @@ class Detector(object):
       self.interpreter.set_tensor(self.tensor_index, img)
       self.interpreter.invoke()
       # Get all output details
-      boxes = self.get_output_tensor(0)
-      return boxes
+      raw_detections = self.get_output_tensor(0)
+      output_shape = [7, 7, 5, 6]
+      output = np.reshape(raw_detections, output_shape)
+      return output 
 
     def detect(self, original_image):
-        self.output_width, self.output_height = original_image.shape[0:2]
+        self.output_height, self.output_width = original_image.shape[0:2]
         start_time = time.time()
-        results = self.detect_objects(image)
+        results = self.detect_objects(original_image)
         elapsed_ms = (time.time() - start_time) * 1000
         fps  = 1 / elapsed_ms*1000
         print("Estimated frames per second : {0:.2f} Inference time: {1:.2f}".format(fps, elapsed_ms))
@@ -71,7 +70,7 @@ class Detector(object):
         if len(boxes) > 0:
             boxes = _to_original_scale(boxes)
             original_image = draw_boxes(original_image, boxes, probs, self.labels)
-        return cv2.imencode('.jpg', original_image)[1].tobytes()
+        return original_image
 
 
     def run(self, netout):
@@ -95,7 +94,7 @@ class Detector(object):
         netout[..., 4]  = _sigmoid(netout[..., 4])
         netout[..., 5:] = netout[..., 4][..., np.newaxis] * _softmax(netout[..., 5:])
         netout[..., 5:] *= netout[..., 5:] > self._threshold
-        
+
         for row in range(grid_h):
             for col in range(grid_w):
                 for b in range(nb_box):
@@ -128,35 +127,34 @@ def _softmax(x, axis=-1, t=-100.):
     e_x = np.exp(x)
     return e_x / e_x.sum(axis, keepdims=True)
 
-@app.route ("/")
-def index ( ):
-   return render_template ('index.html', name = None)
-
-def gen(camera):
-    while True:
-        frame = camera.get_frame()
-        image = detector.detect(frame)
-        yield (b'--frame\r\n'+b'Content-Type: image/jpeg\r\n\r\n' + image + b'\r\n')
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(gen(Camera()),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--model', help='File path of .tflite file.', required=True)
 parser.add_argument('--labels', help='File path of labels file.', required=True)
 parser.add_argument('--threshold', help='Confidence threshold.', default=0.3)
-parser.add_argument('--source', help='picamera or cv', default='cv')
 args = parser.parse_args()
 
-if args.source == "cv":
-    from camera_opencv import Camera
-elif args.source == "picamera":
-    from camera_pi import Camera
 detector = Detector(args.labels, args.model, args.threshold)
+camera = cv2.VideoCapture(2)
 
-if __name__ == "__main__" :
-   app.run (host = '0.0.0.0', port = 5000, debug = True)
-    
+while(camera.isOpened()):
+    ret, frame = camera.read()
+    image = detector.detect(frame)
+    if ret == True:
+
+        # Display the resulting frame
+        cv2.imshow('Frame', image)
+
+        # Press Q on keyboard to  exit
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+          break
+
+    # Break the loop
+    else: 
+        break
+
+# When everything done, release the video capture object
+camera.release()
+
+# Closes all the frames
+cv2.destroyAllWindows()

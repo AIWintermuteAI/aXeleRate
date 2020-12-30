@@ -1,6 +1,9 @@
+
 import numpy as np
 import cv2
 
+
+# Todo : BoundBox & its related method extraction
 class BoundBox:
     def __init__(self, x, y, w, h, c = None, classes = None):
         self.x     = x
@@ -98,7 +101,7 @@ def draw_boxes(image, boxes, probs, labels):
                     (x1, y1 - 13), 
                     cv2.FONT_HERSHEY_SIMPLEX, 
                     1e-3 * image.shape[0], 
-                    (0,0,255), 1)
+                    (0,255,0), 2)
     return image        
 
 
@@ -133,10 +136,8 @@ def centroid_box_iou(box1, box2):
 
 def to_centroid(minmax_boxes):
     """
-    minmax_boxes : (N, 4) [[100, 120, 140, 200]]
-    centroid_boxes: [[120. 160.  40.  80.]]
+    minmax_boxes : (N, 4)
     """
-    #minmax_boxes = np.asarray([[100, 120, 140, 200]])
     minmax_boxes = minmax_boxes.astype(np.float)
     centroid_boxes = np.zeros_like(minmax_boxes)
     

@@ -7,7 +7,6 @@ import time
 import numpy as np
 
 from axelerate.networks.common_utils.fit import train
-
 from axelerate.networks.yolo.backend.decoder import YoloDecoder
 from axelerate.networks.yolo.backend.loss import YoloLoss
 from axelerate.networks.yolo.backend.network import create_yolo_network
@@ -66,10 +65,10 @@ class YOLO(object):
         self._input_size = input_size
         self._norm = yolo_network._norm
 
-    def load_weights(self, weight_path, by_name=False):
+    def load_weights(self, weight_path, by_name=True):
         if os.path.exists(weight_path):
             print("Loading pre-trained weights for the whole model: ", weight_path)
-            self._yolo_network.load_weights(weight_path)
+            self._yolo_network.load_weights(weight_path, by_name=True)
         else:
             print("Failed to load pre-trained weights for the whole model. It might be because you didn't specify any or the weight file cannot be found")
 

@@ -1,7 +1,7 @@
 import os
 import numpy as np
 np.random.seed(1337)
-from keras.utils import Sequence
+from tensorflow.keras.utils import Sequence
 from axelerate.networks.common_utils.augment import process_image_segmentation
 import glob
 import itertools

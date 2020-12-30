@@ -6,7 +6,7 @@
 
 <hr>
 <p align="center">
-aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized for both the workflow on local machine and on Google Colab. Currently supports trained model conversion to: .kmodel(K210), .tflite format(full integer and dymaic range quantization support available), OpenVINO IR model format. Experimental support: Google Edge TPU, TensorRT.
+aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized for both the workflow on local machine and on Google Colab. Currently supports trained model conversion to: .kmodel(K210), .tflite format(full integer and dymaic range quantization support available), OpenVINO IR model format. Experimental support: Google Edge TPU.
 </p>
 
 <table>
@@ -62,14 +62,7 @@ aXeleRate is still work in progress project. I will be making some changes from 
 
 :ballot_box_with_check: TODO list:
 
-  - [ ] Porting to tf.keras and Tensorflow 2
-  - [ ] Dataset verification (checking for corrupt images and label mismatch)
-  - [ ] Pre-trained ImageNet1000 backend weights for Tiny YOLO, SqueezeNet
-  - [ ] Adding support for multi-GPU and Cloud TPU training
-  - [X] Unifiying image augumentation pipeline
-  - [X] SegNet to use common encoders(currently SegNet uses it's own feature extractors as encoder part)
-  - [X] Support for custom input_size
-  - [X] mAP evaluation for Object Detection models
+TODO list is moving to Github Projects!
 
 ### Acknowledgements
 
@@ -78,4 +71,4 @@ aXeleRate is still work in progress project. I will be making some changes from 
   - Big Thank You to creator/maintainers of Keras/Tensorflow
 
 ### Donation
-Recently there were a few people that wanted to make a small donation to aXeleRate, because it helped them with their work. I was caught off guard with the question about donations :) I didn't have anything set up, so I quickly created a paypal.me page for them to be able to send money. If aXeleRate was useful in your work, you can donate to the project here https://www.paypal.me/hardwareai . But times are tough now(and always), so if you don't have much to spare, don't feel guilty! aXeleRate is totally open source and free to use.
+Recently there were a few people that wanted to make a small donation to aXeleRate, because it helped them with their work. I was caught off guard with the question about donations :) I didn't have anything set up, so I quickly created a page for them to be able to send money. If aXeleRate was useful in your work, you can donate a pizza or a beer to the project here https://www.buymeacoffee.com/hardwareai . But times are tough now(and always), so if you don't have much to spare, don't feel guilty! aXeleRate is totally open source and free to use.

@@ -1,12 +1,9 @@
 import os
 import tensorflow as tf
 import numpy as np
-import keras
-import matplotlib
-#matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import tensorflow.keras
 
-class MapEvaluation(keras.callbacks.Callback):
+class MapEvaluation(tensorflow.keras.callbacks.Callback):
     """ Evaluate a given dataset using a given model.
         code originally from https://github.com/fizyr/keras-retinanet
 
@@ -24,7 +21,6 @@ class MapEvaluation(keras.callbacks.Callback):
                  iou_threshold=0.5,
                  score_threshold=0.3,
                  save_path=None,
-                 save_plot_name=None,
                  period=1,
                  save_best=False,
                  save_name=None,
@@ -44,11 +40,9 @@ class MapEvaluation(keras.callbacks.Callback):
         self.loss = [0]
         self.val_loss = [0]
         self.maps = [0]
-        self._save_plot_name = save_plot_name
-
         self.bestMap = 0
 
-        if not isinstance(self._tensorboard, keras.callbacks.TensorBoard) and self._tensorboard is not None:
+        if not isinstance(self._tensorboard, tensorflow.keras.callbacks.TensorBoard) and self._tensorboard is not None:
             raise ValueError("Tensorboard object must be a instance from keras.callbacks.TensorBoard")
 
     def on_epoch_end(self, epoch, logs={}):
@@ -75,14 +69,12 @@ class MapEvaluation(keras.callbacks.Callback):
             self.loss.append(logs.get("loss"))
             self.val_loss.append(logs.get("val_loss"))
             self.maps.append(_map)
-            plot(self.loss,self.val_loss,self.maps,self._save_plot_name)
 
-            if self._tensorboard is not None and self._tensorboard.writer is not None:
-                summary = tf.Summary()
-                summary_value = summary.value.add()
-                summary_value.simple_value = _map
-                summary_value.tag = "val_mAP"
-                self._tensorboard.writer.add_summary(summary, epoch)
+            if self._tensorboard:
+                writer = tf.summary.create_file_writer(self._tensorboard.log_dir)
+                with writer.as_default():
+                    tf.summary.scalar("mAP", _map, step=epoch)
+                    writer.flush()
 
     def evaluate_map(self):
         average_precisions = self._calc_avg_precisions()
@@ -241,24 +233,4 @@ def compute_ap(recall, precision):
     # and sum (\Delta recall) * prec
     ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
-
-def plot(acc, val_acc, maps, filename):
-    plt.figure(figsize=(10,10))
-    plt.plot(acc, 'g')
-    plt.plot(val_acc, 'r')
-    plt.plot(maps, 'b')
-
-    plt.annotate("{:.4f}".format(acc[-1]),xy=(len(acc)-1,acc[-1]))
-    plt.annotate("{:.4f}".format(val_acc[-1]),xy=(len(val_acc)-1,val_acc[-1]))
-    plt.annotate("{:.4f}".format(maps[-1]),xy=(len(maps)-1,maps[-1]))
-
-    plt.title('Training graph')
-    plt.ylabel('Loss, mAP')
-    plt.xlabel('Epoch')
-    plt.legend(['Train', 'Test', 'mAP'], loc='upper left')
-    plt.savefig(os.path.join(filename))
-    
-    plt.show(block=False)
-    plt.pause(1)
-    plt.close()
 

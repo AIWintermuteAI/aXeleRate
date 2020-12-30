@@ -1,12 +1,11 @@
-import keras
-from keras.models import Model
-import tensorflow as tf
-from keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda
-from keras.layers.advanced_activations import LeakyReLU
-from keras.layers.merge import concatenate
-from keras.applications import DenseNet121
-from keras.applications import NASNetMobile
-from keras.applications import ResNet50
+import tensorflow
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda, ZeroPadding2D
+from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.layers import Concatenate
+from tensorflow.keras.applications import DenseNet121
+from tensorflow.keras.applications import NASNetMobile
+from tensorflow.keras.applications import ResNet50
 
 from .mobilenet_sipeed.mobilenet import MobileNet
 
@@ -62,7 +61,7 @@ class BaseFeatureExtractor(object):
         return input_shape[1]
 
     def get_output_size(self):
-        output_shape = self.feature_extractor.get_output_shape_at(-1)
+        output_shape = self.feature_extractor.outputs[0].shape
         return output_shape[1:3]
 
     def extract(self, input_image):
@@ -75,7 +74,7 @@ class FullYoloFeature(BaseFeatureExtractor):
 
         # the function to implement the orgnization layer (thanks to github.com/allanzelener/YAD2K)
         def space_to_depth_x2(x):
-            return tf.space_to_depth(x, block_size=2)
+            return tensorflow.nn.space_to_depth(x, block_size=2)
 
         # Layer 1
         x = Conv2D(32, (3,3), strides=(1,1), padding='same', name='conv_1', use_bias=False)(input_image)
@@ -191,7 +190,7 @@ class FullYoloFeature(BaseFeatureExtractor):
         skip_connection = LeakyReLU(alpha=0.1)(skip_connection)
         skip_connection = Lambda(space_to_depth_x2)(skip_connection)
 
-        x = concatenate([skip_connection, x])
+        x = Concatenate()([skip_connection, x])
 
         # Layer 22
         x = Conv2D(1024, (3,3), strides=(1,1), padding='same', name='conv_22', use_bias=False)(x)
@@ -266,10 +265,10 @@ class MobileNetFeature(BaseFeatureExtractor):
                 input_shape = item
 
         if weights == 'imagenet':
-            mobilenet = MobileNet(input_shape=input_shape, input_tensor=input_image, alpha = alpha, weights = 'imagenet', include_top=False, backend=keras.backend, layers=keras.layers, models=keras.models, utils=keras.utils)
+            mobilenet = MobileNet(input_shape=input_shape, input_tensor=input_image, alpha = alpha, weights = 'imagenet', include_top=False, backend=tensorflow.keras.backend, layers=tensorflow.keras.layers, models=tensorflow.keras.models, utils=tensorflow.keras.utils)
             print('Successfully loaded imagenet backend weights')
         else:
-            mobilenet = MobileNet(input_shape=(input_size[0],input_size[1],3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = None, include_top=False, backend=keras.backend, layers=keras.layers,models=keras.models,utils=keras.utils)
+            mobilenet = MobileNet(input_shape=(input_size[0],input_size[1],3),alpha = alpha,depth_multiplier = 1, dropout = 0.001, weights = None, include_top=False, backend=tensorflow.keras.backend, layers=tensorflow.keras.layers,models=tensorflow.keras.models,utils=tensorflow.keras.utils)
             if weights:
                 print('Loaded backend weigths: '+weights)
                 mobilenet.load_weights(weights)
@@ -296,24 +295,23 @@ class SqueezeNetFeature(BaseFeatureExtractor):
 
         def fire_module(x, fire_id, squeeze=16, expand=64):
             s_id = 'fire' + str(fire_id) + '/'
+            x = Conv2D(squeeze, (1, 1), padding='valid', name=s_id + sq1x1)(x)
+            x = Activation('relu', name=s_id + relu + sq1x1)(x)
 
-            x     = Conv2D(squeeze, (1, 1), padding='valid', name=s_id + sq1x1)(x)
-            x     = Activation('relu', name=s_id + relu + sq1x1)(x)
-
-            left  = Conv2D(expand,  (1, 1), padding='valid', name=s_id + exp1x1)(x)
-            left  = Activation('relu', name=s_id + relu + exp1x1)(left)
+            left = Conv2D(expand,  (1, 1), padding='valid', name=s_id + exp1x1)(x)
+            left = Activation('relu', name=s_id + relu + exp1x1)(left)
 
             right = Conv2D(expand,  (3, 3), padding='same',  name=s_id + exp3x3)(x)
             right = Activation('relu', name=s_id + relu + exp3x3)(right)
 
-            x = concatenate([left, right], axis=3, name=s_id + 'concat')
+            x = Concatenate(axis=3, name=s_id + 'concat')([left, right])
 
             return x
 
         # define the model of SqueezeNet
         input_image = Input(shape=(input_size[0], input_size[1], 3))
-
-        x = Conv2D(64, (3, 3), strides=(2, 2), padding='valid', name='conv1')(input_image)
+        x = ZeroPadding2D(padding=((1, 1), (1, 1)), name='pad')(input_image)
+        x = Conv2D(64, (3, 3), strides=(2, 2), padding='valid', name='conv1')(x)
         x = Activation('relu', name='relu_conv1')(x)
         x = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), name='pool1')(x)
 
@@ -337,7 +335,7 @@ class SqueezeNetFeature(BaseFeatureExtractor):
         elif weights == None:
             pass
         else:
-            print('Loaded backend weigths: '+weights)
+            print('Loaded backend weigths: '+ weights)
             self.feature_extractor.load_weights(weights)
 
 
@@ -368,7 +366,7 @@ class DenseNet121Feature(BaseFeatureExtractor):
         self.feature_extractor = densenet
 
     def normalize(self, image):
-        from keras.applications.densenet import preprocess_input
+        from tensorflow.keras.applications.densenet import preprocess_input
         return preprocess_input(image)
 
 class NASNetMobileFeature(BaseFeatureExtractor):
@@ -387,7 +385,7 @@ class NASNetMobileFeature(BaseFeatureExtractor):
         self.feature_extractor = nasnetmobile
 
     def normalize(self, image):
-        from keras.applications.nasnet import preprocess_input
+        from tensorflow.keras.applications.nasnet import preprocess_input
         return preprocess_input(image)
 
 class ResNet50Feature(BaseFeatureExtractor):
