@@ -77,8 +77,7 @@ def train(model,
 
     #4 create callbacks   
     
-    logdir = os.path.join("logs")
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
+    tensorboard_callback = tf.keras.callbacks.TensorBoard("logs", histogram_freq=1)
     
     early_stop = EarlyStopping(monitor=metrics, 
                        min_delta=0.001, 
