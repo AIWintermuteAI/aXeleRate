@@ -80,7 +80,7 @@ def concat_lenends(  seg_img , legend_img  ):
     return out_img
 
 def visualize_segmentation(seg_arr, inp_img=None, n_classes=None, 
-    colors=class_colors, class_names=None, overlay_img=False, show_legends=False , 
+    colors=class_colors, class_names=None, overlay_img=False, show_legends=False, 
     prediction_width=None, prediction_height=None):
     
     print("Found the following classes in the segmentation image:", np.unique(seg_arr))
@@ -95,11 +95,11 @@ def visualize_segmentation(seg_arr, inp_img=None, n_classes=None,
         orininal_w = inp_img.shape[1]
         seg_img = cv2.resize(seg_img, (orininal_w, orininal_h))
 
-    if (not prediction_height is None) and  (not prediction_width is None):
+    if (not prediction_height is None) and (not prediction_width is None):
         seg_img = cv2.resize(seg_img, (prediction_width, prediction_height ))
         if not inp_img is None:
-            inp_img = cv2.resize(inp_img, (prediction_width, prediction_height ))
-
+            inp_img = cv2.resize(inp_img, (prediction_width, prediction_height))
+            
     if overlay_img:
         assert not inp_img is None
         seg_img = overlay_seg_image(inp_img, seg_img)
@@ -122,6 +122,7 @@ def predict(model=None, inp=None, out_fname=None, image = None, overlay_img=Fals
 
     #pr = pr.reshape((output_height,  output_width, n_classes)).argmax(axis=2)
     pr = pr.argmax(axis=2)
+
     seg_img = visualize_segmentation(pr, inp_img=image, n_classes=n_classes, overlay_img=True, colors=colors)
 
     if out_fname is not None:

@@ -68,11 +68,12 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
         for filename in os.listdir(config['train']['valid_image_folder']):
-            filepath = os.path.join(config['train']['valid_image_folder'],filename)
+            filepath = os.path.join(config['train']['valid_image_folder'], filename)
             orig_image, input_image = prepare_image(filepath, segnet)
-            out_fname = os.path.join(dirname, os.path.basename(filename))
-            predict(model=segnet._network, inp=input_image, out_fname=out_fname)
-
+            output_path = os.path.join(dirname, os.path.basename(filename))
+            predict(model=segnet._network, inp=input_image, image = orig_image, out_fname=output_path)
+            #show_image(output_path)
+            
     if config['model']['type']=='Classifier':
         print('Classifier')    
         if config['model']['labels']:
@@ -113,7 +114,7 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
             # set up text
             cv2.putText(orig_image, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
             cv2.imwrite(output_path, orig_image)
-            show_image(output_path)
+            #show_image(output_path)
             print("{}:{}".format(img_class[0], prob[0]))
         if len(inference_time)>1:
             print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
@@ -152,7 +153,7 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
             output_path = os.path.join(dirname, os.path.split(img_fname)[-1])
             cv2.imwrite(output_path, orig_image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
-            show_image(output_path)
+            #show_image(output_path)
             n_true_positives += count_true_positives(boxes, true_boxes, labels, true_labels)
             n_truth += len(true_boxes)
             n_pred += len(boxes)
@@ -185,4 +186,4 @@ if __name__ == '__main__':
     args = argparser.parse_args()
     with open(args.config) as config_buffer:
         config = json.loads(config_buffer.read())
-    setup_inference(config, args.weights, args.threshold)
+    setup_evaluation(config, args.weights, args.threshold)
