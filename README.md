@@ -6,7 +6,7 @@
 
 <hr>
 <p align="center">
-aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized for both the workflow on local machine and on Google Colab. Currently supports trained model conversion to: .kmodel(K210), .tflite format(full integer and dymaic range quantization support available), OpenVINO IR model format. Experimental support: Google Edge TPU.
+aXeleRate streamlines training and converting computer vision models to be run on various platforms with hardware acceleration. It is optimized for both the workflow on local machine(Ubuntu 18.04 - other Linux distros might work, but not tested. Mac/Win OS are not supported) and on Google Colab. Currently supports trained model conversion to: .kmodel(K210), .tflite format(full integer and dymaic range quantization support available), OpenVINO IR model format. Experimental support: Google Edge TPU.
 </p>
 
 <table>
