@@ -8,9 +8,8 @@ import tarfile
 import glob
 import shutil
 import numpy as np
-#from tensorflow.python.framework import graph_util
-#from tensorflow.python.framework import graph_io
 import shlex
+import tf2onnx
 
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
 k210_converter_download_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),'ncc_linux_x86_64.tar.xz')
@@ -140,28 +139,10 @@ class Converter(object):
         result = run_command(cmd)
         print(result)
 
-    def convert_onnx(self, model, model_layers):
-
-        input_node_names = model.layers[0].get_output_at(0).name.split(':')[0]
-        output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
-        sess = k.get_session()
-
-        # The TensorFlow freeze_graph expects a comma-separated string of output node names.
-        input_node_names_onnx= [model.layers[0].get_output_at(0).name]
-        output_node_names_onnx = [model.layers[-1].get_output_at(0).name]
-        print(output_node_names_onnx)
-        print(input_node_names_onnx)
-        frozen_graph_def = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, output_node_names)
-
-        tf.reset_default_graph()
-        with tf.Graph().as_default() as tf_graph:
-            tf.import_graph_def(frozen_graph_def, name='')
-
-            onnx_graph = tf2onnx.tfonnx.process_tf_graph(tf_graph, input_names=input_node_names_onnx, output_names=output_node_names_onnx)
-            model_proto = onnx_graph.make_model("model")
-            with open(model_path.split(".")[0] + '.onnx', "wb") as f:
-               f.write(model_proto.SerializeToString())
-        #sess.close()
+    def convert_onnx(self, model):
+        spec = (tf.TensorSpec((None, *self._img_size, 3), tf.float32, name="input"),)
+        output_path = self.model_path.split(".")[0] + '.onnx'
+        model_proto, external_tensor_storage = tf2onnx.convert.from_keras(model, input_signature=spec, output_path = output_path)
 
     def convert_tflite(self, model, model_layers, target=None):
         model_type = model.name
@@ -217,8 +198,7 @@ class Converter(object):
             self.convert_edgetpu(model_path.split(".")[0] + '.tflite')
 
         if 'onnx' in self._converter_type:
-            import tf2onnx
-            self.convert_onnx(model, model_layers)
+            self.convert_onnx(model)
             
         if 'openvino' in self._converter_type:
             model.save(model_path.split(".")[0])

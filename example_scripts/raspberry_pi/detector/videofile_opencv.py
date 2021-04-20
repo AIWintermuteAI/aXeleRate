@@ -1,6 +1,6 @@
 import cv2
 from base_camera import BaseCamera
-
+import time
 
 class Camera(BaseCamera):
     video_source = 0
@@ -17,7 +17,10 @@ class Camera(BaseCamera):
 
         while True:
             # read current frame
-            _, img = camera.read()
+            ret, img = camera.read()
+            time.sleep(0.01)
+            if not ret:
+                break
             #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             # return img

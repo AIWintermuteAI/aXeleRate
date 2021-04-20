@@ -7,6 +7,12 @@ from base_camera import BaseCamera
 
 
 class Camera(BaseCamera):
+    video_source = 0
+
+    @staticmethod
+    def set_video_source(source):
+        pass
+
     @staticmethod
     def frames():
         with picamera.PiCamera(resolution = (1280,720)) as camera:
