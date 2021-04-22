@@ -44,22 +44,22 @@ def train_from_config(config,project_folder):
 
     #  Segmentation network
     if config['model']['type']=='SegNet':
-        print('Segmentation')           
-        # 1. Construct the model 
+        print('Segmentation')
+        # 1. Construct the model
         segnet = create_segnet(config['model']['architecture'],
                                    input_size,
                                    config['model']['n_classes'],
-                                   config['weights']['backend'])   
-        # 2. Load the pretrained weights (if any) 
+                                   config['weights']['backend'])
+        # 2. Load the pretrained weights (if any)
         segnet.load_weights(config['weights']['full'], by_name=True)
-        # 3. actual training 
+        # 3. actual training
         model_layers, model_path = segnet.train(config['train']['train_image_folder'],
                                            config['train']['train_annot_folder'],
                                            config['train']['actual_epoch'],
                                            project_folder,
                                            config["train"]["batch_size"],
                                            config["train"]["augumentation"],
-                                           config['train']['learning_rate'], 
+                                           config['train']['learning_rate'],
                                            config['train']['train_times'],
                                            config['train']['valid_times'],
                                            config['train']['valid_image_folder'],
@@ -67,32 +67,32 @@ def train_from_config(config,project_folder):
                                            config['train']['first_trainable_layer'],
                                            config['train']['ignore_zero_class'],
                                            config['train']['valid_metric'])
-               
+
     #  Classifier
     if config['model']['type']=='Classifier':
-        print('Classifier')           
+        print('Classifier')
         if config['model']['labels']:
             labels = config['model']['labels']
         else:
             labels = get_labels(config['train']['train_image_folder'])
-                 # 1. Construct the model 
+                 # 1. Construct the model
         classifier = create_classifier(config['model']['architecture'],
                                        labels,
                                        input_size,
                                        config['model']['fully-connected'],
                                        config['model']['dropout'],
                                        config['weights']['backend'],
-                                       config['weights']['save_bottleneck'])   
-        # 2. Load the pretrained weights (if any) 
+                                       config['weights']['save_bottleneck'])
+        # 2. Load the pretrained weights (if any)
         classifier.load_weights(config['weights']['full'], by_name=True)
 
-        # 3. actual training 
+        # 3. actual training
         model_layers, model_path = classifier.train(config['train']['train_image_folder'],
                                                config['train']['actual_epoch'],
                                                project_folder,
                                                config["train"]["batch_size"],
                                                config["train"]["augumentation"],
-                                               config['train']['learning_rate'], 
+                                               config['train']['learning_rate'],
                                                config['train']['train_times'],
                                                config['train']['valid_times'],
                                                config['train']['valid_image_folder'],
@@ -112,7 +112,7 @@ def train_from_config(config,project_folder):
                 labels = get_object_labels(config['train']['train_annot_folder'])
         print(labels)
 
-        # 1. Construct the model 
+        # 1. Construct the model
         yolo = create_yolo(config['model']['architecture'],
                            labels,
                            input_size,
@@ -122,18 +122,18 @@ def train_from_config(config,project_folder):
                            config['model']['object_scale'],
                            config['model']['no_object_scale'],
                            config['weights']['backend'])
-        
-        # 2. Load the pretrained weights (if any) 
+
+        # 2. Load the pretrained weights (if any)
         yolo.load_weights(config['weights']['full'], by_name=True)
 
-        # 3. actual training 
+        # 3. actual training
         model_layers, model_path = yolo.train(config['train']['train_image_folder'],
                                            config['train']['train_annot_folder'],
                                            config['train']['actual_epoch'],
                                            project_folder,
                                            config["train"]["batch_size"],
                                            config["train"]["augumentation"],
-                                           config['train']['learning_rate'], 
+                                           config['train']['learning_rate'],
                                            config['train']['train_times'],
                                            config['train']['valid_times'],
                                            config['train']['valid_image_folder'],
@@ -142,7 +142,7 @@ def train_from_config(config,project_folder):
                                            config['train']['valid_metric'])
     # 4 Convert the model
     time.sleep(2)
-    converter.convert_model(model_path)    
+    converter.convert_model(model_path)
     return model_path
 
 def setup_training(config_file=None, config_dict=None):

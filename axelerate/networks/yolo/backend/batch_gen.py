@@ -8,19 +8,19 @@ from axelerate.networks.common_utils.augment import ImgAugment
 from axelerate.networks.yolo.backend.utils.box import to_centroid, create_anchor_boxes, find_match_box
 from axelerate.networks.common_utils.fit import train
 
-def create_batch_generator(annotations, 
+def create_batch_generator(annotations,
                            input_size=416,
                            grid_size=13,
                            batch_size=8,
                            anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
                            repeat_times=1,
-                           jitter=True, 
+                           jitter=True,
                            norm=None):
     """
     # Args
         annotations : Annotations instance in utils.annotataion module
-    
-    # Return 
+
+    # Return
         worker : BatchGenerator instance
     """
 
@@ -50,7 +50,7 @@ class BatchGenerator(Sequence):
         """
         # Args
             annotations : Annotations instance
-        
+
         """
         self._netin_gen = netin_gen
         self._netout_gen = netout_gen
@@ -97,16 +97,17 @@ class BatchGenerator(Sequence):
             fname = self.annotations.fname(self._batch_size*idx + i)
             boxes = self.annotations.boxes(self._batch_size*idx + i)
             labels = self.annotations.code_labels(self._batch_size*idx + i)
-            #print(labels)
+
             # 2. read image in fixed size
             img, boxes, labels = self._img_aug.imread(fname, boxes, labels)
+
             if len(boxes) > 0:
                 # 3. grid scaling centroid boxes
                 norm_boxes = self._yolo_box.trans(boxes)
             else:
                 norm_boxes = [[0,0,0,0]]
                 labels = [-1]
-            
+
             # 4. generate x_batch
             x_batch.append(self._netin_gen.run(img))
             y_batch.append(self._netout_gen.run(norm_boxes, labels))
@@ -122,7 +123,7 @@ class BatchGenerator(Sequence):
 
 
 class _YoloBox(object):
-    
+
     def __init__(self, input_size, grid_size):
         self._input_size = input_size
         self._grid_size = grid_size
@@ -132,7 +133,7 @@ class _YoloBox(object):
         # Args
             boxes : array, shape of (N, 4)
                 (x1, y1, x2, y2)-ordered & input image size scale coordinate
-        
+
         # Returns
             norm_boxes : array, same shape of boxes
                 (cx, cy, w, h)-ordered & rescaled to grid-size
@@ -151,10 +152,10 @@ class _NetinGen(object):
     def __init__(self, input_size, norm):
         self._input_size = input_size
         self._norm = self._set_norm(norm)
-    
+
     def run(self, image):
         return self._norm(image)
-    
+
     def _set_norm(self, norm):
         if norm is None:
             return lambda x: x
@@ -183,7 +184,7 @@ class _NetoutGen(object):
             y_shape : tuple (grid_size, grid_size, nb_boxes, 4+1+nb_classes)
         """
         y = np.zeros(self._tensor_shape)
-        
+
         # loop over objects in one image
         for norm_box, label in zip(norm_boxes, labels):
             best_anchor = self._find_anchor_idx(norm_box)
@@ -199,7 +200,7 @@ class _NetoutGen(object):
         _, _, center_w, center_h = norm_box
         shifted_box = np.array([0, 0, center_w, center_h])
         return find_match_box(shifted_box, self._anchors)
-    
+
     def _generate_y(self, best_anchor, obj_indx, box):
         y = np.zeros(self._tensor_shape)
         max_grid_y = self._tensor_shape[0]-1
@@ -210,6 +211,6 @@ class _NetoutGen(object):
 
         y[grid_y, grid_x, best_anchor, 0:4] = box
         y[grid_y, grid_x, best_anchor, 4  ] = 1.
-        if obj_indx != -1: 
+        if obj_indx != -1:
             y[grid_y, grid_x, best_anchor, 5+obj_indx] = 1
         return y
