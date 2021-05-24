@@ -9,7 +9,6 @@ import glob
 import shutil
 import numpy as np
 import shlex
-import tf2onnx
 
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
 k210_converter_download_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),'ncc_linux_x86_64.tar.xz')
@@ -62,6 +61,14 @@ class Converter(object):
                 cmd = "bash install_openvino.sh"
                 result = run_command(cmd, cwd)
                 print(result)       
+                
+        if 'onnx' in converter_type:
+            try:
+                import tf2onnx
+            except:
+                cmd = "pip install tf2onnx"
+                result = run_command(cmd, cwd)
+                print(result)              
                 
         self._converter_type = converter_type
         self._backend = backend
@@ -146,11 +153,11 @@ class Converter(object):
 
     def convert_tflite(self, model, model_layers, target=None):
         model_type = model.name
-        if model_type == 'yolo':
-            model = tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
-            print("Converting to tflite without Reshape")
-            
+
         if target=='k210': 
+            if model_type == 'yolo':
+                print("Converting to tflite without Reshape for K210 YOLO")
+                model = tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
             if model_type == 'segnet':   
                 print("Converting to tflite with old converter for K210 Segnet")
                 converter = tf.lite.TFLiteConverter.from_keras_model(model)
@@ -163,8 +170,8 @@ class Converter(object):
             converter.optimizations = [tf.lite.Optimize.DEFAULT]
             converter.representative_dataset = self.edgetpu_dataset_gen
             converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-            #converter.inference_input_type = tf.uint8
-            #converter.inference_output_type = tf.uint8
+            converter.inference_input_type = tf.uint8
+            converter.inference_output_type = tf.uint8
 
         elif target == 'tflite_dynamic':
             converter = tf.lite.TFLiteConverter.from_keras_model(model)
