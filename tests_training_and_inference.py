@@ -46,13 +46,14 @@ def configs(network_type):
         "model":{
             "type":                 "Detector",
             "architecture":         "MobileNet7_5",
-            "input_size":           224,
-            "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
+            "input_size":           [240, 320],
+            "anchors":              [[[0.51424575, 0.54116074], [0.29523918, 0.45838044], [0.21371929, 0.21518053]]],
             "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
-            "coord_scale" : 		1.0,
-            "class_scale" : 		1.0,
-            "object_scale" : 		5.0,
-            "no_object_scale" : 	1.0
+            "obj_thresh" : 		    0.7,
+            "iou_thresh" : 		    0.3,
+            "coord_scale" : 		0.5,
+            "object_scale" : 		5.0,            
+            "no_object_scale" : 	0.5
         },
         "weights" : {
             "full":   				"",

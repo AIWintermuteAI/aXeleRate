@@ -41,7 +41,6 @@ class ImgAugment(object):
             print("This image has an annotation file, but cannot be open. Check the integrity of your dataset.", img_file)
             raise
         
-
         boxes_ = np.copy(boxes)
         labels_ = np.copy(labels)
   

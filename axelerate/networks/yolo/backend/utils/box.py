@@ -89,18 +89,37 @@ def draw_scaled_boxes(image, boxes, probs, labels, desired_size=400):
     return draw_boxes(img_scaled, boxes_scaled, probs, labels)
         
 
-def draw_boxes(image, boxes, probs, labels):
-    for box, classes in zip(boxes, probs):
-        x1, y1, x2, y2 = box
-        cv2.rectangle(image, (x1,y1), (x2,y2), (0,255,0), 3)
-        cv2.putText(image, 
-                    '{}:  {:.2f}'.format(labels[np.argmax(classes)], classes.max()), 
-                    (x1, y1 - 13), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 
-                    1e-3 * image.shape[0], 
-                    (0,0,255), 1)
-    return image        
+def draw_boxes(image, boxes, scores, classes, labels):
 
+    color = (0, 125, 0)
+
+    for i in range(len(boxes)):
+
+        y_min, x_min, y_max, x_max = boxes[i]
+        obj_class = classes[i]
+        score = scores[i]
+
+        # Draw bounding box around detected object
+        cv2.rectangle(image, (x_min, y_min), (x_max, y_max), color, 2)
+
+        # Create label for detected object class
+        label = "{}:{:.2f}%".format(labels[obj_class], score)
+        label_color = (255, 255, 255)
+
+        text_size = 0.0015 * min(image.shape[0], image.shape[1])
+
+        # Make sure label always stays on-screen
+        x_text, y_text = cv2.getTextSize(label, cv2.FONT_HERSHEY_DUPLEX, text_size, 1)[0][:2]
+
+        lbl_box_xy_min = (x_min, y_min if y_min < 25 else y_min - y_text)
+        lbl_box_xy_max = (x_min + x_text, y_min + y_text if y_min < 25 else y_min)
+        lbl_text_pos = (x_min, y_min)
+
+        # Add label and confidence value
+        cv2.rectangle(image, lbl_box_xy_min, lbl_box_xy_max, color, -1)
+        cv2.putText(image, label, lbl_text_pos, cv2.FONT_HERSHEY_DUPLEX, text_size, label_color, 1, cv2.LINE_AA)
+
+    return image        
 
 def centroid_box_iou(box1, box2):
     def _interval_overlap(interval_a, interval_b):

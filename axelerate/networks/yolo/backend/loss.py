@@ -1,277 +1,316 @@
-# -*- coding: utf-8 -*-
 import tensorflow as tf
+import tensorflow.python.keras.backend as K
+from tensorflow import map_fn
 import numpy as np
+import os
+import skimage
+import cv2
+from math import cos, sin
 
-BOX_IDX_X = 0
-BOX_IDX_Y = 1
-BOX_IDX_W = 2
-BOX_IDX_H = 3
-BOX_IDX_CONFIDENCE = 4
-BOX_IDX_CLASS_START = 5
+def tf_xywh_to_all(grid_pred_xy: tf.Tensor, grid_pred_wh: tf.Tensor, layer: int, params) -> [tf.Tensor, tf.Tensor]:
+    """ rescale the pred raw [grid_pred_xy,grid_pred_wh] to [0~1]
+
+    Parameters
+    ----------
+    grid_pred_xy : tf.Tensor
+
+    grid_pred_wh : tf.Tensor
+
+    layer : int
+        the output layer
+    h : Helper
 
 
-class YoloLoss(object):
-    
-    def __init__(self,
-                 grid_size=13,
-                 nb_class=1,
-                 anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
-                 coord_scale=1.0,
-                 class_scale=1.0,
-                 object_scale=5.0,
-                 no_object_scale=1.0):
-        """
-        # Args
-            grid_size : int
-            batch_size : int
-            anchors : list of floats
-            nb_box : int
-            nb_class : int
-            true_boxes : Tensor instance
-        """
-        self.grid_size = grid_size
+    Returns
+    -------
+    tuple
+
+        after process, [all_pred_xy, all_pred_wh] 
+    """
+    with tf.name_scope('xywh_to_all_%d' % layer):
+        #print('xyoffset', params.xy_offset[layer], 'outhw', params.out_hw[layer][::-1])
+        all_pred_xy = (tf.sigmoid(grid_pred_xy[..., :]) + params.xy_offset[layer]) / params.out_hw[layer][::-1]
+        all_pred_wh = tf.exp(grid_pred_wh[..., :]) * params.anchors[layer]
+    return all_pred_xy, all_pred_wh
+
+
+def tf_xywh_to_grid(all_true_xy: tf.Tensor, all_true_wh: tf.Tensor, layer: int, params) -> [tf.Tensor, tf.Tensor]:
+    """convert true label xy wh to grid scale
+
+    Parameters
+    ----------
+    all_true_xy : tf.Tensor
+
+    all_true_wh : tf.Tensor
+
+    layer : int
+        layer index
+    h : Helper
+
+
+    Returns
+    -------
+    [tf.Tensor, tf.Tensor]
+        grid_true_xy, grid_true_wh shape = [out h ,out w,anchor num , 2 ]
+    """
+    with tf.name_scope('xywh_to_grid_%d' % layer):
+        grid_true_xy = (all_true_xy * params.out_hw[layer][::-1]) - params.xy_offset[layer]
+        grid_true_wh = tf.math.log(all_true_wh / params.anchors[layer])
+    return grid_true_xy, grid_true_wh
+
+
+def tf_reshape_box(true_xy_A: tf.Tensor, true_wh_A: tf.Tensor, p_xy_A: tf.Tensor, p_wh_A: tf.Tensor, layer: int, params) -> tuple:
+    """ reshape the xywh to [?,h,w,anchor_nums,true_box_nums,2]
+        NOTE  must use obj mask in atrue xywh !
+    Parameters
+    ----------
+    true_xy_A : tf.Tensor
+        shape will be [true_box_nums,2]
+
+    true_wh_A : tf.Tensor
+        shape will be [true_box_nums,2]
+
+    p_xy_A : tf.Tensor
+        shape will be [?,h,w,anhor_nums,2]
+
+    p_wh_A : tf.Tensor
+        shape will be [?,h,w,anhor_nums,2]
+
+    layer : int
+
+    helper : Helper
+
+
+    Returns
+    -------
+    tuple
+        true_cent, true_box_wh, pred_cent, pred_box_wh
+    """
+    with tf.name_scope('reshape_box_%d' % layer):
+        true_cent = true_xy_A[tf.newaxis, tf.newaxis, tf.newaxis, tf.newaxis, ...]
+        true_box_wh = true_wh_A[tf.newaxis, tf.newaxis, tf.newaxis, tf.newaxis, ...]
+
+        true_cent = tf.tile(true_cent, [helper.batch_size, helper.out_hw[layer][0], helper.out_hw[layer][1], helper.anchor_number, 1, 1])
+        true_box_wh = tf.tile(true_box_wh, [helper.batch_size, helper.out_hw[layer][0], helper.out_hw[layer][1], helper.anchor_number, 1, 1])
+
+        pred_cent = p_xy_A[..., tf.newaxis, :]
+        pred_box_wh = p_wh_A[..., tf.newaxis, :]
+        pred_cent = tf.tile(pred_cent, [1, 1, 1, 1, tf.shape(true_xy_A)[0], 1])
+        pred_box_wh = tf.tile(pred_box_wh, [1, 1, 1, 1, tf.shape(true_wh_A)[0], 1])
+
+    return true_cent, true_box_wh, pred_cent, pred_box_wh
+
+
+def tf_iou(pred_xy: tf.Tensor, pred_wh: tf.Tensor, vaild_xy: tf.Tensor, vaild_wh: tf.Tensor) -> tf.Tensor:
+    """ calc the iou form pred box with vaild box
+
+    Parameters
+    ----------
+    pred_xy : tf.Tensor
+        pred box shape = [out h, out w, anchor num, 2]
+
+    pred_wh : tf.Tensor
+        pred box shape = [out h, out w, anchor num, 2]
+
+    vaild_xy : tf.Tensor
+        vaild box shape = [? , 2]
+
+    vaild_wh : tf.Tensor
+        vaild box shape = [? , 2]
+
+    Returns
+    -------
+    tf.Tensor
+        iou value shape = [out h, out w, anchor num ,?]
+    """
+    b1_xy = tf.expand_dims(pred_xy, -2)
+    b1_wh = tf.expand_dims(pred_wh, -2)
+    b1_wh_half = b1_wh / 2.
+    b1_mins = b1_xy - b1_wh_half
+    b1_maxes = b1_xy + b1_wh_half
+
+    b2_xy = tf.expand_dims(vaild_xy, 0)
+    b2_wh = tf.expand_dims(vaild_wh, 0)
+    b2_wh_half = b2_wh / 2.
+    b2_mins = b2_xy - b2_wh_half
+    b2_maxes = b2_xy + b2_wh_half
+
+    intersect_mins = tf.maximum(b1_mins, b2_mins)
+    intersect_maxes = tf.minimum(b1_maxes, b2_maxes)
+    intersect_wh = tf.maximum(intersect_maxes - intersect_mins, 0.)
+    intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
+    b1_area = b1_wh[..., 0] * b1_wh[..., 1]
+    b2_area = b2_wh[..., 0] * b2_wh[..., 1]
+    iou = intersect_area / (b1_area + b2_area - intersect_area)
+
+    return iou
+
+
+def calc_ignore_mask(t_xy_A: tf.Tensor, t_wh_A: tf.Tensor, p_xy: tf.Tensor, p_wh: tf.Tensor, obj_mask: tf.Tensor, iou_thresh: float, layer: int, params) -> tf.Tensor:
+    """clac the ignore mask
+
+    Parameters
+    ----------
+    t_xy_A : tf.Tensor
+        raw ture xy,shape = [batch size,h,w,anchors,2]
+    t_wh_A : tf.Tensor
+        raw true wh,shape = [batch size,h,w,anchors,2]
+    p_xy : tf.Tensor
+        raw pred xy,shape = [batch size,h,w,anchors,2]
+    p_wh : tf.Tensor
+        raw pred wh,shape = [batch size,h,w,anchors,2]
+    obj_mask : tf.Tensor
+        old obj mask,shape = [batch size,h,w,anchors]
+    iou_thresh : float
+        iou thresh 
+    helper : Helper
+        Helper obj
+
+    Returns
+    -------
+    tf.Tensor
+    ignore_mask : 
+        ignore_mask, shape = [batch size, h, w, anchors, 1]
+    """
+    with tf.name_scope('calc_mask_%d' % layer):
+        pred_xy, pred_wh = tf_xywh_to_all(p_xy, p_wh, layer, params)
+
+        # def lmba(bc):
+        #     vaild_xy = tf.boolean_mask(t_xy_A[bc], obj_mask[bc])
+        #     vaild_wh = tf.boolean_mask(t_wh_A[bc], obj_mask[bc])
+        #     iou_score = tf_iou(pred_xy[bc], pred_wh[bc], vaild_xy, vaild_wh)
+        #     best_iou = tf.reduce_max(iou_score, axis=-1, keepdims=True)
+        #     return tf.cast(best_iou < iou_thresh, tf.float32)
+        # return map_fn(lmba, tf.range(helper.batch_size), dtype=tf.float32)
+        ignore_mask = []
+        for bc in range(params.batch_size):
+            vaild_xy = tf.boolean_mask(t_xy_A[bc], obj_mask[bc])
+            vaild_wh = tf.boolean_mask(t_wh_A[bc], obj_mask[bc])
+            iou_score = tf_iou(pred_xy[bc], pred_wh[bc], vaild_xy, vaild_wh)
+            best_iou = tf.reduce_max(iou_score, axis=-1, keepdims=True)
+            ignore_mask.append(tf.cast(best_iou < iou_thresh, tf.float32))
+    return tf.stack(ignore_mask)
+
+
+class Params:
+
+    def __init__(self, obj_thresh, iou_thresh, obj_weight, noobj_weight, wh_weight, out_hw, anchors, class_num):
+        self.obj_thresh = obj_thresh
+        self.iou_thresh = iou_thresh
+        self.wh_weight = wh_weight
+        self.obj_weight = obj_weight
+        self.noobj_weight = noobj_weight
+        self.class_num = class_num
+        self.out_hw = np.reshape(np.array(out_hw), (-1, 2))
+        #print(self.out_hw)
         self.anchors = anchors
-        self.nb_box = int(len(anchors)/2)
-        self.nb_class = nb_class
 
-        self.coord_scale = coord_scale
+        self.grid_wh = (1 / self.out_hw)[:, [1, 0]]
+        #print(self.grid_wh)
+        self.wh_scale = Params._anchor_scale(self.anchors, self.grid_wh)
+        self.xy_offset = Params._coordinate_offset(self.anchors, self.out_hw)
 
-        self._activator = _Activator(self.anchors)
-        self._mask = _Mask(nb_class, coord_scale, class_scale, object_scale, no_object_scale)
+        self.batch_size = None
 
+    @staticmethod
+    def _coordinate_offset(anchors: np.ndarray, out_hw: np.ndarray) -> np.array:
+        """construct the anchor coordinate offset array , used in convert scale
 
-    def custom_loss(self, batch_size):
+        Parameters
+        ----------
+        anchors : np.ndarray
+            anchors shape = [n,] = [ n x [m,2]]
+        out_hw : np.ndarray
+            output height width shape = [n,2]
+
+        Returns
+        -------
+        np.array
+            scale shape = [n,] = [n x [h_n,w_n,m,2]]
         """
-        # Args
-            y_true : (N, 13, 13, 5, 6)
-            y_pred : (N, 13, 13, 5, 6)
-        
+        grid = []
+        for l in range(len(anchors)):
+            grid_y = np.tile(np.reshape(np.arange(0, stop=out_hw[l][0]), [-1, 1, 1, 1]), [1, out_hw[l][1], 1, 1])
+            grid_x = np.tile(np.reshape(np.arange(0, stop=out_hw[l][1]), [1, -1, 1, 1]), [out_hw[l][0], 1, 1, 1])
+            grid.append(np.concatenate([grid_x, grid_y], axis=-1))
+        return np.array(grid)
+
+    @staticmethod
+    def _anchor_scale(anchors: np.ndarray, grid_wh: np.ndarray) -> np.array:
+        """construct the anchor scale array , used in convert label to annotation
+
+        Parameters
+        ----------
+        anchors : np.ndarray
+            anchors shape = [n,] = [ n x [m,2]]
+        out_hw : np.ndarray
+            output height width shape = [n,2]
+
+        Returns
+        -------
+        np.array
+            scale shape = [n,] = [n x [m,2]]
         """
-        def loss_func(y_true, y_pred):
-            # 1. activate prediction & truth tensor
-            true_tensor, pred_tensor = self._activator.run(y_true, y_pred)
-            true_box_xy, true_box_wh, true_box_conf, true_box_class = true_tensor[..., :2], true_tensor[..., 2:4], true_tensor[..., 4], true_tensor[..., 5]
-            true_box_class = tf.cast(true_box_class, tf.int64)
-
-            # 2. mask
-            coord_mask = self._mask.create_coord_mask(y_true)
-            class_mask = self._mask.create_class_mask(y_true, true_box_class)
-            conf_mask = self._mask.create_conf_mask(y_true, pred_tensor, batch_size)
-            
-            """
-            Finalize the loss
-            """
-            loss = get_loss(coord_mask, conf_mask, class_mask, pred_tensor, true_box_xy, true_box_wh, true_box_conf, true_box_class)
-            return loss
-        return loss_func
-    
-
-def get_loss(coord_mask, conf_mask, class_mask, pred_tensor, true_box_xy, true_box_wh, true_box_conf, true_box_class):
-    nb_coord_box = tf.reduce_sum(tf.cast(coord_mask > 0.0, dtype=tf.float32))
-    nb_conf_box  = tf.reduce_sum(tf.cast(conf_mask  > 0.0, dtype=tf.float32))
-    nb_class_box = tf.reduce_sum(tf.cast(class_mask > 0.0, dtype=tf.float32))
-
-    pred_box_xy, pred_box_wh, pred_box_conf, pred_box_class = pred_tensor[..., :2], pred_tensor[..., 2:4], pred_tensor[..., 4], pred_tensor[..., 5:]
-    # true_box_xy, true_box_wh, true_box_conf, true_box_class = true_tensor[..., :2], true_tensor[..., 2:4], true_tensor[..., 4], true_tensor[..., 5]
-    true_box_class = tf.cast(true_box_class, tf.int64)
-    
-    loss_xy    = tf.reduce_sum(tf.square(true_box_xy-pred_box_xy)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    loss_wh    = tf.reduce_sum(tf.square(true_box_wh-pred_box_wh)     * coord_mask) / (nb_coord_box + 1e-6) / 2.
-    loss_conf  = tf.reduce_sum(tf.square(true_box_conf-pred_box_conf) * conf_mask)  / (nb_conf_box  + 1e-6) / 2.
-    loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=true_box_class, logits=pred_box_class)
-    loss_class = tf.reduce_sum(loss_class * class_mask) / (nb_class_box + 1e-6)
-    loss = loss_xy + loss_wh + loss_conf + loss_class
-    return loss
+        return np.array([anchors[i] * grid_wh[i] for i in range(len(anchors))])
 
 
-class _Activator(object):
-    
-    def __init__(self, anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]):
-        self._anchor_boxes = np.reshape(anchors, [1,1,1,-1,2])
-        
-    def run(self, y_true, y_pred):
-        pred_box_xy, pred_box_wh, pred_box_conf, pred_box_class = self._activate_pred_tensor(y_pred)
-        true_box_xy, true_box_wh, true_box_conf, true_box_class = self._activate_true_tensor(y_true, pred_box_xy, pred_box_wh)
+def create_loss_fn(params, layer, batch_size):
 
-        # concatenate pred tensor
-        pred_box_conf = tf.expand_dims(pred_box_conf, -1)
-        y_pred_activated = tf.concat([pred_box_xy, pred_box_wh, pred_box_conf, pred_box_class], axis=-1)
+    params.batch_size = batch_size
+    shapes = [[-1] + list(params.out_hw[i]) + [len(params.anchors[i]), params.class_num + 5]for i in range(len(params.anchors))]
 
-        # concatenate true tensor
-        true_box_conf = tf.expand_dims(true_box_conf, -1)
-        true_box_class = tf.expand_dims(true_box_class, -1)
-        true_box_class = tf.cast(true_box_class, true_box_xy.dtype)
-        y_true_activated = tf.concat([true_box_xy, true_box_wh, true_box_conf, true_box_class], axis=-1)
-        return y_true_activated, y_pred_activated
-    
-    def _activate_pred_tensor(self, y_pred):
-        """
-        # Args
-            y_pred : (N, 13, 13, 5, 6)
-            cell_grid : (N, 13, 13, 5, 2)
-        
-        # Returns
-            box_xy : (N, 13, 13, 5, 2)
-                1) sigmoid activation
-                2) grid offset added
-            box_wh : (N, 13, 13, 5, 2)
-                1) exponential activation
-                2) anchor box multiplied
-            box_conf : (N, 13, 13, 5, 1)
-                1) sigmoid activation
-            box_classes : (N, 13, 13, 5, nb_class)
-        """
-        # bx = sigmoid(tx) + cx, by = sigmoid(ty) + cy
-        batch_size = tf.shape(y_pred)[0]
-        grid_size_y = tf.shape(y_pred)[1]
-        grid_size_x = tf.shape(y_pred)[2]
-        cell_grid = create_cell_grid(grid_size_x, grid_size_y, batch_size)
-        
-        pred_box_xy = tf.sigmoid(y_pred[..., :2]) + cell_grid
-        pred_box_wh = tf.exp(y_pred[..., 2:4]) * self._anchor_boxes
-        pred_box_conf = tf.sigmoid(y_pred[..., 4])
-        pred_box_class = y_pred[..., 5:]
-        return pred_box_xy, pred_box_wh, pred_box_conf, pred_box_class
+    # @tf.function
+    def loss_fn(y_true: tf.Tensor, y_pred: tf.Tensor):
+        #print(y_true, y_pred)
+        """ split the label """
+        grid_pred_xy = y_pred[..., 0:2]
+        grid_pred_wh = y_pred[..., 2:4]
+        pred_confidence = y_pred[..., 4:5]
+        pred_cls = y_pred[..., 5:]
 
-    def _activate_true_tensor(self, y_true, pred_box_xy, pred_box_wh):
-        ### adjust x and y
-        true_box_xy = y_true[..., 0:2] # relative position to the containing cell
-        
-        ### adjust w and h
-        true_box_wh = y_true[..., 2:4] # number of cells accross, horizontally and vertically
-        
-        ### adjust confidence
-        true_wh_half = true_box_wh / 2.
-        true_mins    = true_box_xy - true_wh_half
-        true_maxes   = true_box_xy + true_wh_half
-        
-        pred_wh_half = pred_box_wh / 2.
-        pred_mins    = pred_box_xy - pred_wh_half
-        pred_maxes   = pred_box_xy + pred_wh_half       
-        
-        intersect_mins  = tf.maximum(pred_mins,  true_mins)
-        intersect_maxes = tf.minimum(pred_maxes, true_maxes)
-        intersect_wh    = tf.maximum(intersect_maxes - intersect_mins, 0.)
-        intersect_areas = intersect_wh[..., 0] * intersect_wh[..., 1]
-        
-        true_areas = true_box_wh[..., 0] * true_box_wh[..., 1]
-        pred_areas = pred_box_wh[..., 0] * pred_box_wh[..., 1]
-    
-        union_areas = pred_areas + true_areas - intersect_areas
-        iou_scores  = tf.truediv(intersect_areas, union_areas)
-        
-        true_box_conf = iou_scores * y_true[..., 4]
-        
-        ### adjust class probabilities
-        true_box_class = tf.argmax(y_true[..., 5:], -1)
-        
-        return true_box_xy, true_box_wh, true_box_conf, true_box_class
+        all_true_xy = y_true[..., 0:2]
+        all_true_wh = y_true[..., 2:4]
+        true_confidence = y_true[..., 4:5]
+        true_cls = y_true[..., 5:]
 
+        obj_mask = true_confidence  # true_confidence[..., 0] > obj_thresh
+        obj_mask_bool = y_true[..., 4] > params.obj_thresh
 
-def create_cell_grid(grid_size_x, grid_size_y, batch_size):
-    x_pos = tf.cast(tf.range(grid_size_x), dtype=tf.float32)
-    y_pos = tf.cast(tf.range(grid_size_y), dtype=tf.float32)
-    xx, yy = tf.meshgrid(x_pos, y_pos)
-    xx = tf.expand_dims(xx, -1)
-    yy = tf.expand_dims(yy, -1)
-    
-    grid = tf.concat([xx, yy], axis=-1)         # (7, 7, 2)
-    grid = tf.expand_dims(grid, -2)             # (7, 7, 1, 2)
-    grid = tf.tile(grid, (1,1,5,1))             # (7, 7, 5, 2)
-    grid = tf.expand_dims(grid, 0)              # (1, 7, 7, 1, 2)
-    grid = tf.tile(grid, (batch_size,1,1,1,1))  # (N, 7, 7, 1, 2)
+        """ calc the ignore mask  """
 
-    cell_x = tf.cast(tf.reshape(tf.tile(tf.range(grid_size_x), [grid_size_y]), (1, grid_size_y, grid_size_x,
-                                                                                      1, 1)), dtype=tf.float32)
-    cell_y = tf.cast(tf.reshape(tf.tile(tf.range(grid_size_y), [grid_size_x]), (1, grid_size_x, grid_size_y,
-                                                                                      1, 1)), dtype=tf.float32)
-    cell_y = tf.transpose(cell_y, (0, 2, 1, 3, 4))
+        ignore_mask = calc_ignore_mask(all_true_xy, all_true_wh, grid_pred_xy,
+                                       grid_pred_wh, obj_mask_bool,
+                                       params.iou_thresh, layer, params)
 
-    cell_grid = tf.tile(tf.concat([cell_x, cell_y], -1), [batch_size, 1, 1, 5, 1])
+        grid_true_xy, grid_true_wh = tf_xywh_to_grid(all_true_xy, all_true_wh, layer, params)
+        # NOTE When wh=0 , tf.log(0) = -inf, so use K.switch to avoid it
+        grid_true_wh = K.switch(obj_mask_bool, grid_true_wh, tf.zeros_like(grid_true_wh))
 
-    return grid
+        """ define loss """
+        coord_weight = 2 - all_true_wh[..., 0:1] * all_true_wh[..., 1:2]
 
+        xy_loss = tf.reduce_sum(
+            obj_mask * coord_weight * tf.nn.sigmoid_cross_entropy_with_logits(
+                labels=grid_true_xy, logits=grid_pred_xy)) / params.batch_size
 
-class _Mask(object):
-    
-    def __init__(self, nb_class=1, coord_scale=1.0, class_scale=1.0, object_scale=5.0, no_object_scale=1.0):
-        self._nb_class = nb_class
-        self._coord_scale = coord_scale
-        self._class_scale = class_scale
-        self._object_scale = object_scale
-        self._no_object_scale = no_object_scale
-        
-    def create_coord_mask(self, y_true):
-        """ Simply the position of the ground truth boxes (the predictors)
+        wh_loss = tf.reduce_sum(
+            obj_mask * coord_weight * params.wh_weight * tf.square(tf.subtract(
+                x=grid_true_wh, y=grid_pred_wh))) / params.batch_size
 
-        # Args
-            y_true : Tensor, shape of (None, grid, grid, nb_box, 4+1+n_classes)
-        
-        # Returns
-            mask : Tensor, shape of (None, grid, grid, nb_box, 1)
-        """
-        #     BOX 별 confidence value 를 mask value 로 사용
-        # [1 13 13 5 1]
-        mask = tf.expand_dims(y_true[..., BOX_IDX_CONFIDENCE], axis=-1) * self._coord_scale
-        return mask
-    
-    def create_class_mask(self, y_true, true_box_class):
-        """ Simply the position of the ground truth boxes (the predictors)
+        obj_loss = params.obj_weight * tf.reduce_sum(
+            obj_mask * tf.nn.sigmoid_cross_entropy_with_logits(
+                labels=true_confidence, logits=pred_confidence)) / params.batch_size
 
-        # Args
-            y_true : Tensor, shape of (None, grid, grid, nb_box, 4+1+n_classes)
-            true_box_class : Tensor, shape of (None, grid, grid, nb_box)
-                indicate class index per boxes
-        
-        # Returns
-            mask : Tensor, shape of (None, grid, grid, nb_box)
-        """
-        class_wt = np.ones(self._nb_class, dtype='float32')
-        mask = y_true[..., 4] * tf.gather(class_wt, true_box_class) * self._class_scale
-        return mask
-    
-    def create_conf_mask(self, y_true, pred_tensor, batch_size):
-        ### confidence mask: penelize predictors + penalize boxes with low IOU
-        # penalize the confidence of the boxes, which have IOU with some ground truth box < 0.6
-        pred_box_xy, pred_box_wh = pred_tensor[..., :2], pred_tensor[..., 2:4]
-        
-        true_boxes = y_true[..., :4]
-        true_boxes = tf.reshape(true_boxes, [batch_size, -1, 4])
-        true_boxes = tf.expand_dims(true_boxes, 1)
-        true_boxes = tf.expand_dims(true_boxes, 1)
-        true_boxes = tf.expand_dims(true_boxes, 1)
-        
-        true_xy = true_boxes[..., 0:2]
-        true_wh = true_boxes[..., 2:4]
-        
-        true_wh_half = true_wh / 2.
-        true_mins    = true_xy - true_wh_half
-        true_maxes   = true_xy + true_wh_half
-        
-        pred_xy = tf.expand_dims(pred_box_xy, 4)
-        pred_wh = tf.expand_dims(pred_box_wh, 4)
-        
-        pred_wh_half = pred_wh / 2.
-        pred_mins    = pred_xy - pred_wh_half
-        pred_maxes   = pred_xy + pred_wh_half    
-        
-        intersect_mins  = tf.maximum(pred_mins,  true_mins)
-        intersect_maxes = tf.minimum(pred_maxes, true_maxes)
-        intersect_wh    = tf.maximum(intersect_maxes - intersect_mins, 0.)
-        intersect_areas = intersect_wh[..., 0] * intersect_wh[..., 1]
-        
-        true_areas = true_wh[..., 0] * true_wh[..., 1]
-        pred_areas = pred_wh[..., 0] * pred_wh[..., 1]
+        noobj_loss = params.noobj_weight * tf.reduce_sum(
+            (1 - obj_mask) * ignore_mask * tf.nn.sigmoid_cross_entropy_with_logits(
+                labels=true_confidence, logits=pred_confidence)) / params.batch_size
 
-        union_areas = pred_areas + true_areas - intersect_areas
-        iou_scores  = tf.truediv(intersect_areas, union_areas)
+        cls_loss = tf.reduce_sum(
+            obj_mask * tf.nn.sigmoid_cross_entropy_with_logits(
+                labels=true_cls, logits=pred_cls)) / params.batch_size
 
-        best_ious = tf.reduce_max(iou_scores, axis=4)
-        # 1) confidence mask (N, 13, 13, 5)
-        conf_mask  = tf.zeros(tf.shape(y_true)[:4])
-        conf_mask = conf_mask + tf.cast(best_ious < 0.6, dtype=tf.float32) * (1 - y_true[..., 4]) * self._no_object_scale
-        
-        # penalize the confidence of the boxes, which are reponsible for corresponding ground truth box
-        conf_mask = conf_mask + y_true[..., 4] * self._object_scale
-        return conf_mask
-    
+        total_loss = obj_loss + noobj_loss + cls_loss + xy_loss + wh_loss
+
+        return total_loss
+
+    return loss_fn

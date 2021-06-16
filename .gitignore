@@ -6,6 +6,8 @@ build/
 dist/
 _configs/
 projects/
+logs/
 *.tflite
 *.txt
 *.pyc
+.vscode/
