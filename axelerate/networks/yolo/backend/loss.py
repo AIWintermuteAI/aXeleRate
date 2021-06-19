@@ -7,7 +7,7 @@ import skimage
 import cv2
 from math import cos, sin
 
-def tf_xywh_to_all(grid_pred_xy: tf.Tensor, grid_pred_wh: tf.Tensor, layer: int, params) -> [tf.Tensor, tf.Tensor]:
+def tf_xywh_to_all(grid_pred_xy, grid_pred_wh, layer, params):
     """ rescale the pred raw [grid_pred_xy,grid_pred_wh] to [0~1]
 
     Parameters
@@ -34,7 +34,7 @@ def tf_xywh_to_all(grid_pred_xy: tf.Tensor, grid_pred_wh: tf.Tensor, layer: int,
     return all_pred_xy, all_pred_wh
 
 
-def tf_xywh_to_grid(all_true_xy: tf.Tensor, all_true_wh: tf.Tensor, layer: int, params) -> [tf.Tensor, tf.Tensor]:
+def tf_xywh_to_grid(all_true_xy, all_true_wh, layer, params):
     """convert true label xy wh to grid scale
 
     Parameters
@@ -175,13 +175,6 @@ def calc_ignore_mask(t_xy_A: tf.Tensor, t_wh_A: tf.Tensor, p_xy: tf.Tensor, p_wh
     with tf.name_scope('calc_mask_%d' % layer):
         pred_xy, pred_wh = tf_xywh_to_all(p_xy, p_wh, layer, params)
 
-        # def lmba(bc):
-        #     vaild_xy = tf.boolean_mask(t_xy_A[bc], obj_mask[bc])
-        #     vaild_wh = tf.boolean_mask(t_wh_A[bc], obj_mask[bc])
-        #     iou_score = tf_iou(pred_xy[bc], pred_wh[bc], vaild_xy, vaild_wh)
-        #     best_iou = tf.reduce_max(iou_score, axis=-1, keepdims=True)
-        #     return tf.cast(best_iou < iou_thresh, tf.float32)
-        # return map_fn(lmba, tf.range(helper.batch_size), dtype=tf.float32)
         ignore_mask = []
         for bc in range(params.batch_size):
             vaild_xy = tf.boolean_mask(t_xy_A[bc], obj_mask[bc])
@@ -257,8 +250,8 @@ class Params:
 def create_loss_fn(params, layer, batch_size):
 
     params.batch_size = batch_size
-    shapes = [[-1] + list(params.out_hw[i]) + [len(params.anchors[i]), params.class_num + 5]for i in range(len(params.anchors))]
-
+    shapes = [[-1] + list(params.out_hw[layer]) + [len(params.anchors[layer]), params.class_num + 5]]
+    #print(shapes)
     # @tf.function
     def loss_fn(y_true: tf.Tensor, y_pred: tf.Tensor):
         #print(y_true, y_pred)

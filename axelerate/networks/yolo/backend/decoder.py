@@ -1,48 +1,6 @@
 import numpy as np
 from axelerate.networks.yolo.backend.utils.box import BoundBox
 from axelerate.networks.yolo.backend.utils.box import BoundBox, nms_boxes, boxes_to_array
-import tensorflow as tf
-from tensorflow.python import keras
-from axelerate.networks.yolo.backend.loss import tf_xywh_to_all
-
-
-def correct_box(box_xy, box_wh, input_shape, image_shape):
-    """rescale predict box to original image scale
-
-    Parameters
-    ----------
-    box_xy : tf.Tensor
-        box xy
-    box_wh : tf.Tensor
-        box wh
-    input_shape : list
-        input shape
-    image_shape : list
-        image shape
-
-    Returns
-    -------
-    tf.Tensor
-        new boxes
-    """
-    box_yx = box_xy[..., ::-1]
-    box_hw = box_wh[..., ::-1]
-    input_shape = tf.cast(input_shape, tf.float32)
-    image_shape = tf.cast(image_shape, tf.float32)
-
-    box_mins = box_yx - (box_hw / 2.)
-    box_maxes = box_yx + (box_hw / 2.)
-    boxes = tf.concat([
-        box_mins[..., 0:1],  # y_min
-        box_mins[..., 1:2],  # x_min
-        box_maxes[..., 0:1],  # y_max
-        box_maxes[..., 1:2]  # x_max
-    ], axis=-1)
-
-    # Scale boxes back to original image shape.
-    boxes *= tf.concat([image_shape, image_shape], axis=-1)
-    return boxes
-
 
 class YoloDecoder(object):
     
@@ -57,73 +15,41 @@ class YoloDecoder(object):
         self.input_size = input_size
         self.params = params
 
-    def run(self, netout, obj_threshold, orig_size):
+    def run(self, netout, obj_threshold):
+        boxes = []
 
-        """ box list """
-        _yxyx_box = []
-        _yxyx_box_scores = []
+        for l, output in enumerate(netout):
+            output = np.squeeze(output)
+            grid_h, grid_w, nb_box = output.shape[0:3]
+            
+            # decode the output by the network
+            output[..., 4] = _sigmoid(output[..., 4])
+            output[..., 5:] = output[..., 4][..., np.newaxis] * _sigmoid(output[..., 5:])
+            output[..., 5:] *= output[..., 5:] > obj_threshold
+            
+            for row in range(grid_h):
+                for col in range(grid_w):
+                    for b in range(nb_box):
+                        # from 4th element onwards are confidence and class classes
+                        classes = output[row, col, b, 5:]
 
-        #print(netout.shape)
-        """ preprocess label """
-        for l, pred_label in enumerate(netout):
-            """ split the label """
-            pred_xy = pred_label[..., 0:2]
-            pred_wh = pred_label[..., 2:4]
-            pred_confidence = pred_label[..., 4:5]
-            pred_cls = pred_label[..., 5:]
+                        if np.sum(classes) > 0:
+                            # first 4 elements are x, y, w, and h
+                            x, y, w, h = output[row, col, b, :4]
 
-            box_scores = tf.sigmoid(pred_cls) * tf.sigmoid(pred_confidence)
+                            x = (col + _sigmoid(x)) / grid_w # center position, unit: image width
+                            y = (row + _sigmoid(y)) / grid_h # center position, unit: image height
+                            w = self.anchors[l][b][0] * np.exp(w) # unit: image width
+                            h = self.anchors[l][b][1] * np.exp(h) # unit: image height
+                            confidence = output[row, col, b, 4]
+                            box = BoundBox(x, y, w, h, confidence, classes)
+                            boxes.append(box)
 
-            """ reshape box  """
-            # NOTE tf_xywh_to_all will auto use sigmoid function
-            pred_xy_A, pred_wh_A = tf_xywh_to_all(pred_xy, pred_wh, l, self.params)
-            boxes = correct_box(pred_xy_A, pred_wh_A, self.input_size, orig_size)
-            boxes = tf.reshape(boxes, (-1, 4))
-            box_scores = tf.reshape(box_scores, (-1, self.params.class_num))
-            """ append box and scores to global list """
-            _yxyx_box.append(boxes)
-            _yxyx_box_scores.append(box_scores)
+        boxes = nms_boxes(boxes, len(classes), self.nms_threshold, obj_threshold)
+        boxes, probs = boxes_to_array(boxes)
 
-            yxyx_box = tf.concat(_yxyx_box, axis=0)
-            yxyx_box_scores = tf.concat(_yxyx_box_scores, axis=0)
+        return boxes, probs
 
-            mask = yxyx_box_scores >= obj_threshold
-            #print(mask.shape)
-            """ do nms for every classes"""
-            _boxes = []
-            _scores = []
-            _classes = []
-
-            for c in range(self.params.class_num):
-                class_boxes = tf.boolean_mask(yxyx_box, mask[:, c])
-                class_box_scores = tf.boolean_mask(yxyx_box_scores[:, c], mask[:, c])
-                select = tf.image.non_max_suppression(
-                    class_boxes, scores=class_box_scores, max_output_size=30, iou_threshold=self.nms_threshold)
-                class_boxes = tf.gather(class_boxes, select)
-                class_box_scores = tf.gather(class_box_scores, select)
-                _boxes.append(class_boxes)
-                _scores.append(class_box_scores)
-                _classes.append(tf.ones_like(class_box_scores) * c)
-
-            boxes = tf.concat(_boxes, axis=0).numpy()
-            classes = tf.concat(_classes, axis=0).numpy()
-            scores = tf.concat(_scores, axis=0).numpy()
-
-            if len(classes) > 0:
-                print(f'[top\tleft\tbottom\tright\tscore\tclass]')
-                for i, c in enumerate(classes):
-                    box = boxes[i]
-                    score = scores[i]
-                    top, left, bottom, right = box
-                    print(f'[{top:.1f}\t{left:.1f}\t{bottom:.1f}\t{right:.1f}\t{score:.2f}\t{int(c):2d}]')
-                    top = max(0, np.floor(top + 0.5))
-                    left = max(0, np.floor(left + 0.5))
-                    bottom = min(orig_size[0], np.floor(bottom + 0.5))
-                    right = min(orig_size[1], np.floor(right + 0.5))
-                    boxes[i] = [top, left, bottom, right]
-                    
-        boxes = boxes.astype(np.int64)
-        classes = classes.astype(np.int)
-        return boxes, scores, classes
-
+def _sigmoid(x):
+    return 1. / (1. + np.exp(-x))
 

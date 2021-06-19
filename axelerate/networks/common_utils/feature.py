@@ -60,9 +60,14 @@ class BaseFeatureExtractor(object):
         assert input_shape[1] == input_shape[2]
         return input_shape[1]
 
-    def get_output_size(self):
-        output_shape = self.feature_extractor.outputs[0].shape
+    def get_output_size(self, layer = None):
+        if not layer:
+            output_shape = self.feature_extractor.outputs[0].shape
+        output_shape = self.feature_extractor.get_layer(layer).output.shape
         return output_shape[1:3]
+
+    def get_output_tensor(self, layer):
+        return self.feature_extractor.get_layer(layer).output
 
     def extract(self, input_image):
         return self.feature_extractor(input_image)

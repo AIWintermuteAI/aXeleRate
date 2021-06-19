@@ -34,12 +34,13 @@ def create_yolo(architecture,
 
     n_classes = len(labels)
     n_boxes = int(len(anchors[0]))
-    yolo_network = create_yolo_network(architecture, input_size, n_classes, n_boxes, weights)
+    n_branches = len(anchors)
+    yolo_network = create_yolo_network(architecture, input_size, n_classes, n_boxes, n_branches, weights)
     yolo_params = Params(obj_thresh, iou_thresh, object_scale, no_object_scale, coord_scale, yolo_network.get_grid_size(), anchors, n_classes)
     yolo_loss = create_loss_fn
 
-    metrics_dict = {'val_loss': {'name':'val_loss', 'best_value':'min'},
-                    'val_recall': {'name':[Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')], 'best_value':'max'},
+    metrics_dict = {'val_loss': {'name':None, 'best_value':'min'},
+                    'val_reshape_recall': {'name':[Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')], 'best_value':'max'},
                     'val_precision': {'name':[Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')], 'best_value':'max'}}
 
     yolo_decoder = YoloDecoder(anchors, yolo_params, 0.1, input_size)
@@ -84,16 +85,26 @@ class YOLO(object):
             probs : array, shape of (N, nb_classes)
         """
 
+        def _to_original_scale(boxes):
+            minmax_boxes = to_minmax(boxes)
+            minmax_boxes[:,0] *= width
+            minmax_boxes[:,2] *= width
+            minmax_boxes[:,1] *= height
+            minmax_boxes[:,3] *= height
+            return minmax_boxes.astype(np.int)
+
         start_time = time.time()
         netout = self._yolo_network.forward(image)
         elapsed_ms = (time.time() - start_time) * 1000
-        boxes, scores, classes = self._yolo_decoder.run(netout, threshold, (height, width))
+        boxes, probs= self._yolo_decoder.run(netout, threshold)
 
         if len(boxes) > 0:
-            #print(boxes, scores, classes)
-            return elapsed_ms, boxes, scores, classes
+            boxes = _to_original_scale(boxes)
+            print(boxes, probs)
+            return elapsed_ms, boxes, probs
         else:
-            return elapsed_ms, [], [], []
+            return elapsed_ms, [], []
+
 
     def train(self,
               img_folder,

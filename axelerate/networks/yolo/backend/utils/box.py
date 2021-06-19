@@ -95,15 +95,15 @@ def draw_boxes(image, boxes, scores, classes, labels):
 
     for i in range(len(boxes)):
 
-        y_min, x_min, y_max, x_max = boxes[i]
+        x_min, y_min, x_max, y_max  = boxes[i]
         obj_class = classes[i]
         score = scores[i]
 
         # Draw bounding box around detected object
         cv2.rectangle(image, (x_min, y_min), (x_max, y_max), color, 2)
-
+        #print(labels[obj_class], score)
         # Create label for detected object class
-        label = "{}:{:.2f}%".format(labels[obj_class], score)
+        label = "{}:{:.2f}%".format(labels[obj_class], np.max(score))
         label_color = (255, 255, 255)
 
         text_size = 0.0015 * min(image.shape[0], image.shape[1])

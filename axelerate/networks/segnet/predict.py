@@ -166,7 +166,7 @@ def predict_multiple(model=None, inps=None, inp_dir=None, out_dir=None,
 
 
 
-def evaluate( model=None , inp_images=None , annotations=None,inp_images_dir=None ,annotations_dir=None , checkpoints_path=None ):
+def evaluate(model=None, inp_images=None, annotations=None, inp_images_dir=None, annotations_dir=None, checkpoints_path=None):
     
     if model is None:
         assert (checkpoints_path is not None) , "Please provide the model or the checkpoints_path"
@@ -191,12 +191,12 @@ def evaluate( model=None , inp_images=None , annotations=None,inp_images_dir=Non
     
     for inp , ann   in tqdm(zip(inp_images , annotations)):
         pr = predict(model, inp)
-        gt = get_segmentation_array(ann , model.n_classes ,  model.output_width , model.output_height , no_reshape=True)
+        gt = get_segmentation_array(ann, model.n_classes,  model.output_width , model.output_height , no_reshape=True)
         gt = gt.argmax(-1)
         #pr = pr.flatten()
         #gt = gt.flatten()
                 
-        for cl_i in range(model.n_classes ):
+        for cl_i in range(model.n_classes):
             
             tp[ cl_i ] += np.sum( (pr == cl_i) * (gt == cl_i) )
             fp[ cl_i ] += np.sum( (pr == cl_i) * ((gt != cl_i)) )

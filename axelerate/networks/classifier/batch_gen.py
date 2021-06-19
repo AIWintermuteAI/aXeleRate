@@ -9,33 +9,25 @@ from tensorflow.keras.utils import Sequence
 import cv2
 import os
 
-def create_datagen(train_folder, valid_folder, batch_size, input_size, project_folder, augumentation, norm):
+def create_datagen(img_folder, batch_size, input_size, project_folder, augment, norm):
 
-    train_datagen=ImageDataAugmentor(preprocess_input=  norm, process_image = process_image_classification, augment = augumentation)
-    validation_datagen=ImageDataAugmentor(preprocess_input = norm, process_image = process_image_classification, augment = False)
+    datagen = ImageDataAugmentor(preprocess_input =  norm, process_image = process_image_classification, augment = augment)
     
-    train_generator=train_datagen.flow_from_directory(train_folder,
-                                                     target_size=input_size,
-                                                     color_mode='rgb',
-                                                     batch_size=batch_size,
-                                                     class_mode='categorical', 
-			                                         shuffle=True)
-
-    validation_generator=validation_datagen.flow_from_directory(valid_folder,
-                                                     target_size=input_size,
-                                                     color_mode='rgb',
-                                                     batch_size=batch_size,
-                                                     class_mode='categorical', 
-			                                         shuffle=True)		
-				                                         
-    labels = (train_generator.class_indices)
-    labels = dict((v,k) for k,v in labels.items())
-    fo = open(os.path.join(project_folder,"labels.txt"), "w")
-    for k,v in labels.items():
-        print(v)
-        fo.write(v+"\n")
-    fo.close()
-    return train_generator, validation_generator
+    generator=datagen.flow_from_directory(img_folder,
+                                        target_size=input_size,
+                                        color_mode='rgb',
+                                        batch_size=batch_size,
+                                        class_mode='categorical', 
+                                        shuffle=augment)
+    if project_folder:             
+        labels = (generator.class_indices)
+        labels = dict((v,k) for k,v in labels.items())
+        fo = open(os.path.join(project_folder,"labels.txt"), "w")
+        for k,v in labels.items():
+            print(v)
+            fo.write(v+"\n")
+        fo.close()
+    return generator
     
     
 class ImageDataAugmentor(Sequence):

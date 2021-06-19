@@ -54,6 +54,7 @@ class BatchGenerator(Sequence):
         """
         self._netin_gen = netin_gen
         self._netout_gen = netout_gen
+        self.nb_stages = len(netout_gen.anchors)
         self._img_aug = img_aug
         self._yolo_box = yolo_box
 
@@ -71,7 +72,11 @@ class BatchGenerator(Sequence):
             idx : batch index
         """
         x_batch = []
-        y_batch= []
+        y_batch1 = []
+
+        if self.nb_stages == 2:
+            y_batch2 = []
+
         for i in range(self._batch_size):
             # 1. get input file & its annotation
             fname = self.annotations.fname(self._batch_size*idx + i)
@@ -89,12 +94,22 @@ class BatchGenerator(Sequence):
             
             # 4. generate x_batch
             x_batch.append(self._netin_gen.run(img))
-            y_batch.append(self._netout_gen.run(norm_boxes, labels))
+            processed_labels = self._netout_gen.run(norm_boxes, labels)
+
+            y_batch1.append(processed_labels[0])
+            if self.nb_stages == 2:           
+                y_batch2.append(processed_labels[1])
 
         x_batch = np.array(x_batch)
-        y_batch = np.array(y_batch)
+        y_batch1 = np.array(y_batch1)
+        batch = y_batch1
+
+        if self.nb_stages == 2:           
+            y_batch2 = np.array(y_batch2)
+            batch = [y_batch1, y_batch2]
+
         self.counter += 1
-        return x_batch, y_batch
+        return x_batch, batch
 
     def on_epoch_end(self):
         self.annotations.shuffle()
@@ -163,8 +178,8 @@ class _NetoutGen(object):
             norm_boxes= np.concatenate((labels.T, norm_boxes), axis = 1)
         #print("boxes", boxes)
         y = self.box_to_label(norm_boxes)
-        #print(y[0].shape)
-        return y[0]
+        #print(y.shape)
+        return y
 
     def _set_tensor_shape(self, grid_size, nb_classes):
         nb_boxes = len(self.anchors[0])
@@ -255,11 +270,9 @@ class _NetoutGen(object):
         labels = [np.zeros((self._tensor_shape[i][0], self._tensor_shape[i][1], len(self.anchors[i]),
                             5 + self.nb_classes), dtype='float32') for i in range(len(self.anchors))]
         for box in true_box:
-            #box = np.asarray(box)
             # NOTE box [x y w h] are relative to the size of the entire image [0~1]
             l, n = self._get_anchor_index(box[3:5])  # [layer index, anchor index]
             idx, idy = self._xy_grid_index(box[1:3], l)  # [x index , y index]
-            #print(l, n, idx, idy)
             labels[l][idy, idx, n, 0:4] = np.clip(box[1:5], 1e-8, 1.)
             labels[l][idy, idx, n, 4] = 1.
             labels[l][idy, idx, n, 5 + int(box[0])] = 1.
