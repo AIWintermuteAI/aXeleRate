@@ -27,6 +27,15 @@ K.clear_session()
 
 DEFAULT_THRESHOLD = 0.3
 
+def save_report(config, report, report_file):
+    with open(report_file, 'w') as outfile:
+        outfile.write("REPORT\n")
+        outfile.write(str(report))
+        outfile.write("\nCONFIG\n")
+        outfile.write(json.dumps(config, indent=4, sort_keys=False))
+
+
+
 def show_image(filename):
     image = mpimg.imread(filename)
     plt.figure()
@@ -140,7 +149,10 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
             n_truth += len(true_boxes)
             n_pred += len(boxes)
 
-        print(calc_score(n_true_positives, n_truth, n_pred))
+        report = calc_score(n_true_positives, n_truth, n_pred)
+        save_report(config, report, os.path.join(dirname, 'report.txt'))
+        print(report)
+
         if len(inference_time)>1:
             print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
 

@@ -8,7 +8,9 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.ops import state_ops
 from tensorflow.python.ops.resource_variable_ops import ResourceVariable
 import numpy as np
-
+import os
+import tensorflow as tf
+import tensorflow.keras
 
 class Yolo_Precision(Metric):
     def __init__(self, thresholds=None, name=None, dtype=None):
@@ -73,3 +75,61 @@ class Yolo_Recall(Metric):
 
     def result(self):
         return math_ops.div_no_nan(self.true_positives, (math_ops.add(self.true_positives, self.false_negatives)))
+
+class MergeMetrics(tensorflow.keras.callbacks.Callback):
+
+    def __init__(self, 
+                 model,
+                 type,
+                 period = 1,
+                 save_best=False,
+                 save_name=None,
+                 tensorboard=None):
+                 
+        super().__init__()
+        self.type = type
+        self.name = "total_val_" + self.type
+        output_names = []
+
+        for layer in model.layers:
+            if 'reshape' in layer.name:
+                output_names.append(layer.name)
+
+        self.output_names = ['val_' + output_name + "_" + self.type if len(output_names) > 1 else 'val' + self.type for output_name in output_names]
+        print("Layers to use in {} callback monitoring: {}".format(self.name, self.output_names))
+
+        self._period = period
+        self._save_best = save_best
+        self._save_name = save_name
+        self._tensorboard = tensorboard
+
+        self.best_result = 0
+
+        if not isinstance(self._tensorboard, tensorflow.keras.callbacks.TensorBoard) and self._tensorboard is not None:
+            raise ValueError("Tensorboard object must be a instance from keras.callbacks.TensorBoard")
+
+    def on_epoch_end(self, epoch, logs={}):
+        logs = logs or {}
+        if epoch % self._period == 0 and self._period != 0:
+            result = sum([logs[output_name] for output_name in self.output_names])/2
+            logs[self.name] = result
+
+            print('\n')
+            print('{}: {:.4f}'.format(self.name, result))
+
+            if epoch == 0:
+                print("Saving model on first epoch irrespective of mAP")
+                self.model.save(self._save_name, overwrite=True, include_optimizer=False)
+            else:
+                if self._save_best and self._save_name is not None and result > self.best_result:
+                    print("{} improved from {} to {}, saving model to {}.".format(self.name, self.best_result, result, self._save_name))
+                    self.best_result = result
+                    self.model.save(self._save_name, overwrite=True, include_optimizer=False)
+                else:
+                    print("{} did not improve from {}.".format(self.name, self.best_result))
+
+            if self._tensorboard:
+                writer = tf.summary.create_file_writer(self._tensorboard.log_dir)
+                with writer.as_default():
+                    tf.summary.scalar(self.name, result, step=epoch)
+                    writer.flush()

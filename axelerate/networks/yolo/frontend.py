@@ -40,8 +40,8 @@ def create_yolo(architecture,
     yolo_loss = create_loss_fn
 
     metrics_dict = {'val_loss': {'name':None, 'best_value':'min'},
-                    'val_reshape_recall': {'name':[Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')], 'best_value':'max'},
-                    'val_precision': {'name':[Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')], 'best_value':'max'}}
+                    'recall': {'name':[Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')], 'best_value':'max'},
+                    'precision': {'name':[Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')], 'best_value':'max'}}
 
     yolo_decoder = YoloDecoder(anchors, yolo_params, 0.1, input_size)
     yolo = YOLO(yolo_network, yolo_loss, yolo_decoder, labels, input_size, yolo_params, metrics_dict)

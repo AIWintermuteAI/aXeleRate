@@ -6,6 +6,7 @@ import numpy as np
 import warnings
 
 from axelerate.networks.common_utils.callbacks import WarmUpCosineDecayScheduler
+from axelerate.networks.yolo.backend.utils.custom import MergeMetrics
 from tensorflow.keras.optimizers import Adam, SGD
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from datetime import datetime
@@ -69,11 +70,10 @@ def train(model,
     optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
     if metrics_dict:
-        best_value = metrics_dict[metric]['best_value']
         metrics = metrics_dict[metric]['name']
     else:
         metrics = metric
-        
+    
     # 3. create loss function
     model.compile(loss=loss_func, optimizer=optimizer, metrics=metrics)
     model.summary()
@@ -83,20 +83,25 @@ def train(model,
     tensorboard_callback = tf.keras.callbacks.TensorBoard("logs", histogram_freq=1)
     
     early_stop = EarlyStopping(monitor=metric, 
-                       min_delta=0.001, 
-                       patience=20, 
-                       mode=best_value, 
-                       verbose=2,
-                       restore_best_weights=True)
+                                min_delta=0.001, 
+                                patience=20, 
+                                mode='auto', 
+                                verbose=2,
+                                restore_best_weights=True)
                        
     checkpoint = ModelCheckpoint(save_weights_name, 
                                  monitor=metric, 
                                  verbose=2, 
                                  save_best_only=True, 
-                                 mode=best_value, 
+                                 mode='auto', 
                                  period=1)
                                  
-    reduce_lr = ReduceLROnPlateau(monitor=metric, factor=0.2, patience=10, min_lr=0.00001, mode=best_value, verbose=2)
+    reduce_lr = ReduceLROnPlateau(monitor=metric,
+                                factor=0.2,
+                                patience=10,
+                                min_lr=1e-6,
+                                mode='auto',
+                                verbose=2)
 
     warm_up_lr = WarmUpCosineDecayScheduler(learning_rate_base=learning_rate,
                                             total_steps=len(train_batch_gen)*nb_epoch,
@@ -105,7 +110,11 @@ def train(model,
                                             hold_base_rate_steps=0,
                                             verbose=1)
 
-    callbacks= [early_stop, checkpoint, warm_up_lr, tensorboard_callback] 
+    if metric in ['recall', 'precision']:
+        mergedMetric = MergeMetrics(model, metric, 1, True, save_weights_name, tensorboard_callback)
+        callbacks = [mergedMetric, warm_up_lr, tensorboard_callback]  
+    else:     
+        callbacks = [early_stop, checkpoint, warm_up_lr, tensorboard_callback] 
 
     # 4. training
     try:

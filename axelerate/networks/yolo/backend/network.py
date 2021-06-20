@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-
+import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Reshape, Conv2D, UpSampling2D, Concatenate
+from tensorflow.keras.layers import Reshape, Conv2D, UpSampling2D, Concatenate, ZeroPadding2D
 from axelerate.networks.common_utils.feature import create_feature_extractor
 from axelerate.networks.common_utils.mobilenet_sipeed.mobilenet import _depthwise_conv_block, _conv_block
 
@@ -27,9 +27,6 @@ class YoloNetwork(object):
                  nb_stages,
                  nb_classes,
                  nb_box):
-        
-        output_tensors = []
-        detection_layers = []
 
         # 1. create full network
         grid_size_y, grid_size_x = feature_extractor.get_output_size(layer  = 'conv_pw_13_relu')
@@ -41,26 +38,40 @@ class YoloNetwork(object):
                             name='detection_layer_1', 
                             kernel_initializer='lecun_normal')(x1)
 
-        l1 = Reshape((grid_size_y, grid_size_x, nb_box, 4 + 1 + nb_classes))(y1)  
-        output_tensors.append(l1)
-        detection_layers.append('detection_layer_1')
-
         if nb_stages == 2:
-            grid_size_y, grid_size_x = feature_extractor.get_output_size(layer = 'conv_pw_11_relu')
+            grid_size_y_2, grid_size_x_2 = feature_extractor.get_output_size(layer = 'conv_pw_11_relu')
             x2 = feature_extractor.get_output_tensor('conv_pw_11_relu')
             #x1 = _depthwise_conv_block(inputs = x1, alpha = 1, pointwise_conv_filters = 128, block_id=14)
             x1 = UpSampling2D(2)(x1)
-            x2 = Concatenate()([x1, x2])
-            #x1 = _depthwise_conv_block(inputs = x1, alpha = 1, pointwise_conv_filters = 128, block_id=14)
+
+            if x1.shape[1:3] != x2.shape[1:3]:
+                #print(x1.shape[1:3] - x2.shape[1:3])
+                pad = tf.math.subtract(x1.shape[1:3], x2.shape[1:3]).numpy().tolist()
+                print(pad)
+                x2 = ZeroPadding2D(padding=((0,1), (0,0)))(x2)
+                grid_size_y_2, grid_size_x_2 = x2.shape[1:3]
+
+            x2 = Concatenate()([x2, x1])
+            #x2 = _depthwise_conv_block(inputs = x2, alpha = 1, pointwise_conv_filters = 128, block_id=14)
 
             y2 = Conv2D(nb_box * (4 + 1 + nb_classes), (1,1), strides=(1,1),
                                 padding='same', 
                                 name='detection_layer_2', 
                                 kernel_initializer='lecun_normal')(x2)
 
-            l2 = Reshape((14, 14, nb_box, 4 + 1 + nb_classes))(y2)
-            output_tensors.append(l2)
-            detection_layers.append('detection_layer_2')
+        if nb_stages == 2:
+
+            l1 = Reshape((grid_size_y, grid_size_x, nb_box, 4 + 1 + nb_classes))(y1)
+            l2 = Reshape((grid_size_y_2, grid_size_x_2, nb_box, 4 + 1 + nb_classes))(y2)
+
+            detection_layers = ['detection_layer_1', 'detection_layer_2']
+            output_tensors = [l1, l2]
+        else:
+
+            l1 = Reshape((grid_size_y, grid_size_x, nb_box, 4 + 1 + nb_classes))(y1) 
+
+            detection_layers = ['detection_layer_1']
+            output_tensors = [l1]
 
         model = Model(feature_extractor.feature_extractor.inputs[0], output_tensors, name='yolo')
         self._norm = feature_extractor.normalize
