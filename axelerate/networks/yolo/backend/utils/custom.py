@@ -95,7 +95,7 @@ class MergeMetrics(tensorflow.keras.callbacks.Callback):
             if 'reshape' in layer.name:
                 output_names.append(layer.name)
 
-        self.output_names = ['val_' + output_name + "_" + self.type if len(output_names) > 1 else 'val' + self.type for output_name in output_names]
+        self.output_names = ['val_' + output_name + "_" + self.type if len(output_names) > 1 else 'val_' + self.type for output_name in output_names]
         print("Layers to use in {} callback monitoring: {}".format(self.name, self.output_names))
 
         self._period = period
@@ -118,7 +118,7 @@ class MergeMetrics(tensorflow.keras.callbacks.Callback):
             print('{}: {:.4f}'.format(self.name, result))
 
             if epoch == 0:
-                print("Saving model on first epoch irrespective of mAP")
+                print("Saving model on first epoch irrespective of {}".format(self.name))
                 self.model.save(self._save_name, overwrite=True, include_optimizer=False)
             else:
                 if self._save_best and self._save_name is not None and result > self.best_result:

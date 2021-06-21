@@ -2,7 +2,7 @@
         "model":{
             "type":                 "Detector",
             "architecture":         "MobileNet2_5",
-            "input_size":          [240, 320],
+            "input_size":           [240, 320],
             "anchors":              [[[0.51424575, 0.54116074], [0.29523918, 0.45838044], [0.21371929, 0.21518053]]],
             "labels":               ["face"],
             "obj_thresh" : 		    0.5,

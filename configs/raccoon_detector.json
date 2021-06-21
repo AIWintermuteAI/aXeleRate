@@ -28,7 +28,7 @@
         "learning_rate":        1e-4,
         "saved_folder":   		"raccoon_detector",
         "first_trainable_layer": "",
-        "augumentation":		true,
+        "augmentation":		    true,
         "is_only_detect" : 		false
     },
     "converter" : {

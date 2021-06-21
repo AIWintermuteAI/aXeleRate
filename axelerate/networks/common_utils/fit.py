@@ -19,8 +19,8 @@ def train(model,
          nb_epoch = 300,
          project_folder = 'project',
          first_trainable_layer = None,
-         metrics_dict=None,
-         metric="val_loss"):
+         metric=None,
+         metric_name="val_loss"):
     """A function that performs training on a general keras model.
 
     # Args
@@ -38,7 +38,7 @@ def train(model,
     train_start = time.time()
     train_date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     path = os.path.join(project_folder, train_date)
-    basename = model.name + "_best_"+ metric
+    basename = model.name + "_best_"+ metric_name
     print('Current training session folder is {}'.format(path))
     os.makedirs(path)
     save_weights_name = os.path.join(path, basename + '.h5')
@@ -69,40 +69,20 @@ def train(model,
     # 2 create optimizer
     optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
-    if metrics_dict:
-        metrics = metrics_dict[metric]['name']
+    if not metric:
+        metric = metric_name
     else:
-        metrics = metric
-    
+        metric = metric[metric_name]
+
+    print(metric)    
     # 3. create loss function
-    model.compile(loss=loss_func, optimizer=optimizer, metrics=metrics)
+    model.compile(loss=loss_func, optimizer=optimizer, metrics=metric if metric != 'loss' else None)
     model.summary()
 
     #4 create callbacks   
     
     tensorboard_callback = tf.keras.callbacks.TensorBoard("logs", histogram_freq=1)
     
-    early_stop = EarlyStopping(monitor=metric, 
-                                min_delta=0.001, 
-                                patience=20, 
-                                mode='auto', 
-                                verbose=2,
-                                restore_best_weights=True)
-                       
-    checkpoint = ModelCheckpoint(save_weights_name, 
-                                 monitor=metric, 
-                                 verbose=2, 
-                                 save_best_only=True, 
-                                 mode='auto', 
-                                 period=1)
-                                 
-    reduce_lr = ReduceLROnPlateau(monitor=metric,
-                                factor=0.2,
-                                patience=10,
-                                min_lr=1e-6,
-                                mode='auto',
-                                verbose=2)
-
     warm_up_lr = WarmUpCosineDecayScheduler(learning_rate_base=learning_rate,
                                             total_steps=len(train_batch_gen)*nb_epoch,
                                             warmup_learning_rate=0.0,
@@ -110,10 +90,30 @@ def train(model,
                                             hold_base_rate_steps=0,
                                             verbose=1)
 
-    if metric in ['recall', 'precision']:
-        mergedMetric = MergeMetrics(model, metric, 1, True, save_weights_name, tensorboard_callback)
+    if metric_name in ['recall', 'precision']:
+        mergedMetric = MergeMetrics(model, metric_name, 1, True, save_weights_name, tensorboard_callback)
         callbacks = [mergedMetric, warm_up_lr, tensorboard_callback]  
-    else:     
+    else:  
+        early_stop = EarlyStopping(monitor='val_' + metric, 
+                                min_delta=0.001, 
+                                patience=20, 
+                                mode='auto', 
+                                verbose=2,
+                                restore_best_weights=True)
+                       
+        checkpoint = ModelCheckpoint(save_weights_name, 
+                                 monitor='val_' + metric, 
+                                 verbose=2, 
+                                 save_best_only=True, 
+                                 mode='auto', 
+                                 period=1)
+                                 
+        reduce_lr = ReduceLROnPlateau(monitor='val_' + metric,
+                                factor=0.2,
+                                patience=10,
+                                min_lr=1e-6,
+                                mode='auto',
+                                verbose=2)   
         callbacks = [early_stop, checkpoint, warm_up_lr, tensorboard_callback] 
 
     # 4. training

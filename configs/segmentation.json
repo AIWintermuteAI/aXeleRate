@@ -3,7 +3,7 @@
         "type":                 "SegNet",
         "architecture":         "MobileNet7_5",
         "input_size":           224,
-        "n_classes" : 		20
+        "n_classes" : 		    20
     },
     "weights" : {
         "full":   				"",
@@ -23,9 +23,9 @@
         "saved_folder":   		"segment",
         "first_trainable_layer": "",
         "ignore_zero_class":    false,
-        "augumentation":		true
+        "augmentation":		    true
     },
     "converter" : {
-        "type":   				["k210","tflite"]
+        "type":   				["k210", "tflite"]
     }
 }

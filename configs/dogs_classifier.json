@@ -24,7 +24,7 @@
         "learning_rate":        1e-3,
         "saved_folder":   		"dogs_classifier",
         "first_trainable_layer": "",
-        "augumentation":		 true
+        "augmentation":		     true
     },
     "converter" : {
         "type":   				["tflite"]

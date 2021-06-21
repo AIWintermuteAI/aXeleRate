@@ -29,7 +29,7 @@
         "learning_rate":        1e-3,
         "saved_folder":   		"pascal",
         "first_trainable_layer": "",
-        "augmentation":		true,
+        "augmentation":		    true,
         "is_only_detect" : 		false
     },
     "converter" : {

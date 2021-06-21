@@ -34,8 +34,6 @@ def save_report(config, report, report_file):
         outfile.write("\nCONFIG\n")
         outfile.write(json.dumps(config, indent=4, sort_keys=False))
 
-
-
 def show_image(filename):
     image = mpimg.imread(filename)
     plt.figure()
@@ -80,13 +78,10 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
                                    config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
-        evaluate(model=None, inp_images=None, annotations=None, inp_images_dir=None, annotations_dir=None, checkpoints_path=None)
-        for filename in os.listdir(config['train']['valid_image_folder']):
-            filepath = os.path.join(config['train']['valid_image_folder'], filename)
-            orig_image, input_image = prepare_image(filepath, segnet)
-            output_path = os.path.join(dirname, os.path.basename(filename))
-            predict(model=segnet._network, inp=input_image, image = orig_image, out_fname=output_path)
-            
+        report = segnet.evaluate(config['train']['valid_image_folder'], config['train']['valid_annot_folder'], 2)
+        save_report(config, report, os.path.join(dirname, 'report.txt'))
+        print(report)
+
     if config['model']['type']=='Classifier':
         print('Classifier')    
         if config['model']['labels']:
@@ -101,7 +96,8 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
                                        config['model']['dropout'])   
         # 2. Load the pretrained weights
         classifier.load_weights(weights)
-        classifier.evaluate(config['train']['valid_image_folder'], 16)
+        report, cm = classifier.evaluate(config['train']['valid_image_folder'], 16)
+        save_report(config, report, os.path.join(dirname, 'report.txt'))
 
     if config['model']['type']=='Detector':
         # 2. create yolo instance & predict

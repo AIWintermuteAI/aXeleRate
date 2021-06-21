@@ -29,12 +29,12 @@ def configs(network_type):
             "train_times":          1,
             "valid_image_folder":   "sample_datasets/classifier/imgs_validation",
             "valid_times":          1,
-            "valid_metric":         "val_accuracy",
+            "valid_metric":         "accuracy",
             "batch_size":           2,
             "learning_rate":        1e-4,
             "saved_folder":   		"classifier",
             "first_trainable_layer": "",
-            "augumentation":		True
+            "augmentation":		True
         },
         "converter" : {
             "type":   				[]
@@ -48,7 +48,7 @@ def configs(network_type):
             "architecture":         "MobileNet7_5",
             "input_size":           [240, 320],
             "anchors":              [[[0.51424575, 0.54116074], [0.29523918, 0.45838044], [0.21371929, 0.21518053]]],
-            "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
+            "labels":               ["aeroplane", "person", "diningtable"," bottle", "bird", "bus", "boat", "cow", "sheep", "train"],
             "obj_thresh" : 		    0.7,
             "iou_thresh" : 		    0.3,
             "coord_scale" : 		0.5,
@@ -67,12 +67,12 @@ def configs(network_type):
             "valid_image_folder":   "sample_datasets/detector/imgs_validation",
             "valid_annot_folder":   "sample_datasets/detector/anns_validation",
             "valid_times":          1,
-            "valid_metric":         "mAP",
+            "valid_metric":         "recall",
             "batch_size":           2,
             "learning_rate":        1e-4,
             "saved_folder":   		"detector",
             "first_trainable_layer": "",
-            "augumentation":		True,
+            "augmentation":		    True,
             "is_only_detect" : 		False
         },
         "converter" : {
@@ -85,7 +85,7 @@ def configs(network_type):
                 "type":                 "SegNet",
                 "architecture":         "MobileNet5_0",
                 "input_size":           [224,224],
-                "n_classes" : 		20
+                "n_classes" : 		     20
             },
         "weights" : {
             "full":   				"",
@@ -99,13 +99,13 @@ def configs(network_type):
                 "valid_image_folder":   "sample_datasets/segmentation/imgs_validation",
                 "valid_annot_folder":   "sample_datasets/segmentation/anns_validation",
                 "valid_times":          4,
-                "valid_metric":         "val_loss",
+                "valid_metric":         "loss",
                 "batch_size":           2,
                 "learning_rate":        1e-4,
                 "saved_folder":   		"segment",
                 "first_trainable_layer": "",
                 "ignore_zero_class":    False,
-                "augumentation":		True
+                "augmentation":		True
             },
             "converter" : {
                 "type":   				[]

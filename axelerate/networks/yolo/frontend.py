@@ -39,9 +39,8 @@ def create_yolo(architecture,
     yolo_params = Params(obj_thresh, iou_thresh, object_scale, no_object_scale, coord_scale, yolo_network.get_grid_size(), anchors, n_classes)
     yolo_loss = create_loss_fn
 
-    metrics_dict = {'val_loss': {'name':None, 'best_value':'min'},
-                    'recall': {'name':[Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')], 'best_value':'max'},
-                    'precision': {'name':[Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')], 'best_value':'max'}}
+    metrics_dict = {'recall': [Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')],
+                    'precision': [Yolo_Precision(obj_thresh, name='precision'), Yolo_Recall(obj_thresh, name='recall')]}
 
     yolo_decoder = YoloDecoder(anchors, yolo_params, 0.1, input_size)
     yolo = YOLO(yolo_network, yolo_loss, yolo_decoder, labels, input_size, yolo_params, metrics_dict)
@@ -149,8 +148,8 @@ class YOLO(object):
                 nb_epoch  = nb_epoch,
                 project_folder = project_folder,
                 first_trainable_layer = first_trainable_layer,
-                metrics_dict=self.metrics_dict,
-                metric=metrics)
+                metric=self.metrics_dict,
+                metric_name=metrics)
 
     def _get_loss_func(self, batch_size):
         return [self._yolo_loss(self.yolo_params, layer, batch_size) for layer in range(self.num_branches)]

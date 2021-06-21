@@ -46,8 +46,8 @@ class YoloNetwork(object):
 
             if x1.shape[1:3] != x2.shape[1:3]:
                 #print(x1.shape[1:3] - x2.shape[1:3])
-                pad = tf.math.subtract(x1.shape[1:3], x2.shape[1:3]).numpy().tolist()
-                print(pad)
+                #pad = tf.math.subtract(x1.shape[1:3], x2.shape[1:3]).numpy().tolist()
+                #print(pad)
                 x2 = ZeroPadding2D(padding=((0,1), (0,0)))(x2)
                 grid_size_y_2, grid_size_x_2 = x2.shape[1:3]
 

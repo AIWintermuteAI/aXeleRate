@@ -82,13 +82,15 @@ class Classifier(object):
         elapsed_ms, y_pred, predictions = self.predict(img_folder, batch_size)
 
         print('Classification Report')
-        print(classification_report(self.generator.classes, y_pred, target_names=self._labels))
+        report = classification_report(self.generator.classes, y_pred, target_names=self._labels)
+        print(report)
 
         print('Confusion Matrix')
         cm = confusion_matrix(self.generator.classes, y_pred)
         disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=self._labels)
         disp.plot(include_values=True, cmap='Blues', ax=None)
         plt.show()
+        return report, cm
 
     def train(self,
               img_folder,
@@ -103,14 +105,23 @@ class Classifier(object):
               first_trainable_layer=None,
               metrics="val_loss"):
 
-        if metrics != "val_accuracy" and metrics != "val_loss":
+        if metrics != "accuracy" and metrics != "loss":
             print("Unknown metric for Classifier, valid options are: val_loss or val_accuracy. Defaulting ot val_loss")
-            metrics = "val_loss"
+            metrics = "loss"
 
         train_generator = create_datagen(img_folder, batch_size, self._input_size, project_folder, augumentation, self._norm)
         validation_generator = create_datagen(valid_img_folder, batch_size, self._input_size, project_folder, False, self._norm)
 
-        model_layers, model_path = train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch, project_folder,first_trainable_layer, self, metrics)
+        model_layers, model_path = train(self._network,
+                                        'categorical_crossentropy',
+                                        train_generator,
+                                        validation_generator,
+                                        learning_rate, 
+                                        nb_epoch, 
+                                        project_folder,
+                                        first_trainable_layer, 
+                                        metric_name = metrics)
+
         if self._bottleneck_layer:
             self.save_bottleneck(model_path, self._bottleneck_layer)
         return model_layers, model_path
