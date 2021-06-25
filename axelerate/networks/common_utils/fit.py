@@ -67,7 +67,7 @@ def train(model,
         print("    ", fixed_layers)
 
     # 2 create optimizer
-    optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    optimizer = Adam(learning_rate=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
     if not metric:
         metric = metric_name

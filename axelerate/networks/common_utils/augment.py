@@ -157,7 +157,7 @@ def _create_augment_pipeline():
                            ])),
                            sometimes(iaa.Add((-10, 10), per_channel=0.5)),  
                            sometimes(iaa.Multiply((0.5, 1.5), per_channel=0.5)), 
-                           sometimes(iaa.ContrastNormalization((0.5, 2.0), per_channel=0.5)) 
+                           sometimes(iaa.LinearContrast((0.5, 2.0), per_channel=0.5)) 
         ],
         random_order=True
     )
