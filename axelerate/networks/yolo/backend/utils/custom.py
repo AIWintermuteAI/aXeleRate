@@ -98,6 +98,7 @@ class MergeMetrics(tensorflow.keras.callbacks.Callback):
         self.output_names = ['val_' + output_name + "_" + self.type if len(output_names) > 1 else 'val_' + self.type for output_name in output_names]
         print("Layers to use in {} callback monitoring: {}".format(self.name, self.output_names))
 
+        self.num_outputs = len(self.output_names)
         self._period = period
         self._save_best = save_best
         self._save_name = save_name
@@ -111,7 +112,7 @@ class MergeMetrics(tensorflow.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         logs = logs or {}
         if epoch % self._period == 0 and self._period != 0:
-            result = sum([logs[output_name] for output_name in self.output_names])/2
+            result = sum([logs[output_name] for output_name in self.output_names])/self.num_outputs
             logs[self.name] = result
 
             print('\n')
