@@ -8,6 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from axelerate.networks.common_utils.fit import train
+from axelerate.networks.common_utils.optimize import prune, train_qat
 from axelerate.networks.yolo.backend.decoder import YoloDecoder
 from axelerate.networks.yolo.backend.utils.custom import Yolo_Precision, Yolo_Recall
 from axelerate.networks.yolo.backend.loss import create_loss_fn, Params
@@ -150,6 +151,95 @@ class YOLO(object):
                 first_trainable_layer = first_trainable_layer,
                 metric=self.metrics_dict,
                 metric_name=metrics)
+
+    def prune(self,
+              img_folder,
+              ann_folder,
+              nb_epoch,
+              project_folder,
+              batch_size,
+              jitter,
+              learning_rate, 
+              train_times,
+              valid_times,
+              valid_img_folder,
+              valid_ann_folder,
+              first_trainable_layer,
+              metrics):
+
+        # 1. get annotations        
+        train_annotations, valid_annotations = get_train_annotations(self._labels,
+                                                                     img_folder,
+                                                                     ann_folder,
+                                                                     valid_img_folder,
+                                                                     valid_ann_folder,
+                                                                     is_only_detect=False)
+        # 1. get batch generator
+        valid_batch_size = len(valid_annotations)*valid_times
+        if valid_batch_size < batch_size: 
+            raise ValueError("Not enough validation images: batch size {} is larger than {} validation images. Add more validation images or decrease batch size!".format(batch_size, valid_batch_size))
+        
+        train_batch_generator = self._get_batch_generator(train_annotations, batch_size, train_times, augment=jitter)
+        valid_batch_generator = self._get_batch_generator(valid_annotations, batch_size, valid_times, augment=False)
+        
+        # 2. To train model get keras model instance & loss function
+        model = self._yolo_network.get_model(first_trainable_layer)
+        loss = self._get_loss_func(batch_size)
+        
+        return prune(model,
+                    loss,
+                    train_batch_generator,
+                    valid_batch_generator,
+                    learning_rate = learning_rate, 
+                    nb_epoch  = nb_epoch,
+                    model_path = project_folder,
+                    metric=self.metrics_dict,
+                    metric_name=metrics)
+
+    def train_qat(self,
+              img_folder,
+              ann_folder,
+              nb_epoch,
+              project_folder,
+              batch_size,
+              jitter,
+              learning_rate, 
+              train_times,
+              valid_times,
+              valid_img_folder,
+              valid_ann_folder,
+              first_trainable_layer,
+              metrics):
+
+        # 1. get annotations        
+        train_annotations, valid_annotations = get_train_annotations(self._labels,
+                                                                     img_folder,
+                                                                     ann_folder,
+                                                                     valid_img_folder,
+                                                                     valid_ann_folder,
+                                                                     is_only_detect=False)
+        # 1. get batch generator
+        valid_batch_size = len(valid_annotations)*valid_times
+        if valid_batch_size < batch_size: 
+            raise ValueError("Not enough validation images: batch size {} is larger than {} validation images. Add more validation images or decrease batch size!".format(batch_size, valid_batch_size))
+        
+        train_batch_generator = self._get_batch_generator(train_annotations, batch_size, train_times, augment=jitter)
+        valid_batch_generator = self._get_batch_generator(valid_annotations, batch_size, valid_times, augment=False)
+        
+        # 2. To train model get keras model instance & loss function
+        model = self._yolo_network.get_model(first_trainable_layer)
+        loss = self._get_loss_func(batch_size)
+        
+        return train_qat(model,
+                    loss,
+                    train_batch_generator,
+                    valid_batch_generator,
+                    learning_rate = learning_rate, 
+                    nb_epoch  = nb_epoch,
+                    model_path = project_folder,
+                    metric=self.metrics_dict,
+                    metric_name=metrics)
+
 
     def _get_loss_func(self, batch_size):
         return [self._yolo_loss(self.yolo_params, layer, batch_size) for layer in range(self.num_branches)]

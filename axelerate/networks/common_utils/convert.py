@@ -9,6 +9,7 @@ import glob
 import shutil
 import numpy as np
 import shlex
+import tensorflow_model_optimization as tfmot
 
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
 k210_converter_download_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),'ncc_linux_x86_64.tar.xz')
@@ -170,8 +171,12 @@ class Converter(object):
             converter.optimizations = [tf.lite.Optimize.DEFAULT]
             converter.representative_dataset = self.edgetpu_dataset_gen
             converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-            converter.inference_input_type = tf.uint8
-            converter.inference_output_type = tf.uint8
+            converter.inference_input_type = tf.int8
+            converter.inference_output_type = tf.int8
+ 
+        elif target == 'tflite_sparse':
+            converter = tf.lite.TFLiteConverter.from_keras_model(model)
+            converter.optimizations = [tf.lite.Optimize.EXPERIMENTAL_SPARSITY]
 
         elif target == 'tflite_dynamic':
             converter = tf.lite.TFLiteConverter.from_keras_model(model)
@@ -191,7 +196,8 @@ class Converter(object):
     def convert_model(self, model_path):
         k.clear_session()
         k.set_learning_phase(0)
-        model = tf.keras.models.load_model(model_path, compile=False)
+        with tfmot.quantization.keras.quantize_scope():
+            model = tf.keras.models.load_model(model_path, compile=False)
         model_layers = model.layers
         self._img_size = model.input_shape[1:3]
         self.model_path = os.path.abspath(model_path)

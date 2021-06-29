@@ -128,6 +128,7 @@ def train_from_config(config,project_folder):
         yolo.load_weights(config['weights']['full'], by_name=True)
 
         # 3. actual training 
+        """
         model_layers, model_path = yolo.train(config['train']['train_image_folder'],
                                            config['train']['train_annot_folder'],
                                            config['train']['actual_epoch'],
@@ -141,6 +142,21 @@ def train_from_config(config,project_folder):
                                            config['train']['valid_annot_folder'],
                                            config['train']['first_trainable_layer'],
                                            config['train']['valid_metric'])
+        """                                   
+
+        model_layers, model_path = yolo.train_qat(config['train']['train_image_folder'],
+                                    config['train']['train_annot_folder'],
+                                    config['train']['actual_epoch'],
+                                    config['weights']['full'],
+                                    config["train"]["batch_size"],
+                                    config["train"]["augmentation"],
+                                    config['train']['learning_rate'], 
+                                    config['train']['train_times'],
+                                    config['train']['valid_times'],
+                                    config['train']['valid_image_folder'],
+                                    config['train']['valid_annot_folder'],
+                                    config['train']['first_trainable_layer'],
+                                    config['train']['valid_metric'])
     # 4 Convert the model
     time.sleep(2)
     converter.convert_model(model_path)    
