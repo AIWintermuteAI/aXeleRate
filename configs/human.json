@@ -1,0 +1,77 @@
+{
+    "model": {
+        "type": "Detector",
+        "architecture": "MobileNet7_5",
+        "input_size": [
+            224,
+            320
+        ],
+        "anchors": [
+            [
+                [
+                    1.0409,
+                    1.0767
+                ],
+                [
+                    0.8368,
+                    2.0545
+                ],
+                [
+                    1.0061,
+                    2.6951
+                ]
+            ],
+            [
+                [
+                    1.3151,
+                    3.1347
+                ],
+                [
+                    1.5425,
+                    4.1184
+                ],
+                [
+                    2.2773,
+                    4.9677
+                ]
+            ]
+        ],
+        "labels": [
+            "human"
+        ],
+        "obj_thresh": 0.5,
+        "iou_thresh": 0.45,
+        "coord_scale": 1.0,
+        "class_scale": 1.0,
+        "object_scale": 5.0,
+        "no_object_scale": 1.0
+    },
+    "weights": {
+        "full": "",
+        "backend": "imagenet"
+    },
+    "train": {
+        "actual_epoch": 2000,
+        "train_image_folder": "human/Images/train",
+        "train_annot_folder": "human/Annotations/train",
+        "train_times": 1,
+        "valid_image_folder": "human/Images/val",
+        "valid_annot_folder": "human/Annotations/val",
+        "valid_times": 1,
+        "valid_metric": "precision",
+        "batch_size": 64,
+        "learning_rate": 2e-4,
+        "saved_folder": "human/results",
+        "first_trainable_layer": "",
+        "augmentation": true,
+        "is_only_detect": false,
+        "validation_freq": 2,
+        "quantize": false
+    },
+    "converter": {
+        "type": [
+            "k210",
+            "tflite"
+        ]
+    }
+}

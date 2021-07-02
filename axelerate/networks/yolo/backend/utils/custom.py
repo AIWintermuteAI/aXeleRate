@@ -1,16 +1,16 @@
-from tensorflow.python import keras
-from tensorflow.python.ops import init_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.keras.utils.generic_utils import to_list
-from tensorflow.python.keras.utils import metrics_utils
-from tensorflow.python.keras.metrics import Metric
-from tensorflow.python.keras import backend as K
-from tensorflow.python.ops import state_ops
-from tensorflow.python.ops.resource_variable_ops import ResourceVariable
-import numpy as np
 import os
+
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras
+from tensorflow.python import keras
+from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.metrics import Metric
+from tensorflow.python.keras.utils import metrics_utils
+from tensorflow.python.keras.utils.generic_utils import to_list
+from tensorflow.python.ops import init_ops, math_ops, state_ops
+from tensorflow.python.ops.resource_variable_ops import ResourceVariable
+
 
 class Yolo_Precision(Metric):
     def __init__(self, thresholds=None, name=None, dtype=None):
@@ -21,11 +21,9 @@ class Yolo_Precision(Metric):
 
         self.thresholds = default_threshold if thresholds is None else thresholds
 
-        self.true_positives = self.add_weight(
-            'tp', initializer=init_ops.zeros_initializer)  # type: ResourceVariable
+        self.true_positives = self.add_weight('tp', initializer=init_ops.zeros_initializer)  # type: ResourceVariable
 
-        self.false_positives = self.add_weight(
-            'fp', initializer=init_ops.zeros_initializer)  # type: ResourceVariable
+        self.false_positives = self.add_weight('fp', initializer=init_ops.zeros_initializer)  # type: ResourceVariable
 
     def update_state(self, y_true, y_pred, sample_weight=None):
         true_confidence = y_true[..., 4:5]
@@ -54,10 +52,8 @@ class Yolo_Recall(Metric):
 
         self.thresholds = default_threshold if thresholds is None else thresholds
 
-        self.true_positives = self.add_weight(
-            'tp', initializer=init_ops.zeros_initializer)
-        self.false_negatives = self.add_weight(
-            'fn', initializer=init_ops.zeros_initializer)
+        self.true_positives = self.add_weight('tp', initializer=init_ops.zeros_initializer)
+        self.false_negatives = self.add_weight('fn', initializer=init_ops.zeros_initializer)
 
     def update_state(self, y_true, y_pred, sample_weight=None):
         true_confidence = y_true[..., 4:5]
@@ -76,16 +72,10 @@ class Yolo_Recall(Metric):
     def result(self):
         return math_ops.div_no_nan(self.true_positives, (math_ops.add(self.true_positives, self.false_negatives)))
 
-class MergeMetrics(tensorflow.keras.callbacks.Callback):
 
-    def __init__(self, 
-                 model,
-                 type,
-                 period = 1,
-                 save_best=False,
-                 save_name=None,
-                 tensorboard=None):
-                 
+class MergeMetrics(tensorflow.keras.callbacks.Callback):
+    def __init__(self, model, type, period=1, save_best=False, save_name=None, tensorboard=None):
+
         super().__init__()
         self.type = type
         self.name = "total_val_" + self.type
@@ -95,7 +85,10 @@ class MergeMetrics(tensorflow.keras.callbacks.Callback):
             if 'reshape' in layer.name:
                 output_names.append(layer.name)
 
-        self.output_names = ['val_' + output_name + "_" + self.type if len(output_names) > 1 else 'val_' + self.type for output_name in output_names]
+        self.output_names = [
+            'val_' + output_name + "_" + self.type if len(output_names) > 1 else 'val_' + self.type
+            for output_name in output_names
+        ]
         print("Layers to use in {} callback monitoring: {}".format(self.name, self.output_names))
 
         self.num_outputs = len(self.output_names)
@@ -111,23 +104,26 @@ class MergeMetrics(tensorflow.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         logs = logs or {}
-        if epoch % self._period == 0 and self._period != 0:
-            result = sum([logs[output_name] for output_name in self.output_names])/self.num_outputs
+
+        if epoch == 0:
+            print("Saving model on first epoch irrespective of {}".format(self.name))
+            self.model.save(self._save_name, overwrite=True, include_optimizer=False)
+            return
+
+        if (epoch + 1) % self._period == 0 and self._period != 0:
+            result = sum([logs[output_name] for output_name in self.output_names]) / self.num_outputs
             logs[self.name] = result
 
             print('\n')
             print('{}: {:.4f}'.format(self.name, result))
 
-            if epoch == 0:
-                print("Saving model on first epoch irrespective of {}".format(self.name))
+            if self._save_best and self._save_name is not None and result > self.best_result:
+                print("{} improved from {} to {}, saving model to {}.".format(self.name, self.best_result, result,
+                                                                              self._save_name))
+                self.best_result = result
                 self.model.save(self._save_name, overwrite=True, include_optimizer=False)
             else:
-                if self._save_best and self._save_name is not None and result > self.best_result:
-                    print("{} improved from {} to {}, saving model to {}.".format(self.name, self.best_result, result, self._save_name))
-                    self.best_result = result
-                    self.model.save(self._save_name, overwrite=True, include_optimizer=False)
-                else:
-                    print("{} did not improve from {}.".format(self.name, self.best_result))
+                print("{} did not improve from {}.".format(self.name, self.best_result))
 
             if self._tensorboard:
                 writer = tf.summary.create_file_writer(self._tensorboard.log_dir)
