@@ -8,6 +8,7 @@ from axelerate.networks.common_utils.augment import ImgAugment
 from axelerate.networks.yolo.backend.utils.box import to_centroid, create_anchor_boxes, find_match_box
 from axelerate.networks.common_utils.fit import train
 
+
 def create_batch_generator(annotations, 
                            input_size,
                            grid_sizes,
@@ -50,7 +51,7 @@ class BatchGenerator(Sequence):
         """
         # Args
             annotations : Annotations instance
-        
+
         """
         self._netin_gen = netin_gen
         self._netout_gen = netout_gen
@@ -85,13 +86,14 @@ class BatchGenerator(Sequence):
 
             # 2. read image in fixed size
             img, boxes, labels = self._img_aug.imread(fname, boxes, labels)
+
             # 3. grid scaling centroid boxes
             if len(boxes) > 0:
                 norm_boxes = self._yolo_box.trans(boxes)
             else:
                 norm_boxes = []
                 labels = []
-            
+      
             # 4. generate x_batch
             x_batch.append(self._netin_gen.run(img))
             processed_labels = self._netout_gen.run(norm_boxes, labels)
@@ -116,7 +118,7 @@ class BatchGenerator(Sequence):
         self.counter = 0
 
 class _YoloBox(object):
-    
+
     def __init__(self, input_size, grid_size):
         self._input_size = input_size
         self._grid_size = grid_size
@@ -126,7 +128,7 @@ class _YoloBox(object):
         # Args
             boxes : array, shape of (N, 4)
                 (x1, y1, x2, y2)-ordered & input image size scale coordinate
-        
+
         # Returns
             norm_boxes : array, same shape of boxes
                 (cx, cy, w, h)-ordered & rescaled to grid-size
@@ -144,10 +146,10 @@ class _NetinGen(object):
     def __init__(self, input_size, norm):
         self._input_size = input_size
         self._norm = self._set_norm(norm)
-    
+
     def run(self, image):
         return self._norm(image)
-    
+
     def _set_norm(self, norm):
         if norm is None:
             return lambda x: x
@@ -171,7 +173,6 @@ class _NetoutGen(object):
             labels : list of integers
             y_shape : tuple (grid_size, grid_size, nb_boxes, 4+1+nb_classes)
         """
-
         labels = np.asarray([labels])
         norm_boxes = np.asarray(norm_boxes)
         if len(norm_boxes) > 0:
@@ -179,6 +180,7 @@ class _NetoutGen(object):
         #print("boxes", boxes)
         y = self.box_to_label(norm_boxes)
         #print(y.shape)
+
         return y
 
     def _set_tensor_shape(self, grid_size, nb_classes):
