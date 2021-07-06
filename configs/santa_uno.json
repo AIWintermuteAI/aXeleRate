@@ -24,9 +24,9 @@
         "learning_rate":        1e-4,
         "saved_folder":   		"santa_uno",
         "first_trainable_layer": "",
-        "augumentation":				true
+        "augmentation":				true
     },
     "converter" : {
-        "type":   				["k210","tflite"]
+        "type":   				["k210", "tflite"]
     }
 }

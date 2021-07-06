@@ -8,26 +8,27 @@ from axelerate.networks.common_utils.augment import ImgAugment
 from axelerate.networks.yolo.backend.utils.box import to_centroid, create_anchor_boxes, find_match_box
 from axelerate.networks.common_utils.fit import train
 
-def create_batch_generator(annotations,
-                           input_size=416,
-                           grid_size=13,
-                           batch_size=8,
-                           anchors=[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
-                           repeat_times=1,
-                           jitter=True,
+
+def create_batch_generator(annotations, 
+                           input_size,
+                           grid_sizes,
+                           batch_size,
+                           anchors,
+                           repeat_times,
+                           augment, 
                            norm=None):
     """
     # Args
-        annotations : Annotations instance in utils.annotataion module
-
-    # Return
+        annotations : Annotations instance in utils.annotation module
+    
+    # Return 
         worker : BatchGenerator instance
     """
 
-    img_aug = ImgAugment(input_size[0], input_size[1], jitter)
-    yolo_box = _YoloBox(input_size, grid_size)
+    img_aug = ImgAugment(input_size[0], input_size[1], augment)
+    yolo_box = _YoloBox(input_size, grid_sizes)
     netin_gen = _NetinGen(input_size, norm)
-    netout_gen = _NetoutGen(grid_size, annotations.n_classes(), anchors)
+    netout_gen = _NetoutGen(grid_sizes, annotations.n_classes(), anchors)
     worker = BatchGenerator(netin_gen,
                             netout_gen,
                             yolo_box,
@@ -54,6 +55,7 @@ class BatchGenerator(Sequence):
         """
         self._netin_gen = netin_gen
         self._netout_gen = netout_gen
+        self.nb_stages = len(netout_gen.anchors)
         self._img_aug = img_aug
         self._yolo_box = yolo_box
 
@@ -65,33 +67,17 @@ class BatchGenerator(Sequence):
     def __len__(self):
         return int(len(self.annotations) * self._repeat_times /self._batch_size)
 
-    def load_batch(self, idx):
-        imgs_list = []
-        anns_list = []
-        for i in range(self._batch_size):
-            fname = self.annotations.fname(self._batch_size*idx + i)
-            boxes = self.annotations.boxes(self._batch_size*idx + i)
-            labels = self.annotations.code_labels(self._batch_size*idx + i)
-            img, boxes, labels = self._img_aug.imread(fname, boxes, labels)
-            imgs_list.append(self._netin_gen.run(img))
-            annotations = []
-            for j in range(len(boxes)):
-                annotation = []
-                for item in boxes[j].tolist():
-                    annotation.append(item)
-                annotation.append(labels[j])
-                annotations.append(annotation)
-            anns_list.append(np.array(annotations))
-        return imgs_list, np.array(anns_list)
-
-
     def __getitem__(self, idx):
         """
         # Args
             idx : batch index
         """
         x_batch = []
-        y_batch= []
+        y_batch1 = []
+
+        if self.nb_stages == 2:
+            y_batch2 = []
+
         for i in range(self._batch_size):
             # 1. get input file & its annotation
             fname = self.annotations.fname(self._batch_size*idx + i)
@@ -101,26 +87,35 @@ class BatchGenerator(Sequence):
             # 2. read image in fixed size
             img, boxes, labels = self._img_aug.imread(fname, boxes, labels)
 
+            # 3. grid scaling centroid boxes
             if len(boxes) > 0:
-                # 3. grid scaling centroid boxes
                 norm_boxes = self._yolo_box.trans(boxes)
             else:
-                norm_boxes = [[0,0,0,0]]
-                labels = [-1]
-
+                norm_boxes = []
+                labels = []
+      
             # 4. generate x_batch
             x_batch.append(self._netin_gen.run(img))
-            y_batch.append(self._netout_gen.run(norm_boxes, labels))
+            processed_labels = self._netout_gen.run(norm_boxes, labels)
+
+            y_batch1.append(processed_labels[0])
+            if self.nb_stages == 2:           
+                y_batch2.append(processed_labels[1])
 
         x_batch = np.array(x_batch)
-        y_batch = np.array(y_batch)
+        y_batch1 = np.array(y_batch1)
+        batch = y_batch1
+
+        if self.nb_stages == 2:           
+            y_batch2 = np.array(y_batch2)
+            batch = [y_batch1, y_batch2]
+
         self.counter += 1
-        return x_batch, y_batch
+        return x_batch, batch
 
     def on_epoch_end(self):
         self.annotations.shuffle()
         self.counter = 0
-
 
 class _YoloBox(object):
 
@@ -140,13 +135,12 @@ class _YoloBox(object):
         """
         # 1. [[100, 120, 140, 200]] minimax box -> centroid box
         centroid_boxes = to_centroid(boxes).astype(np.float32)
-        # 2. [[120. 160.  40.  80.]] image scale -> grid scale [[4.        5.        1.3333334 2.5      ]]
+        # 2. [[120. 160.  40.  80.]] image scale -> imga scle 0 ~ 1 [[4.        5.        1.3333334 2.5      ]]
         norm_boxes = np.zeros_like(centroid_boxes)
-        norm_boxes[:,0::2] = centroid_boxes[:,0::2] * (self._grid_size[0] / self._input_size[0])
-        norm_boxes[:,1::2] = centroid_boxes[:,1::2] * (self._grid_size[1] / self._input_size[1])
-        #print(norm_boxes)
+        norm_boxes[:,0::2] = centroid_boxes[:,0::2] / self._input_size[1]
+        norm_boxes[:,1::2] = centroid_boxes[:,1::2] / self._input_size[0]
+        #print("norm boxes", norm_boxes)
         return norm_boxes
-
 
 class _NetinGen(object):
     def __init__(self, input_size, norm):
@@ -162,18 +156,14 @@ class _NetinGen(object):
         else:
             return norm
 
-
 class _NetoutGen(object):
     def __init__(self,
-                 grid_size,
+                 grid_sizes,
                  nb_classes,
-                 anchors=[0.57273, 0.677385,
-                          1.87446, 2.06253,
-                          3.33843, 5.47434,
-                          7.88282, 3.52778,
-                          9.77052, 9.16828]):
-        self._anchors = create_anchor_boxes(anchors)
-        self._tensor_shape = self._set_tensor_shape(grid_size, nb_classes)
+                 anchors):
+        self.nb_classes = nb_classes
+        self.anchors = np.asarray(anchors)
+        self._tensor_shape = self._set_tensor_shape(grid_sizes, nb_classes)
 
     def run(self, norm_boxes, labels):
         """
@@ -183,34 +173,110 @@ class _NetoutGen(object):
             labels : list of integers
             y_shape : tuple (grid_size, grid_size, nb_boxes, 4+1+nb_classes)
         """
-        y = np.zeros(self._tensor_shape)
+        labels = np.asarray([labels])
+        norm_boxes = np.asarray(norm_boxes)
+        if len(norm_boxes) > 0:
+            norm_boxes= np.concatenate((labels.T, norm_boxes), axis = 1)
+        #print("boxes", boxes)
+        y = self.box_to_label(norm_boxes)
+        #print(y.shape)
 
-        # loop over objects in one image
-        for norm_box, label in zip(norm_boxes, labels):
-            best_anchor = self._find_anchor_idx(norm_box)
-            # assign ground truth x, y, w, h, confidence and class probs to y_batch
-            y += self._generate_y(best_anchor, label, norm_box)
         return y
 
     def _set_tensor_shape(self, grid_size, nb_classes):
-        nb_boxes = len(self._anchors)
-        return (grid_size[0], grid_size[1], nb_boxes, 4+1+nb_classes)
+        nb_boxes = len(self.anchors[0])
+        return [(grid_size[i][0], grid_size[i][1], nb_boxes, 4+1+nb_classes) for i in range(len(self.anchors))]
 
-    def _find_anchor_idx(self, norm_box):
-        _, _, center_w, center_h = norm_box
-        shifted_box = np.array([0, 0, center_w, center_h])
-        return find_match_box(shifted_box, self._anchors)
+    def _xy_grid_index(self, box_xy: np.ndarray, layer: int):
+        """ get xy index in grid scale
 
-    def _generate_y(self, best_anchor, obj_indx, box):
-        y = np.zeros(self._tensor_shape)
-        max_grid_y = self._tensor_shape[0]-1
-        max_grid_x = self._tensor_shape[1]-1
-        grid_x, grid_y, _, _ = np.floor(box).astype(int)
-        if grid_x > max_grid_x: grid_x = max_grid_x
-        if grid_y > max_grid_y: grid_y = max_grid_y
+        Parameters
+        ----------
+        box_xy : np.ndarray
+            value = [x,y]
+        layer  : int
+            layer index
 
-        y[grid_y, grid_x, best_anchor, 0:4] = box
-        y[grid_y, grid_x, best_anchor, 4  ] = 1.
-        if obj_indx != -1:
-            y[grid_y, grid_x, best_anchor, 5+obj_indx] = 1
-        return y
+        Returns
+        -------
+        [np.ndarray,np.ndarray]
+
+            index xy : = [idx,idy]
+        """
+        out_wh = self._tensor_shape[layer][0:2:][::-1]
+        #print(box_xy, out_wh)
+        return np.floor(box_xy * out_wh).astype('int')
+
+    @staticmethod
+    def _fake_iou(a: np.ndarray, b: np.ndarray) -> float:
+        """set a,b center to same,then calc the iou value
+
+        Parameters
+        ----------
+        a : np.ndarray
+            array value = [w,h]
+        b : np.ndarray
+            array value = [w,h]
+
+        Returns
+        -------
+        float
+            iou value
+        """
+        a_maxes = a / 2.
+        a_mins = -a_maxes
+
+        b_maxes = b / 2.
+        b_mins = -b_maxes
+
+        iner_mins = np.maximum(a_mins, b_mins)
+        iner_maxes = np.minimum(a_maxes, b_maxes)
+        iner_wh = np.maximum(iner_maxes - iner_mins, 0.)
+        iner_area = iner_wh[..., 0] * iner_wh[..., 1]
+
+        s1 = a[..., 0] * a[..., 1]
+        s2 = b[..., 0] * b[..., 1]
+
+        return iner_area / (s1 + s2 - iner_area)
+
+    def _get_anchor_index(self, wh: np.ndarray) -> np.ndarray:
+        """get the max iou anchor index
+
+        Parameters
+        ----------
+        wh : np.ndarray
+            value = [w,h]
+
+        Returns
+        -------
+        np.ndarray
+            max iou anchor index
+            value  = [layer index , anchor index]
+        """
+        iou = _NetoutGen._fake_iou(wh, self.anchors)
+        return np.unravel_index(np.argmax(iou), iou.shape)
+
+    def box_to_label(self, true_box: np.ndarray) -> tuple:
+        """convert the annotation to yolo v3 label~
+
+        Parameters
+        ----------
+        true_box : np.ndarray
+            annotation shape :[n,5] value :[n*[p,x,y,w,h]]
+
+        Returns
+        -------
+        tuple
+            labels list value :[output_number*[out_h,out_w,anchor_num,class+5]]
+        """
+        labels = [np.zeros((self._tensor_shape[i][0], self._tensor_shape[i][1], len(self.anchors[i]),
+                            5 + self.nb_classes), dtype='float32') for i in range(len(self.anchors))]
+        for box in true_box:
+            # NOTE box [x y w h] are relative to the size of the entire image [0~1]
+            l, n = self._get_anchor_index(box[3:5])  # [layer index, anchor index]
+            idx, idy = self._xy_grid_index(box[1:3], l)  # [x index , y index]
+            labels[l][idy, idx, n, 0:4] = np.clip(box[1:5], 1e-8, 1.)
+            labels[l][idy, idx, n, 4] = 1.
+            labels[l][idy, idx, n, 5 + int(box[0])] = 1.
+
+        return labels

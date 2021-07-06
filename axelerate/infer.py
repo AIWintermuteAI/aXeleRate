@@ -33,7 +33,7 @@ def show_image(filename):
     print(filename)
 
 def create_ann(filename, image, boxes, right_label, label_list):
-    copyfile(filename, 'test_img/'+os.path.basename(filename))
+    copyfile(filename, 'test_img/' + os.path.basename(filename))
     writer = Writer(filename, image.shape[0], image.shape[1])
     for i in range(len(right_label)):
     	writer.addObject(label_list[right_label[i]], boxes[i][0], boxes[i][1], boxes[i][2], boxes[i][3])
@@ -43,10 +43,17 @@ def create_ann(filename, image, boxes, right_label, label_list):
 def prepare_image(img_path, network):
     orig_image = cv2.imread(img_path)
     input_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
-    input_image = cv2.resize(input_image, (network._input_size[1],network._input_size[0]))
+    input_image = cv2.resize(input_image, (network._input_size[1], network._input_size[0]))
     input_image = network._norm(input_image)
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image
+
+def find_imgs(folder):
+    ext_list = ['/**/*.jpg', '/**/*.jpeg', '/**/*.png', '/**/*.JPG', '/**/*.JPEG']
+    image_files_list = []
+    image_search = lambda ext : glob.glob(folder + ext, recursive=True)
+    for ext in ext_list: image_files_list.extend(image_search(ext))
+    return image_files_list
 
 def setup_inference(config, weights, threshold=0.3, create_dataset=None):
     try:
@@ -100,14 +107,13 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         classifier.load_weights(weights)
         
         font = cv2.FONT_HERSHEY_SIMPLEX
-        valid_image_folder = config['train']['valid_image_folder']
-        image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
+        image_files_list = find_imgs(config['train']['valid_image_folder'])
         
         inference_time = []
         for filename in image_files_list:
             output_path = os.path.join(dirname, os.path.basename(filename))
             orig_image, input_image = prepare_image(filename, classifier)
-            prediction_time, img_class, prob = classifier.predict(input_image)
+            prediction_time, prob, img_class = classifier.predict(input_image)
             inference_time.append(prediction_time)
             
             # label shape and colorization
@@ -128,6 +134,7 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
             cv2.imwrite(output_path, orig_image)
             show_image(output_path)
             print("{}:{}".format(img_class[0], prob[0]))
+
         if len(inference_time)>1:
             print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
 
@@ -136,27 +143,36 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         yolo = create_yolo(config['model']['architecture'],
                            config['model']['labels'],
                            input_size,
-                           config['model']['anchors'])
+                           config['model']['anchors'],
+                           config['model']['obj_thresh'],
+                           config['model']['iou_thresh'],
+                           config['model']['coord_scale'],
+                           config['model']['object_scale'],
+                           config['model']['no_object_scale'],                           
+                           config['weights']['backend'])                           
         yolo.load_weights(weights)
         
         valid_image_folder = config['train']['valid_image_folder']
-        image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
-        
+        image_files_list = []
+        image_search = lambda ext : glob.glob(valid_image_folder + ext, recursive=True)
+        for ext in ['/**/*.jpg', '/**/*.jpeg', '/**/*.png']: image_files_list.extend(image_search(ext))
+
         inference_time = []
         for i in range(len(image_files_list)):
             img_path = image_files_list[i]
             img_fname = os.path.basename(img_path)
-
             orig_image, input_image = prepare_image(img_path, yolo)
             height, width = orig_image.shape[:2]
-            prediction_time, boxes, probs = yolo.predict(input_image, height, width, float(threshold))
+
+            prediction_time, boxes, scores = yolo.predict(input_image, height, width, float(threshold))
+            classes = np.argmax(scores, axis=1) if len(scores) > 0 else []
+            print(classes)
             inference_time.append(prediction_time)
-            labels = np.argmax(probs, axis=1) if len(probs) > 0 else []
-             
+
             # 4. save detection result
-            orig_image = draw_boxes(orig_image, boxes, probs, config['model']['labels'])
+            orig_image = draw_boxes(orig_image, boxes, scores, classes, config['model']['labels'])
             output_path = os.path.join(dirname, os.path.split(img_fname)[-1])
-            if len(probs) > 0 and create_dataset:
+            if len(boxes) > 0 and create_dataset:
                 create_ann(img_path, orig_image, boxes, labels, config['model']['labels'])
             cv2.imwrite(output_path, orig_image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))

@@ -41,6 +41,7 @@ def get_train_annotations(labels,
 
     # parse annotations of the validation set, if any, otherwise split the training set
     if os.path.exists(valid_ann_folder):
+        print(valid_ann_folder)
         valid_anns = parse_annotation(valid_ann_folder,
                                          valid_img_folder,
                                          labels,

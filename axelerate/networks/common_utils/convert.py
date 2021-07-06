@@ -8,8 +8,6 @@ import tarfile
 import glob
 import shutil
 import numpy as np
-#from tensorflow.python.framework import graph_util
-#from tensorflow.python.framework import graph_io
 import shlex
 
 k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
@@ -63,6 +61,14 @@ class Converter(object):
                 cmd = "bash install_openvino.sh"
                 result = run_command(cmd, cwd)
                 print(result)       
+                
+        if 'onnx' in converter_type:
+            try:
+                import tf2onnx
+            except:
+                cmd = "pip install tf2onnx"
+                result = run_command(cmd, cwd)
+                print(result)              
                 
         self._converter_type = converter_type
         self._backend = backend
@@ -140,36 +146,18 @@ class Converter(object):
         result = run_command(cmd)
         print(result)
 
-    def convert_onnx(self, model, model_layers):
-
-        input_node_names = model.layers[0].get_output_at(0).name.split(':')[0]
-        output_node_names = [model.layers[-1].get_output_at(0).name.split(':')[0]]
-        sess = k.get_session()
-
-        # The TensorFlow freeze_graph expects a comma-separated string of output node names.
-        input_node_names_onnx= [model.layers[0].get_output_at(0).name]
-        output_node_names_onnx = [model.layers[-1].get_output_at(0).name]
-        print(output_node_names_onnx)
-        print(input_node_names_onnx)
-        frozen_graph_def = tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, output_node_names)
-
-        tf.reset_default_graph()
-        with tf.Graph().as_default() as tf_graph:
-            tf.import_graph_def(frozen_graph_def, name='')
-
-            onnx_graph = tf2onnx.tfonnx.process_tf_graph(tf_graph, input_names=input_node_names_onnx, output_names=output_node_names_onnx)
-            model_proto = onnx_graph.make_model("model")
-            with open(model_path.split(".")[0] + '.onnx', "wb") as f:
-               f.write(model_proto.SerializeToString())
-        #sess.close()
+    def convert_onnx(self, model):
+        spec = (tf.TensorSpec((None, *self._img_size, 3), tf.float32, name="input"),)
+        output_path = self.model_path.split(".")[0] + '.onnx'
+        model_proto, external_tensor_storage = tf2onnx.convert.from_keras(model, input_signature=spec, output_path = output_path)
 
     def convert_tflite(self, model, model_layers, target=None):
         model_type = model.name
-        if model_type == 'yolo':
-            model = tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
-            print("Converting to tflite without Reshape")
-            
+
         if target=='k210': 
+            if model_type == 'yolo':
+                print("Converting to tflite without Reshape for K210 YOLO")
+                model = tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
             if model_type == 'segnet':   
                 print("Converting to tflite with old converter for K210 Segnet")
                 converter = tf.lite.TFLiteConverter.from_keras_model(model)
@@ -182,8 +170,8 @@ class Converter(object):
             converter.optimizations = [tf.lite.Optimize.DEFAULT]
             converter.representative_dataset = self.edgetpu_dataset_gen
             converter.target_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-            #converter.inference_input_type = tf.uint8
-            #converter.inference_output_type = tf.uint8
+            converter.inference_input_type = tf.uint8
+            converter.inference_output_type = tf.uint8
 
         elif target == 'tflite_dynamic':
             converter = tf.lite.TFLiteConverter.from_keras_model(model)
@@ -217,8 +205,7 @@ class Converter(object):
             self.convert_edgetpu(model_path.split(".")[0] + '.tflite')
 
         if 'onnx' in self._converter_type:
-            import tf2onnx
-            self.convert_onnx(model, model_layers)
+            self.convert_onnx(model)
             
         if 'openvino' in self._converter_type:
             model.save(model_path.split(".")[0])

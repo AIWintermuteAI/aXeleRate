@@ -1,11 +1,8 @@
-tensorflow
+tensorflow>=2.3.0,<2.5.0
 imgaug==0.4
-opencv-python
-Pillow
-requests
-tqdm
+opencv-python~=4.5
+matplotlib~=3.4
 sklearn
-matplotlib
+tqdm
 pascal_voc_writer
 tf2onnx
-defusedxml

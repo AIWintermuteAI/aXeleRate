@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import cv2
-import os
-import time
+import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Reshape, Conv2D, Input, Lambda
+from tensorflow.keras.layers import Reshape, Conv2D, UpSampling2D, Concatenate, ZeroPadding2D
 from axelerate.networks.common_utils.feature import create_feature_extractor
+from axelerate.networks.common_utils.mobilenet_sipeed.mobilenet import _depthwise_conv_block, _conv_block
 
 def create_yolo_network(architecture,
                         input_size,
                         nb_classes,
                         nb_box,
+                        nb_stages,
                         weights):
     feature_extractor = create_feature_extractor(architecture, input_size, weights)
     yolo_net = YoloNetwork(feature_extractor,
-                           input_size,
+                           nb_stages,
                            nb_classes,
                            nb_box)
     return yolo_net
@@ -24,48 +24,86 @@ class YoloNetwork(object):
     
     def __init__(self,
                  feature_extractor,
-                 input_size,
+                 nb_stages,
                  nb_classes,
                  nb_box):
-        
+
         # 1. create full network
-        grid_size_x, grid_size_y = feature_extractor.get_output_size()
-        
+        grid_size_y, grid_size_x = feature_extractor.get_output_size(layer  = 'conv_pw_13_relu')
+        x1 = feature_extractor.get_output_tensor('conv_pw_13_relu')
+
         # make the object detection layer
-        output_tensor = Conv2D(nb_box * (4 + 1 + nb_classes), (1,1), strides=(1,1),
-                               padding='same', 
-                               name='detection_layer_{}'.format(nb_box * (4 + 1 + nb_classes)), 
-                               kernel_initializer='lecun_normal')(feature_extractor.feature_extractor.outputs[0])
-        output_tensor = Reshape((grid_size_x, grid_size_y, nb_box, 4 + 1 + nb_classes))(output_tensor)
-    
-        model = Model(feature_extractor.feature_extractor.inputs[0], output_tensor, name='yolo')
+        y1 = Conv2D(nb_box * (4 + 1 + nb_classes), (1,1), strides=(1,1),
+                            padding='same', 
+                            name='detection_layer_1', 
+                            kernel_initializer='lecun_normal')(x1)
+
+        if nb_stages == 2:
+            grid_size_y_2, grid_size_x_2 = feature_extractor.get_output_size(layer = 'conv_pw_11_relu')
+            x2 = feature_extractor.get_output_tensor('conv_pw_11_relu')
+            #x1 = _depthwise_conv_block(inputs = x1, alpha = 1, pointwise_conv_filters = 128, block_id=14)
+            x1 = UpSampling2D(2)(x1)
+
+            if x1.shape[1:3] != x2.shape[1:3]:
+                #print(x1.shape[1:3] - x2.shape[1:3])
+                #pad = tf.math.subtract(x1.shape[1:3], x2.shape[1:3]).numpy().tolist()
+                #print(pad)
+                x2 = ZeroPadding2D(padding=((0,1), (0,0)))(x2)
+                grid_size_y_2, grid_size_x_2 = x2.shape[1:3]
+
+            x2 = Concatenate()([x2, x1])
+            #x2 = _depthwise_conv_block(inputs = x2, alpha = 1, pointwise_conv_filters = 128, block_id=14)
+
+            y2 = Conv2D(nb_box * (4 + 1 + nb_classes), (1,1), strides=(1,1),
+                                padding='same', 
+                                name='detection_layer_2', 
+                                kernel_initializer='lecun_normal')(x2)
+
+        if nb_stages == 2:
+
+            l1 = Reshape((grid_size_y, grid_size_x, nb_box, 4 + 1 + nb_classes))(y1)
+            l2 = Reshape((grid_size_y_2, grid_size_x_2, nb_box, 4 + 1 + nb_classes))(y2)
+
+            detection_layers = ['detection_layer_1', 'detection_layer_2']
+            output_tensors = [l1, l2]
+        else:
+
+            l1 = Reshape((grid_size_y, grid_size_x, nb_box, 4 + 1 + nb_classes))(y1) 
+
+            detection_layers = ['detection_layer_1']
+            output_tensors = [l1]
+
+        model = Model(feature_extractor.feature_extractor.inputs[0], output_tensors, name='yolo')
         self._norm = feature_extractor.normalize
         self._model = model
-        self._init_layer()
+        self._init_layers(detection_layers)
 
-    def _init_layer(self):
-        layer = self._model.layers[-2]
-        weights = layer.get_weights()
-        
-        input_depth = weights[0].shape[-2] # 2048
-        new_kernel = np.random.normal(size=weights[0].shape)/ input_depth
-        new_bias   = np.zeros_like(weights[1])
+    def _init_layers(self, layers):
+        for layer in layers:
+            layer = self._model.get_layer(layer)
+            weights = layer.get_weights()
+            
+            input_depth = weights[0].shape[-2] # 2048
+            new_kernel = np.random.normal(size=weights[0].shape)/ input_depth
+            new_bias   = np.zeros_like(weights[1])
 
-        layer.set_weights([new_kernel, new_bias])
+            layer.set_weights([new_kernel, new_bias])
 
     def load_weights(self, weight_path, by_name):
         self._model.load_weights(weight_path, by_name=by_name)
         
     def forward(self, image):
-        netout = self._model.predict(image)[0]
+        netout = self._model.predict(image)
         return netout
 
     def get_model(self, first_trainable_layer=None):
         return self._model
 
     def get_grid_size(self):
-        _, w, h, _, _ = self._model.outputs[0].shape
-        return (w,h)
+        grid_sizes = []
+        for model_output in self._model.outputs:
+            grid_sizes.append(list(model_output.shape[1:3]))
+        return grid_sizes
 
     def get_normalize_func(self):
         return self._norm

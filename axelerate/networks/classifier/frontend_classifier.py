@@ -1,6 +1,9 @@
 import time
 import os
 import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
 
 from axelerate.networks.common_utils.feature import create_feature_extractor
 from axelerate.networks.classifier.batch_gen import create_datagen
@@ -44,6 +47,7 @@ class Classifier(object):
         self._input_size = input_size
         self._bottleneck_layer = bottleneck_layer
         self._norm = norm
+
     def load_weights(self, weight_path, by_name=False):
         if os.path.exists(weight_path):
             print("Loading pre-trained weights for the whole model: ", weight_path)
@@ -60,13 +64,33 @@ class Classifier(object):
         bottleneck_model = Model(model.input, output)
         bottleneck_model.save_weights(bottleneck_weights_path)
 
-    def predict(self, image):
+    def predict(self, img_folder, batch_size):
+
+        self.generator = create_datagen(img_folder, batch_size, self._input_size, None, False, self._norm)
         start_time = time.time()
-        pred = self._network.predict(image)
-        elapsed_ms = (time.time() - start_time) * 1000
-        predicted_class_indices=np.argmax(pred,axis=1)
-        predictions = [self._labels[k] for k in predicted_class_indices]
-        return elapsed_ms, predictions, pred[0][predicted_class_indices]
+        Y_pred = self._network.predict(self.generator, len(self.generator) // batch_size+1)
+        elapsed_ms = (time.time() - start_time) / len(self.generator) * 1000
+
+        y_pred = np.argmax(Y_pred, axis=1)
+
+        predictions = [self._labels[k] for k in y_pred]
+
+        return elapsed_ms, y_pred, predictions
+
+    def evaluate(self, img_folder, batch_size):
+
+        elapsed_ms, y_pred, predictions = self.predict(img_folder, batch_size)
+
+        print('Classification Report')
+        report = classification_report(self.generator.classes, y_pred, target_names=self._labels)
+        print(report)
+
+        print('Confusion Matrix')
+        cm = confusion_matrix(self.generator.classes, y_pred)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=self._labels)
+        disp.plot(include_values=True, cmap='Blues', ax=None)
+        plt.show()
+        return report, cm
 
     def train(self,
               img_folder,
@@ -81,12 +105,23 @@ class Classifier(object):
               first_trainable_layer=None,
               metrics="val_loss"):
 
-        if metrics != "val_accuracy" and metrics != "val_loss":
+        if metrics != "accuracy" and metrics != "loss":
             print("Unknown metric for Classifier, valid options are: val_loss or val_accuracy. Defaulting ot val_loss")
-            metrics = "val_loss"
+            metrics = "loss"
 
-        train_generator, validation_generator = create_datagen(img_folder, valid_img_folder, batch_size, self._input_size, project_folder, augumentation, self._norm)
-        model_layers, model_path = train(self._network,'categorical_crossentropy',train_generator,validation_generator,learning_rate, nb_epoch, project_folder,first_trainable_layer, self, metrics)
+        train_generator = create_datagen(img_folder, batch_size, self._input_size, project_folder, augumentation, self._norm)
+        validation_generator = create_datagen(valid_img_folder, batch_size, self._input_size, project_folder, False, self._norm)
+
+        model_layers, model_path = train(self._network,
+                                        'categorical_crossentropy',
+                                        train_generator,
+                                        validation_generator,
+                                        learning_rate, 
+                                        nb_epoch, 
+                                        project_folder,
+                                        first_trainable_layer, 
+                                        metric_name = metrics)
+
         if self._bottleneck_layer:
             self.save_bottleneck(model_path, self._bottleneck_layer)
         return model_layers, model_path

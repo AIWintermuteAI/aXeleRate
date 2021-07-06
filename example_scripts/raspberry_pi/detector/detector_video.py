@@ -16,7 +16,7 @@ class Detector(object):
     def __init__(self, label_file, model_file, threshold):
         self._threshold = float(threshold)
         self.labels = self.load_labels(label_file)
-        self.interpreter = Interpreter(model_file)
+        self.interpreter = Interpreter(model_file, num_threads=6)
         self.interpreter.allocate_tensors()
         _, self.input_height, self.input_width, _ = self.interpreter.get_input_details()[0]['shape']
         self.tensor_index = self.interpreter.get_input_details()[0]['index']
@@ -51,9 +51,9 @@ class Detector(object):
       return boxes
 
     def detect(self, original_image):
-        self.output_width, self.output_height = original_image.shape[0:2]
+        self.output_height, self.output_width = original_image.shape[0:2]
         start_time = time.time()
-        results = self.detect_objects(image)
+        results = self.detect_objects(original_image)
         elapsed_ms = (time.time() - start_time) * 1000
         fps  = 1 / elapsed_ms*1000
         print("Estimated frames per second : {0:.2f} Inference time: {1:.2f}".format(fps, elapsed_ms))
@@ -149,12 +149,21 @@ parser.add_argument('--model', help='File path of .tflite file.', required=True)
 parser.add_argument('--labels', help='File path of labels file.', required=True)
 parser.add_argument('--threshold', help='Confidence threshold.', default=0.3)
 parser.add_argument('--source', help='picamera or cv', default='cv')
+parser.add_argument('--file', help='path to file', default=None)
 args = parser.parse_args()
 
 if args.source == "cv":
     from camera_opencv import Camera
+    source = 0
 elif args.source == "picamera":
     from camera_pi import Camera
+    source = 0
+elif args.source == "file":
+    from videofile_opencv import Camera
+    source = args.file
+
+Camera.set_video_source(source)
+
 detector = Detector(args.labels, args.model, args.threshold)
 
 if __name__ == "__main__" :
