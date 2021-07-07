@@ -11,8 +11,7 @@ import time
 
 import matplotlib
 
-from axelerate.networks.classifier.frontend_classifier import (
-    create_classifier, get_labels)
+from axelerate.networks.classifier.frontend_classifier import (create_classifier, get_labels)
 from axelerate.networks.common_utils.convert import Converter
 from axelerate.networks.segnet.frontend_segnet import create_segnet
 from axelerate.networks.yolo.frontend import create_yolo, get_object_labels
@@ -40,24 +39,35 @@ def train_from_config(config, project_folder):
         input_size = [config['model']['input_size'], config['model']['input_size']]
 
     # Create the converter
-    converter = Converter(config['converter']['type'], config['model']['architecture'], config['train']['valid_image_folder'])
+    converter = Converter(config['converter']['type'],
+                          config['model']['architecture'],
+                          config['train']['valid_image_folder'])
 
     #  Segmentation network
     if config['model']['type'] == 'SegNet':
         print('Segmentation')
         # 1. Construct the model
-        segnet = create_segnet(config['model']['architecture'], input_size, config['model']['n_classes'],
+        segnet = create_segnet(config['model']['architecture'],
+                               input_size,
+                               config['model']['n_classes'],
                                config['weights']['backend'])
         # 2. Load the pretrained weights (if any)
         segnet.load_weights(config['weights']['full'], by_name=True)
         # 3. actual training
-        model_layers, model_path = segnet.train(config['train']['train_image_folder'], config['train']['train_annot_folder'],
-                                                config['train']['actual_epoch'], project_folder, config["train"]["batch_size"],
-                                                config["train"]["augmentation"], config['train']['learning_rate'],
-                                                config['train']['train_times'], config['train']['valid_times'],
-                                                config['train']['valid_image_folder'], config['train']['valid_annot_folder'],
-                                                config['train']['first_trainable_layer'], config['train']['ignore_zero_class'],
-                                                config['train']['valid_metric'])
+        model_layers, model_path = segnet.train(config['train']['train_image_folder'],
+                                                config['train']['train_annot_folder'],
+                                                config['train']['actual_epoch'],
+                                                project_folder,
+                                                config["train"]["batch_size"],
+                                                config["train"]["augmentation"],
+                                                config['train']['learning_rate'],
+                                                config['train']['train_times'],
+                                                config['train']['valid_times'],
+                                                config['train']['valid_image_folder'],
+                                                config['train']['valid_annot_folder'],
+                                                config['train']['first_trainable_layer'],
+                                                config['train']['ignore_zero_class'],
+                                                config['train']['valid_metric'])  # yapf: disable
 
     #  Classifier
     if config['model']['type'] == 'Classifier':
@@ -67,19 +77,28 @@ def train_from_config(config, project_folder):
         else:
             labels = get_labels(config['train']['train_image_folder'])
             # 1. Construct the model
-        classifier = create_classifier(config['model']['architecture'], labels, input_size, config['model']['fully-connected'],
-                                       config['model']['dropout'], config['weights']['backend'],
+        classifier = create_classifier(config['model']['architecture'],
+                                       labels,
+                                       input_size,
+                                       config['model']['fully-connected'],
+                                       config['model']['dropout'],
+                                       config['weights']['backend'],
                                        config['weights']['save_bottleneck'])
         # 2. Load the pretrained weights (if any)
         classifier.load_weights(config['weights']['full'], by_name=True)
 
         # 3. actual training
-        model_layers, model_path = classifier.train(config['train']['train_image_folder'], config['train']['actual_epoch'],
-                                                    project_folder, config["train"]["batch_size"],
-                                                    config["train"]["augmentation"], config['train']['learning_rate'],
-                                                    config['train']['train_times'], config['train']['valid_times'],
+        model_layers, model_path = classifier.train(config['train']['train_image_folder'],
+                                                    config['train']['actual_epoch'],
+                                                    project_folder,
+                                                    config["train"]["batch_size"],
+                                                    config["train"]["augmentation"],
+                                                    config['train']['learning_rate'],
+                                                    config['train']['train_times'],
+                                                    config['train']['valid_times'],
                                                     config['train']['valid_image_folder'],
-                                                    config['train']['first_trainable_layer'], config['train']['valid_metric'])
+                                                    config['train']['first_trainable_layer'],
+                                                    config['train']['valid_metric'])  # yapf: disable
 
     #  Detector
     if config['model']['type'] == 'Detector':
@@ -93,28 +112,50 @@ def train_from_config(config, project_folder):
         print(labels)
 
         # 1. Construct the model
-        yolo = create_yolo(config['model']['architecture'], labels, input_size, config['model']['anchors'],
-                           config['model']['obj_thresh'], config['model']['iou_thresh'], config['model']['coord_scale'],
-                           config['model']['object_scale'], config['model']['no_object_scale'], config['weights']['backend'])
+        yolo = create_yolo(config['model']['architecture'],
+                           labels,
+                           input_size,
+                           config['model']['anchors'],
+                           config['model']['obj_thresh'],
+                           config['model']['iou_thresh'],
+                           config['model']['coord_scale'],
+                           config['model']['object_scale'],
+                           config['model']['no_object_scale'],
+                           config['weights']['backend'])
 
         # 2. Load the pretrained weights (if any)
         yolo.load_weights(config['weights']['full'], by_name=True)
 
         # 3. actual training
         if not config["train"]["quantize"]:
-            model_layers, model_path = yolo.train(
-                config['train']['train_image_folder'], config['train']['train_annot_folder'], config['train']['actual_epoch'],
-                project_folder, config["train"]["batch_size"], config["train"]["augmentation"],
-                config['train']['learning_rate'], config['train']['train_times'], config['train']['valid_times'],
-                config['train']['valid_image_folder'], config['train']['valid_annot_folder'],
-                config['train']['first_trainable_layer'], config['train']['valid_metric'], config["train"]["validation_freq"])
+            model_layers, model_path = yolo.train(config['train']['train_image_folder'],
+                                                  config['train']['train_annot_folder'],
+                                                  config['train']['actual_epoch'],
+                                                  project_folder,
+                                                  config["train"]["batch_size"],
+                                                  config["train"]["augmentation"],
+                                                  config['train']['learning_rate'],
+                                                  config['train']['train_times'],
+                                                  config['train']['valid_times'],
+                                                  config['train']['valid_image_folder'],
+                                                  config['train']['valid_annot_folder'],
+                                                  config['train']['first_trainable_layer'],
+                                                  config['train']['valid_metric'],
+                                                  config["train"]["validation_freq"])  # yapf: disable
         else:
-            model_layers, model_path = yolo.train_qat(
-                config['train']['train_image_folder'], config['train']['train_annot_folder'], config['train']['actual_epoch'],
-                config['weights']['full'], config["train"]["batch_size"], config["train"]["augmentation"],
-                config['train']['learning_rate'], config['train']['train_times'], config['train']['valid_times'],
-                config['train']['valid_image_folder'], config['train']['valid_annot_folder'],
-                config['train']['first_trainable_layer'], config['train']['valid_metric'])
+            model_layers, model_path = yolo.train_qat(config['train']['train_image_folder'],
+                                                      config['train']['train_annot_folder'],
+                                                      config['train']['actual_epoch'],
+                                                      config['weights']['full'],
+                                                      config["train"]["batch_size"],
+                                                      config["train"]["augmentation"],
+                                                      config['train']['learning_rate'],
+                                                      config['train']['train_times'],
+                                                      config['train']['valid_times'],
+                                                      config['train']['valid_image_folder'],
+                                                      config['train']['valid_annot_folder'],
+                                                      config['train']['first_trainable_layer'],
+                                                      config['train']['valid_metric'])  # yapf: disable
     # 4 Convert the model
     time.sleep(2)
     converter.convert_model(model_path)

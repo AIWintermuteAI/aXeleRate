@@ -95,5 +95,5 @@ def correct_pad(backend, inputs, kernel_size):
 __version__ = '1.0.7'
 
 
-from . import mobilenet
+from . import mobilenet, mobilenet_v2
 

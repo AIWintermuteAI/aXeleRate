@@ -9,8 +9,7 @@ import tensorflow as tf
 from axelerate.networks.common_utils.callbacks import \
     WarmUpCosineDecayScheduler
 from axelerate.networks.yolo.backend.utils.custom import MergeMetrics
-from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
-                                        ReduceLROnPlateau)
+from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint, ReduceLROnPlateau)
 from tensorflow.keras.optimizers import SGD, Adam
 
 
@@ -84,19 +83,25 @@ def train(model,
     model.summary()
 
     #4 create callbacks
-
     tensorboard_callback = tf.keras.callbacks.TensorBoard("logs", histogram_freq=1)
-
     warm_up_lr = WarmUpCosineDecayScheduler(learning_rate_base=learning_rate,
                                             total_steps=len(train_batch_gen) * nb_epoch,
                                             warmup_learning_rate=0.0,
                                             warmup_steps=len(train_batch_gen) * min(3, nb_epoch - 1),
                                             hold_base_rate_steps=0,
                                             verbose=1)
+    checkpoint = ModelCheckpoint(os.path.join(path,
+                                              "checkpoints",
+                                              "%s-{epoch:02d}-{%s:.4f}.h5" % (basename, "val_loss")),
+                                 monitor="val_loss",
+                                 verbose=2,
+                                 save_best_only=False,
+                                 mode='auto',
+                                 period=validation_freq)
 
     if metric_name in ['recall', 'precision']:
         mergedMetric = MergeMetrics(model, metric_name, validation_freq, True, save_weights_name, tensorboard_callback)
-        callbacks = [mergedMetric, warm_up_lr, tensorboard_callback]
+        callbacks = [mergedMetric, warm_up_lr, tensorboard_callback, checkpoint]
     else:
         early_stop = EarlyStopping(monitor='val_' + metric,
                                    min_delta=0.001,
@@ -104,13 +109,6 @@ def train(model,
                                    mode='auto',
                                    verbose=2,
                                    restore_best_weights=True)
-
-        checkpoint = ModelCheckpoint(save_weights_name,
-                                     monitor='val_' + metric,
-                                     verbose=2,
-                                     save_best_only=True,
-                                     mode='auto',
-                                     period=validation_freq)
 
         reduce_lr = ReduceLROnPlateau(monitor='val_' + metric,
                                       factor=0.2,

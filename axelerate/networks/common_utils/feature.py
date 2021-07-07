@@ -1,13 +1,14 @@
 import tensorflow
+from tensorflow.keras.applications import DenseNet121, NASNetMobile, ResNet50
+from tensorflow.keras.layers import (Activation, BatchNormalization,
+                                     Concatenate, Conv2D, Dense, Flatten,
+                                     Input, Lambda, LeakyReLU, MaxPooling2D,
+                                     Reshape, ZeroPadding2D)
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda, ZeroPadding2D
-from tensorflow.keras.layers import LeakyReLU
-from tensorflow.keras.layers import Concatenate
-from tensorflow.keras.applications import DenseNet121
-from tensorflow.keras.applications import NASNetMobile
-from tensorflow.keras.applications import ResNet50
 
 from .mobilenet_sipeed.mobilenet import MobileNet
+from .mobilenet_sipeed.mobilenet_v2 import MobileNetV2
+
 
 def create_feature_extractor(architecture, input_size, weights = None):
     """
@@ -30,6 +31,14 @@ def create_feature_extractor(architecture, input_size, weights = None):
         feature_extractor = MobileNetFeature(input_size, weights, alpha=0.5)
     elif architecture == 'MobileNet2_5':
         feature_extractor = MobileNetFeature(input_size, weights, alpha=0.25)
+    elif architecture == 'MobileNetV2_1_0':
+        feature_extractor = MobileNetV2Feature(input_size, weights, alpha=1)
+    elif architecture == 'MobileNetV2_7_5':
+        feature_extractor = MobileNetV2Feature(input_size, weights, alpha=0.75)
+    elif architecture == 'MobileNetV2_5_0':
+        feature_extractor = MobileNetV2Feature(input_size, weights, alpha=0.5)
+    elif architecture == 'MobileNetV2_2_5':
+        feature_extractor = MobileNetV2Feature(input_size, weights, alpha=0.25)
     elif architecture == 'Full Yolo':
         feature_extractor = FullYoloFeature(input_size, weights)
     elif architecture == 'Tiny Yolo':
@@ -43,7 +52,6 @@ def create_feature_extractor(architecture, input_size, weights = None):
     return feature_extractor
 
 
-
 class BaseFeatureExtractor(object):
     """docstring for ClassName"""
 
@@ -53,7 +61,7 @@ class BaseFeatureExtractor(object):
 
     # to be defined in each subclass
     def normalize(self, image):
-        raise NotImplementedError("error message")       
+        raise NotImplementedError("error message")
 
     def get_input_size(self):
         input_shape = self.feature_extractor.get_input_shape_at(0)
@@ -286,7 +294,53 @@ class MobileNetFeature(BaseFeatureExtractor):
         image = image - 0.5
         image = image * 2.
 
-        return image		
+        return image
+
+
+class MobileNetV2Feature(MobileNetFeature):
+    """docstring for ClassName"""
+    def __init__(self, input_size, weights, alpha):
+        input_image = Input(shape=(input_size[0], input_size[1], 3))
+        input_shapes_imagenet = [(96, 96, 3), (128, 128, 3), (160, 160, 3), (192, 192, 3), (224, 224, 3)]
+        input_shape = (128, 128, 3)
+        for item in input_shapes_imagenet:
+            if item[0] <= input_size[0]:
+                input_shape = item
+
+        if weights == 'imagenet':
+            mobilenet = MobileNetV2(input_shape=input_shape,
+                                    input_tensor=input_image,
+                                    alpha=alpha,
+                                    weights='imagenet',
+                                    include_top=False,
+                                    backend=tensorflow.keras.backend,
+                                    layers=tensorflow.keras.layers,
+                                    models=tensorflow.keras.models,
+                                    utils=tensorflow.keras.utils)
+            print('Successfully loaded imagenet backend weights')
+        else:
+            mobilenet = MobileNetV2(input_shape=(input_size[0], input_size[1], 3),
+                                    input_tensor=input_image,
+                                    alpha=alpha,
+                                    weights=None,
+                                    include_top=False,
+                                    backend=tensorflow.keras.backend,
+                                    layers=tensorflow.keras.layers,
+                                    models=tensorflow.keras.models,
+                                    utils=tensorflow.keras.utils)
+            if weights:
+                print('Loaded backend weigths: ' + weights)
+                mobilenet.load_weights(weights)
+
+        #x = mobilenet(input_image)
+        self.feature_extractor = mobilenet
+
+    def normalize(self, image):
+        image = image / 127.5
+        image = image - 1
+
+        return image
+
 
 class SqueezeNetFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
@@ -333,8 +387,8 @@ class SqueezeNetFeature(BaseFeatureExtractor):
         x = fire_module(x, fire_id=8, squeeze=64, expand=256)
         x = fire_module(x, fire_id=9, squeeze=64, expand=256)
 
-        self.feature_extractor = Model(input_image, x)  
-        
+        self.feature_extractor = Model(input_image, x)
+
         if weights == 'imagenet':
             print('Imagenet for SqueezeNet backend are not available yet, defaulting to random weights')
         elif weights == None:
@@ -352,7 +406,7 @@ class SqueezeNetFeature(BaseFeatureExtractor):
         image[..., 1] -= 116.779
         image[..., 2] -= 123.68
 
-        return image    
+        return image
 
 class DenseNet121Feature(BaseFeatureExtractor):
     """docstring for ClassName"""
@@ -417,4 +471,4 @@ class ResNet50Feature(BaseFeatureExtractor):
         image[..., 1] -= 116.779
         image[..., 2] -= 123.68
 
-        return image 
+        return image

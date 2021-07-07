@@ -8,6 +8,7 @@ projects/
 *.txt
 mydata/
 axelerate/networks/common_utils/tmp/
+logs/
 
 
 # General
