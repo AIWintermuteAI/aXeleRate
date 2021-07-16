@@ -194,7 +194,7 @@ def parse_annotation(ann_dir, img_dir, labels_naming=[], is_only_detect=False):
         fname = parser.get_fname(annotation_file)
         path = parser.get_path(annotation_file)
 
-        if not path:
+        if not path or not os.path.exists(path):
             path = os.path.join(img_dir, fname)
 
         annotation = Annotation(path)
