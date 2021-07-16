@@ -31,6 +31,7 @@ class YoloNetwork(object):
         # 1. create full network
         grid_size_y, grid_size_x = feature_extractor.get_output_size(layer  = 'conv_pw_13_relu')
         x1 = feature_extractor.get_output_tensor('conv_pw_13_relu')
+        #x1 = _depthwise_conv_block(inputs = x1, alpha = 1, pointwise_conv_filters = 128, block_id=14)
 
         # make the object detection layer
         y1 = Conv2D(nb_box * (4 + 1 + nb_classes), (1,1), strides=(1,1),
@@ -52,7 +53,7 @@ class YoloNetwork(object):
                 grid_size_y_2, grid_size_x_2 = x2.shape[1:3]
 
             x2 = Concatenate()([x2, x1])
-            #x2 = _depthwise_conv_block(inputs = x2, alpha = 1, pointwise_conv_filters = 128, block_id=14)
+            #x2 = _depthwise_conv_block(inputs = x2, alpha = 1, pointwise_conv_filters = 128, block_id=15)
 
             y2 = Conv2D(nb_box * (4 + 1 + nb_classes), (1,1), strides=(1,1),
                                 padding='same', 

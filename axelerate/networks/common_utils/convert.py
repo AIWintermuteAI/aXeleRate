@@ -153,17 +153,20 @@ class Converter(object):
 
     def convert_tflite(self, model, model_layers, target=None):
         model_type = model.name
+        model.summary()
 
         if target=='k210': 
-            if model_type == 'yolo':
+            if model_type == 'yolo' or 'segnet':
                 print("Converting to tflite without Reshape for K210 YOLO")
-                model = tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
-            if model_type == 'segnet':   
-                print("Converting to tflite with old converter for K210 Segnet")
-                converter = tf.lite.TFLiteConverter.from_keras_model(model)
-                converter.experimental_new_converter = False
-            else:
-                converter = tf.lite.TFLiteConverter.from_keras_model(model)
+                if len(model.outputs) == 2:
+                    output1 = model.get_layer(name="detection_layer_1").output
+                    output2 = model.get_layer(name="detection_layer_2").output
+                    model = tf.keras.Model(inputs=model.input, outputs=[output1, output2])
+                else:
+                    model = tf.keras.Model(inputs=model.input, outputs=model.layers[-2].output)
+                    
+            model.input.set_shape(1 + model.input.shape[1:])
+            converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
         elif target == 'edgetpu':
             converter = tf.lite.TFLiteConverter.from_keras_model(model)

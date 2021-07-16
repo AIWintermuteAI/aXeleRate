@@ -22,14 +22,12 @@ from ..models.config import IMAGE_ORDERING
 DATA_LOADER_SEED = 0
 
 random.seed(DATA_LOADER_SEED)
-class_colors = [(random.randint(0, 255), random.randint(
-    0, 255), random.randint(0, 255)) for _ in range(5000)]
-
+class_colors = [(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) for _ in range(5000)]
 
 class DataLoaderError(Exception):
     pass
 
-def get_pairs_from_paths(images_path, segs_path, ignore_non_matching=False):
+def get_pairs_from_paths(images_path, segs_path, ignore_non_matching=True):
     """ Find all the images from the images_path directory and
         the segmentation images from the segs_path directory
         while checking integrity of data """
@@ -60,6 +58,7 @@ def get_pairs_from_paths(images_path, segs_path, ignore_non_matching=False):
         if image_file in segmentation_files:
             return_value.append((image_full_path, segmentation_files[image_file][1]))
         elif ignore_non_matching:
+            print("No corresponding segmentation found for image {0}.".format(image_full_path))
             continue
         else:
             # Error out

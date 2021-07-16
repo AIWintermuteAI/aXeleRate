@@ -40,11 +40,11 @@ def create_ann(filename, image, boxes, right_label, label_list):
     name = os.path.basename(filename).split('.')
     writer.save('test_ann/'+name[0]+'.xml')
 
-def prepare_image(img_path, network):
+def prepare_image(img_path, network, input_size):
     orig_image = cv2.imread(img_path)
     input_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
-    input_image = cv2.resize(input_image, (network._input_size[1], network._input_size[0]))
-    input_image = network._norm(input_image)
+    input_image = cv2.resize(input_image, (input_size[1], input_size[0]))
+    input_image = network.norm(input_image)
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image
 
@@ -84,9 +84,9 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         segnet.load_weights(weights)
         for filename in os.listdir(config['train']['valid_image_folder']):
             filepath = os.path.join(config['train']['valid_image_folder'],filename)
-            orig_image, input_arr = prepare_image(filepath, segnet)
+            orig_image, input_arr = prepare_image(filepath, segnet, input_size)
             out_fname = os.path.join(dirname, os.path.basename(filename))
-            predict(model=segnet._network, inp=input_arr, image = orig_image, out_fname=out_fname)
+            predict(model=segnet.network, inp=input_arr, image = orig_image, out_fname=out_fname)
             show_image(out_fname)
 
     if config['model']['type']=='Classifier':
@@ -112,7 +112,7 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         inference_time = []
         for filename in image_files_list:
             output_path = os.path.join(dirname, os.path.basename(filename))
-            orig_image, input_image = prepare_image(filename, classifier)
+            orig_image, input_image = prepare_image(filename, classifier, input_size)
             prediction_time, prob, img_class = classifier.predict(input_image)
             inference_time.append(prediction_time)
             
@@ -161,7 +161,7 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         for i in range(len(image_files_list)):
             img_path = image_files_list[i]
             img_fname = os.path.basename(img_path)
-            orig_image, input_image = prepare_image(img_path, yolo)
+            orig_image, input_image = prepare_image(img_path, yolo, input_size)
             height, width = orig_image.shape[:2]
 
             prediction_time, boxes, scores = yolo.predict(input_image, height, width, float(threshold))
