@@ -1,9 +1,9 @@
 {
     "model" : {
         "type":                 "Detector",
-        "architecture":         "MobileNet7_5",
+        "architecture":         "MobileNet5_0",
         "input_size":           [240, 320],
-        "anchors":              [[0.76120044, 0.57155991], [0.6923348, 0.88535553], [0.47163042, 0.34163313]],
+        "anchors":              [[[0.76120044, 0.57155991], [0.6923348, 0.88535553], [0.47163042, 0.34163313]]],
         "labels":               ["raccoon"],
         "obj_thresh" : 		    0.5,
         "iou_thresh" : 		    0.5,
@@ -23,7 +23,7 @@
         "valid_image_folder":   "/home/ubuntu/datasets/raccoon_detector/imgs_validation",
         "valid_annot_folder":   "/home/ubuntu/datasets/raccoon_detector/anns_validation",
         "valid_times":          2,
-        "valid_metric":         "val_recall",
+        "valid_metric":         "recall",
         "batch_size":           4,
         "learning_rate":        1e-4,
         "saved_folder":   		"raccoon_detector",
