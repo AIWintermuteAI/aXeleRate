@@ -64,22 +64,26 @@ class Classifier(object):
         bottleneck_model = Model(model.input, output)
         bottleneck_model.save_weights(bottleneck_weights_path)
 
-    def predict(self, img_folder, batch_size):
+    def predict(self, img):
 
-        self.generator = create_datagen(img_folder, batch_size, self._input_size, None, False, self._norm)
         start_time = time.time()
-        Y_pred = self._network.predict(self.generator, len(self.generator) // batch_size+1)
-        elapsed_ms = (time.time() - start_time) / len(self.generator) * 1000
+        Y_pred = np.squeeze(self._network(img, training = False))
+        elapsed_ms = (time.time() - start_time)  * 1000
 
-        y_pred = np.argmax(Y_pred, axis=1)
+        y_pred = np.argmax(Y_pred)
+        prob = Y_pred[y_pred]
 
-        predictions = [self._labels[k] for k in y_pred]
+        prediction = self._labels[y_pred]
 
-        return elapsed_ms, y_pred, predictions
+        return elapsed_ms, prob, prediction
 
     def evaluate(self, img_folder, batch_size):
 
-        elapsed_ms, y_pred, predictions = self.predict(img_folder, batch_size)
+        self.generator = create_datagen(img_folder, batch_size, self._input_size, None, False, self._norm)
+
+        Y_pred = self._network.predict(self.generator, len(self.generator) // batch_size + 1)
+
+        y_pred = np.argmax(Y_pred, axis=1)
 
         print('Classification Report')
         report = classification_report(self.generator.classes, y_pred, target_names=self._labels)
@@ -90,6 +94,7 @@ class Classifier(object):
         disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=self._labels)
         disp.plot(include_values=True, cmap='Blues', ax=None)
         plt.show()
+
         return report, cm
 
     def train(self,

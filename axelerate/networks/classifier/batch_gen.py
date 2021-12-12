@@ -11,14 +11,16 @@ import os
 
 def create_datagen(img_folder, batch_size, input_size, project_folder, augment, norm):
 
-    datagen = ImageDataAugmentor(preprocess_input =  norm, process_image = process_image_classification, augment = augment)
+    datagen = ImageDataAugmentor(preprocess_input = norm,
+                                 process_image = process_image_classification,
+                                 augment = augment)
     
-    generator=datagen.flow_from_directory(img_folder,
-                                        target_size=input_size,
-                                        color_mode='rgb',
-                                        batch_size=batch_size,
-                                        class_mode='categorical', 
-                                        shuffle=augment)
+    generator = datagen.flow_from_directory(img_folder,
+                                        target_size = input_size,
+                                        color_mode = 'rgb',
+                                        batch_size = batch_size,
+                                        class_mode = 'categorical', 
+                                        shuffle = augment)
     if project_folder:             
         labels = (generator.class_indices)
         labels = dict((v,k) for k,v in labels.items())

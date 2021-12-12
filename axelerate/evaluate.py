@@ -63,12 +63,28 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
         input_size = [config['model']['input_size'],config['model']['input_size']]
 
     """make directory to save inference results """
-    dirname = os.path.join(os.path.dirname(weights),'Evaluation_results')
-    if os.path.isdir(dirname):
-        print("Folder {} is already exists. Image files in directory might be overwritten".format(dirname))
-    else:
-        print("Folder {} is created.".format(dirname))
-        os.makedirs(dirname)
+    dirname = os.path.dirname(weights)
+
+    if config['model']['type']=='Classifier':
+        print('Classifier')  
+
+        if config['model']['labels']:
+            labels = config['model']['labels']
+        else:
+            labels = get_labels(config['train']['train_image_folder'])
+
+        # 1.Construct the model 
+        classifier = create_classifier(config['model']['architecture'],
+                                       labels,
+                                       input_size,
+                                       config['model']['fully-connected'],
+                                       config['model']['dropout'])
+
+        # 2. Load the pretrained weights
+        classifier.load_weights(weights)
+
+        report, cm = classifier.evaluate(config['train']['valid_image_folder'], 16)
+        save_report(config, report, os.path.join(dirname, 'report.txt'))
 
     if config['model']['type']=='SegNet':
         print('Segmentation')           
@@ -81,23 +97,6 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
         report = segnet.evaluate(config['train']['valid_image_folder'], config['train']['valid_annot_folder'], 2)
         save_report(config, report, os.path.join(dirname, 'report.txt'))
         print(report)
-
-    if config['model']['type']=='Classifier':
-        print('Classifier')    
-        if config['model']['labels']:
-            labels = config['model']['labels']
-        else:
-            labels = get_labels(config['train']['train_image_folder'])
-        # 1.Construct the model 
-        classifier = create_classifier(config['model']['architecture'],
-                                       labels,
-                                       input_size,
-                                       config['model']['fully-connected'],
-                                       config['model']['dropout'])   
-        # 2. Load the pretrained weights
-        classifier.load_weights(weights)
-        report, cm = classifier.evaluate(config['train']['valid_image_folder'], 16)
-        save_report(config, report, os.path.join(dirname, 'report.txt'))
 
     if config['model']['type']=='Detector':
         # 2. create yolo instance & predict

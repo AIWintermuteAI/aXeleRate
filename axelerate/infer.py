@@ -36,7 +36,7 @@ def create_ann(filename, image, boxes, right_label, label_list):
     copyfile(filename, 'test_img/' + os.path.basename(filename))
     writer = Writer(filename, image.shape[0], image.shape[1])
     for i in range(len(right_label)):
-    	writer.addObject(label_list[right_label[i]], boxes[i][0], boxes[i][1], boxes[i][2], boxes[i][3])
+        writer.addObject(label_list[right_label[i]], boxes[i][0], boxes[i][1], boxes[i][2], boxes[i][3])
     name = os.path.basename(filename).split('.')
     writer.save('test_ann/'+name[0]+'.xml')
 
@@ -44,7 +44,7 @@ def prepare_image(img_path, network, input_size):
     orig_image = cv2.imread(img_path)
     input_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
     input_image = cv2.resize(input_image, (input_size[1], input_size[0]))
-    input_image = network.norm(input_image)
+    input_image = network._norm(input_image)
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image
 
@@ -74,21 +74,6 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         print("Folder {} is created.".format(dirname))
         os.makedirs(dirname)
 
-    if config['model']['type']=='SegNet':
-        print('Segmentation')           
-        # 1. Construct the model 
-        segnet = create_segnet(config['model']['architecture'],
-                                   input_size,
-                                   config['model']['n_classes'])   
-        # 2. Load the pretrained weights (if any) 
-        segnet.load_weights(weights)
-        for filename in os.listdir(config['train']['valid_image_folder']):
-            filepath = os.path.join(config['train']['valid_image_folder'],filename)
-            orig_image, input_arr = prepare_image(filepath, segnet, input_size)
-            out_fname = os.path.join(dirname, os.path.basename(filename))
-            predict(model=segnet.network, inp=input_arr, image = orig_image, out_fname=out_fname)
-            show_image(out_fname)
-
     if config['model']['type']=='Classifier':
         print('Classifier')    
         if config['model']['labels']:
@@ -107,23 +92,26 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         classifier.load_weights(weights)
         
         font = cv2.FONT_HERSHEY_SIMPLEX
-        image_files_list = find_imgs(config['train']['valid_image_folder'])
+        background_color = (70, 120, 70) # grayish green background for text
+        text_color = (255, 255, 255)   # white text
+
+        file_folder = args.folder if args.folder else config['train']['valid_image_folder']
+
+        image_files_list = find_imgs(file_folder)
         
         inference_time = []
-        for filename in image_files_list:
-            output_path = os.path.join(dirname, os.path.basename(filename))
-            orig_image, input_image = prepare_image(filename, classifier, input_size)
+        for filepath in image_files_list:
+            output_path = os.path.join(dirname, os.path.basename(filepath))
+            orig_image, input_image = prepare_image(filepath, classifier, input_size)
             prediction_time, prob, img_class = classifier.predict(input_image)
             inference_time.append(prediction_time)
             
             # label shape and colorization
-            text = "{}:{:.2f}".format(img_class[0], prob[0])
-            background_color = (70, 120, 70) # grayish green background for text
-            text_color = (255, 255, 255)   # white text
+            text = "{}:{:.2f}".format(img_class, prob)
 
             size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
             left = 10
-            top = 30 - size[1]
+            top = 35 - size[1]
             right = left + size[0]
             bottom = top + size[1]
 
@@ -133,10 +121,31 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
             cv2.putText(orig_image, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
             cv2.imwrite(output_path, orig_image)
             show_image(output_path)
-            print("{}:{}".format(img_class[0], prob[0]))
+            print("{}:{}".format(img_class, prob))
 
         if len(inference_time)>1:
             print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
+
+    if config['model']['type']=='SegNet':
+        print('Segmentation')           
+        # 1. Construct the model 
+        segnet = create_segnet(config['model']['architecture'],
+                                   input_size,
+                                   config['model']['n_classes'])   
+        # 2. Load the pretrained weights (if any) 
+        segnet.load_weights(weights)
+
+        file_folder = args.folder if args.folder else config['train']['valid_image_folder']
+
+        image_files_list = find_imgs(file_folder)
+
+        inference_time = []
+        for filepath in image_files_list:
+
+            orig_image, input_arr = prepare_image(filepath, segnet, input_size)
+            out_fname = os.path.join(dirname, os.path.basename(filepath))
+            predict(model=segnet.network, inp=input_arr, image = orig_image, out_fname = out_fname)
+            show_image(out_fname)
 
     if config['model']['type']=='Detector':
         # 2. create yolo instance & predict
@@ -152,16 +161,15 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
                            config['weights']['backend'])                           
         yolo.load_weights(weights)
         
-        valid_image_folder = config['train']['valid_image_folder']
-        image_files_list = []
-        image_search = lambda ext : glob.glob(valid_image_folder + ext, recursive=True)
-        for ext in ['/**/*.jpg', '/**/*.jpeg', '/**/*.png']: image_files_list.extend(image_search(ext))
+        file_folder = args.folder if args.folder else config['train']['valid_image_folder']
+
+        image_files_list = find_imgs(file_folder)
 
         inference_time = []
-        for i in range(len(image_files_list)):
-            img_path = image_files_list[i]
-            img_fname = os.path.basename(img_path)
-            orig_image, input_image = prepare_image(img_path, yolo, input_size)
+        for filepath in image_files_list:
+
+            img_fname = os.path.basename(filepath)
+            orig_image, input_image = prepare_image(filepath, yolo, input_size)
             height, width = orig_image.shape[:2]
 
             prediction_time, boxes, scores = yolo.predict(input_image, height, width, float(threshold))
@@ -173,7 +181,7 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
             orig_image = draw_boxes(orig_image, boxes, scores, classes, config['model']['labels'])
             output_path = os.path.join(dirname, os.path.split(img_fname)[-1])
             if len(boxes) > 0 and create_dataset:
-                create_ann(img_path, orig_image, boxes, labels, config['model']['labels'])
+                create_ann(filepath, orig_image, boxes, labels, config['model']['labels'])
             cv2.imwrite(output_path, orig_image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
             show_image(output_path)
@@ -202,7 +210,12 @@ if __name__ == '__main__':
         '-w',
         '--weights',
         help='trained weight files')
-        
+
+    argparser.add_argument(
+        '-f',
+        '--folder',
+        help='folder with image files to run inference on')   
+
     argparser.add_argument(
         '-d',
         '--create_dataset',
