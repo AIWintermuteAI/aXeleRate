@@ -6,6 +6,7 @@ import os
 import time
 import numpy as np
 import tensorflow as tf
+from tqdm import tqdm
 
 from axelerate.networks.common_utils.fit import train
 from axelerate.networks.yolo.backend.decoder import YoloDecoder
@@ -30,7 +31,7 @@ def create_yolo(architecture,
                 coord_scale,
                 object_scale,
                 no_object_scale,
-                weights=None):
+                weights = None):
 
     n_classes = len(labels)
     n_boxes = int(len(anchors[0]))
@@ -57,12 +58,12 @@ class YOLO(object):
                  yolo_params,
                  metrics_dict):
 
-        self._yolo_network = yolo_network
-        self._yolo_loss = yolo_loss
-        self._yolo_decoder = yolo_decoder
-        self._labels = labels
-        self._input_size = input_size
-        self._norm = yolo_network._norm
+        self.yolo_network = yolo_network
+        self.yolo_loss = yolo_loss
+        self.yolo_decoder = yolo_decoder
+        self.labels = labels
+        self.input_size = input_size
+        self.norm = yolo_network._norm
         self.yolo_params = yolo_params
         self.num_branches = len(self.yolo_params.anchors)
         self.metrics_dict = metrics_dict
@@ -70,7 +71,7 @@ class YOLO(object):
     def load_weights(self, weight_path, by_name=True):
         if os.path.exists(weight_path):
             print("Loading pre-trained weights for the whole model: ", weight_path)
-            self._yolo_network.load_weights(weight_path, by_name=True)
+            self.yolo_network.load_weights(weight_path, by_name=True)
         else:
             print("Failed to load pre-trained weights for the whole model. It might be because you didn't specify any or the weight file cannot be found")
 
@@ -93,9 +94,9 @@ class YOLO(object):
             return minmax_boxes.astype(np.int)
 
         start_time = time.time()
-        netout = self._yolo_network.forward(image)
+        netout = self.yolo_network.forward(image)
         elapsed_ms = (time.time() - start_time) * 1000
-        boxes, probs= self._yolo_decoder.run(netout, threshold)
+        boxes, probs= self.yolo_decoder.run(netout, threshold)
 
         if len(boxes) > 0:
             boxes = _to_original_scale(boxes)
@@ -104,6 +105,18 @@ class YOLO(object):
         else:
             return elapsed_ms, [], []
 
+    def evaluate(self, img_folder, ann_folder, batch_size):
+
+        self.generator = create_batch_generator(img_folder, ann_folder, self.input_size, 
+                                                self.output_size, self.n_classes, 
+                                                batch_size, 1, False, self.norm)
+        tp = np.zeros(self.n_classes)
+        fp = np.zeros(self.n_classes)
+        fn = np.zeros(self.n_classes)
+        n_pixels = np.zeros(self.n_classes)
+        
+        for inp, gt in tqdm(list(self.generator)):
+            y_pred = self.network.predict(inp)        
 
     def train(self,
               img_folder,
@@ -121,12 +134,12 @@ class YOLO(object):
               metrics):
 
         # 1. get annotations        
-        train_annotations, valid_annotations = get_train_annotations(self._labels,
+        train_annotations, valid_annotations = get_train_annotations(self.labels,
                                                                      img_folder,
                                                                      ann_folder,
                                                                      valid_img_folder,
                                                                      valid_ann_folder,
-                                                                     is_only_detect=False)
+                                                                     is_only_detect = False)
         # 1. get batch generator
         valid_batch_size = len(valid_annotations)*valid_times
         if valid_batch_size < batch_size: 
@@ -136,7 +149,7 @@ class YOLO(object):
         valid_batch_generator = self._get_batch_generator(valid_annotations, batch_size, valid_times, augment=False)
         
         # 2. To train model get keras model instance & loss function
-        model = self._yolo_network.get_model(first_trainable_layer)
+        model = self.yolo_network.get_model(first_trainable_layer)
         loss = self._get_loss_func(batch_size)
         
         # 3. Run training loop
@@ -152,7 +165,7 @@ class YOLO(object):
                 metric_name=metrics)
 
     def _get_loss_func(self, batch_size):
-        return [self._yolo_loss(self.yolo_params, layer, batch_size) for layer in range(self.num_branches)]
+        return [self.yolo_loss(self.yolo_params, layer, batch_size) for layer in range(self.num_branches)]
 
     def _get_batch_generator(self, annotations, batch_size, repeat_times, augment):
         """
@@ -165,12 +178,12 @@ class YOLO(object):
             batch_generator : BatchGenerator instance
         """
         batch_generator = create_batch_generator(annotations,
-                                                 self._input_size,
-                                                 self._yolo_network.get_grid_size(),
+                                                 self.input_size,
+                                                 self.yolo_network.get_grid_size(),
                                                  batch_size,
                                                  self.yolo_params.anchors,
                                                  repeat_times,
                                                  augment=augment,
-                                                 norm=self._yolo_network.get_normalize_func())
+                                                 norm=self.yolo_network.get_normalize_func())
         return batch_generator
     

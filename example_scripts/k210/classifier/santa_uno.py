@@ -1,4 +1,4 @@
-#tested with frimware 5-0.22
+# tested with firmware maixpy_v0.6.2_72_g22a8555b5_openmv_kmodel_v4_with_ide_support
 import sensor, image, lcd, time
 import KPU as kpu
 lcd.init()

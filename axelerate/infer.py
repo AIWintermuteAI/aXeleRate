@@ -1,3 +1,5 @@
+import glob
+import os
 import argparse
 import json
 import cv2
@@ -7,21 +9,16 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 from tensorflow.keras import backend as K 
+
+from tensorflow.keras import backend as K 
 from axelerate.networks.yolo.frontend import create_yolo
 from axelerate.networks.yolo.backend.utils.box import draw_boxes
-from axelerate.networks.yolo.backend.utils.annotation import parse_annotation
 from axelerate.networks.segnet.frontend_segnet import create_segnet
-from axelerate.networks.segnet.predict import predict
+from axelerate.networks.segnet.predict import visualize_segmentation
 from axelerate.networks.classifier.frontend_classifier import get_labels, create_classifier
 from shutil import copyfile
 
-import os
-import glob
-import tensorflow as tf
-
 K.clear_session()
-
-DEFAULT_THRESHOLD = 0.3
     
 def show_image(filename):
     image = mpimg.imread(filename)
@@ -44,7 +41,7 @@ def prepare_image(img_path, network, input_size):
     orig_image = cv2.imread(img_path)
     input_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
     input_image = cv2.resize(input_image, (input_size[1], input_size[0]))
-    input_image = network._norm(input_image)
+    input_image = network.norm(input_image)
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image
 
@@ -55,16 +52,17 @@ def find_imgs(folder):
     for ext in ext_list: image_files_list.extend(image_search(ext))
     return image_files_list
 
-def setup_inference(config, weights, threshold=0.3, create_dataset=None):
+def setup_inference(config, weights, threshold = None, create_dataset=None):
     try:
         matplotlib.use('TkAgg')
     except:
         pass
+
     #added for compatibility with < 0.5.7 versions
     try:
         input_size = config['model']['input_size'][:]
     except:
-        input_size = [config['model']['input_size'],config['model']['input_size']]
+        input_size = [config['model']['input_size'], config['model']['input_size']]
 
     """make directory to save inference results """
     dirname = os.path.join(os.path.dirname(weights),'Inference_results')
@@ -88,7 +86,7 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
                                        config['model']['fully-connected'],
                                        config['model']['dropout'])  
                                         
-        # 2. Load the pretrained weights (if any) 
+        # 2. Load the trained weights
         classifier.load_weights(weights)
         
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -106,9 +104,9 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
             prediction_time, prob, img_class = classifier.predict(input_image)
             inference_time.append(prediction_time)
             
-            # label shape and colorization
             text = "{}:{:.2f}".format(img_class, prob)
 
+            # label shape and colorization
             size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
             left = 10
             top = 35 - size[1]
@@ -132,19 +130,20 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         segnet = create_segnet(config['model']['architecture'],
                                    input_size,
                                    config['model']['n_classes'])   
-        # 2. Load the pretrained weights (if any) 
+        # 2. Load the trained weights
         segnet.load_weights(weights)
 
         file_folder = args.folder if args.folder else config['train']['valid_image_folder']
-
         image_files_list = find_imgs(file_folder)
 
         inference_time = []
         for filepath in image_files_list:
 
-            orig_image, input_arr = prepare_image(filepath, segnet, input_size)
+            orig_image, input_image = prepare_image(filepath, segnet, input_size)
             out_fname = os.path.join(dirname, os.path.basename(filepath))
-            predict(model=segnet.network, inp=input_arr, image = orig_image, out_fname = out_fname)
+            prediction_time, output_array = segnet.predict(input_image)
+            seg_img = visualize_segmentation(output_array, orig_image, segnet.n_classes, overlay_img = True)
+            cv2.imwrite(out_fname, seg_img)
             show_image(out_fname)
 
     if config['model']['type']=='Detector':
@@ -162,7 +161,7 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         yolo.load_weights(weights)
         
         file_folder = args.folder if args.folder else config['train']['valid_image_folder']
-
+        threshold = args.threshold if args.threshold else config['model']['obj_thresh']
         image_files_list = find_imgs(file_folder)
 
         inference_time = []
@@ -203,7 +202,6 @@ if __name__ == '__main__':
     argparser.add_argument(
         '-t',
         '--threshold',
-        default=0.3,
         help='detection threshold')
 
     argparser.add_argument(

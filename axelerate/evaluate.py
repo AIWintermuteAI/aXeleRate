@@ -1,3 +1,4 @@
+import os
 import argparse
 import json
 import cv2
@@ -6,22 +7,14 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-
 from tensorflow.keras import backend as K 
 
 from axelerate.networks.yolo.frontend import create_yolo
 from axelerate.networks.yolo.backend.utils.box import draw_boxes
 from axelerate.networks.yolo.backend.utils.annotation import parse_annotation
 from axelerate.networks.yolo.backend.utils.eval.fscore import count_true_positives, calc_score
-
 from axelerate.networks.segnet.frontend_segnet import create_segnet
-from axelerate.networks.segnet.predict import predict, evaluate
-
 from axelerate.networks.classifier.frontend_classifier import get_labels, create_classifier
-
-import os
-import glob
-import tensorflow as tf
 
 K.clear_session()
 
@@ -46,12 +39,12 @@ def show_image(filename):
 def prepare_image(img_path, network):
     orig_image = cv2.imread(img_path)
     input_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
-    input_image = cv2.resize(input_image, (network._input_size[1], network._input_size[0]))
-    input_image = network._norm(input_image)
+    input_image = cv2.resize(input_image, (network.input_size[1], network.input_size[0]))
+    input_image = network.norm(input_image)
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image
 
-def setup_evaluation(config, weights,threshold=0.3, path=None):
+def setup_evaluation(config, weights, threshold = None):
     try:
         matplotlib.use('TkAgg')
     except:
@@ -118,6 +111,8 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
                                        config['model']['labels'],
                                        is_only_detect=config['train']['is_only_detect'])
 
+        threshold = threshold if threshold else config['model']['obj_thresh']
+
         n_true_positives = 0
         n_truth = 0
         n_pred = 0
@@ -165,7 +160,6 @@ if __name__ == '__main__':
     argparser.add_argument(
         '-t',
         '--threshold',
-        default=DEFAULT_THRESHOLD,
         help='detection threshold')
 
     argparser.add_argument(
