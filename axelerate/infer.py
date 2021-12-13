@@ -16,7 +16,6 @@ from axelerate.networks.yolo.backend.utils.box import draw_boxes
 from axelerate.networks.segnet.frontend_segnet import create_segnet
 from axelerate.networks.segnet.predict import visualize_segmentation
 from axelerate.networks.classifier.frontend_classifier import get_labels, create_classifier
-from shutil import copyfile
 
 K.clear_session()
     
@@ -28,14 +27,6 @@ def show_image(filename):
     plt.pause(1)
     plt.close()
     print(filename)
-
-def create_ann(filename, image, boxes, right_label, label_list):
-    copyfile(filename, 'test_img/' + os.path.basename(filename))
-    writer = Writer(filename, image.shape[0], image.shape[1])
-    for i in range(len(right_label)):
-        writer.addObject(label_list[right_label[i]], boxes[i][0], boxes[i][1], boxes[i][2], boxes[i][3])
-    name = os.path.basename(filename).split('.')
-    writer.save('test_ann/'+name[0]+'.xml')
 
 def prepare_image(img_path, network, input_size):
     orig_image = cv2.imread(img_path)
@@ -179,8 +170,6 @@ def setup_inference(config, weights, threshold = None, folder = None):
             # 4. save detection result
             orig_image = draw_boxes(orig_image, boxes, scores, classes, config['model']['labels'])
             output_path = os.path.join(dirname, os.path.split(img_fname)[-1])
-            if len(boxes) > 0 and create_dataset:
-                create_ann(filepath, orig_image, boxes, labels, config['model']['labels'])
             cv2.imwrite(output_path, orig_image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
             show_image(output_path)
@@ -213,13 +202,6 @@ if __name__ == '__main__':
         '-f',
         '--folder',
         help='folder with image files to run inference on')   
-
-    argparser.add_argument(
-        '-d',
-        '--create_dataset',
-        action='store_true',
-        default=False,
-        help='whether to save bboxes to annotations')
 
     args = argparser.parse_args()
     
