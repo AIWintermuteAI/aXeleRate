@@ -56,18 +56,15 @@ class Segnet(object):
         else:
             print("Failed to load pre-trained weights for the whole model. It might be because you didn't specify any or the weight file cannot be found")
 
-    def predict(self, img_folder, ann_folder, batch_size):
+    def predict(self, image):
 
-        self.generator = create_batch_generator(img_folder, ann_folder, self.input_size, 
-                                                self.output_size, self.n_classes, 
-                                                batch_size, 1, False, self.norm)
         start_time = time.time()
-        Y_pred = self.network.predict(self.generator, len(self.generator) // batch_size+1)
+        Y_pred = np.squeeze(model.predict(image))
         elapsed_ms = (time.time() - start_time) / len(self.generator) * 1000
 
-        y_pred = np.argmax(Y_pred, axis=2)
+        y_pred = np.argmax(Y_pred, axis = 2)
 
-        return elapsed_ms, y_pred, []
+        return elapsed_ms, y_pred
 
 
     def evaluate(self, img_folder, ann_folder, batch_size):

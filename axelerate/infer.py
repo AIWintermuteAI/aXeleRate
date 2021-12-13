@@ -74,21 +74,6 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
         print("Folder {} is created.".format(dirname))
         os.makedirs(dirname)
 
-    if config['model']['type']=='SegNet':
-        print('Segmentation')           
-        # 1. Construct the model 
-        segnet = create_segnet(config['model']['architecture'],
-                                   input_size,
-                                   config['model']['n_classes'])   
-        # 2. Load the pretrained weights (if any) 
-        segnet.load_weights(weights)
-        for filename in os.listdir(config['train']['valid_image_folder']):
-            filepath = os.path.join(config['train']['valid_image_folder'],filename)
-            orig_image, input_arr = prepare_image(filepath, segnet)
-            out_fname = os.path.join(dirname, os.path.basename(filename))
-            predict(model=segnet._network, inp=input_arr, image = orig_image, out_fname=out_fname)
-            show_image(out_fname)
-
     if config['model']['type']=='Classifier':
         print('Classifier')    
         if config['model']['labels']:
@@ -137,6 +122,32 @@ def setup_inference(config, weights, threshold=0.3, create_dataset=None):
 
         if len(inference_time)>1:
             print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
+
+    if config['model']['type']=='SegNet':
+        print('Segmentation')           
+        # 1. Construct the model 
+        segnet = create_segnet(config['model']['architecture'],
+                                   input_size,
+                                   config['model']['n_classes'])   
+        # 2. Load the pretrained weights (if any) 
+        segnet.load_weights(weights)
+
+        file_folder = args.folder if args.folder else config['train']['valid_image_folder']
+
+        image_files_list = find_imgs(file_folder)
+
+        inference_time = []
+        for filepath in image_files_list:
+
+            orig_image, input_image = prepare_image(filepath, segnet, input_size)
+            out_fname = os.path.join(dirname, os.path.basename(filepath))
+            #predict(model=segnet.network, inp=input_image, image = orig_image, out_fname = out_fname)
+            #show_image(out_fname)
+
+            prediction_time, output_array = segnet.predict(input_image)
+            seg_img = visualize_segmentation(output_array, orig_image, segnet.n_classes, overlay_img = True)
+            cv2.imwrite(out_fname, seg_img)
+            show_image(out_fname)
 
     if config['model']['type']=='Detector':
         # 2. create yolo instance & predict
