@@ -52,7 +52,7 @@ def find_imgs(folder):
     for ext in ext_list: image_files_list.extend(image_search(ext))
     return image_files_list
 
-def setup_inference(config, weights, threshold = None, create_dataset=None):
+def setup_inference(config, weights, threshold = None, folder = None):
     try:
         matplotlib.use('TkAgg')
     except:
@@ -93,7 +93,7 @@ def setup_inference(config, weights, threshold = None, create_dataset=None):
         background_color = (70, 120, 70) # grayish green background for text
         text_color = (255, 255, 255)   # white text
 
-        file_folder = args.folder if args.folder else config['train']['valid_image_folder']
+        file_folder = folder if folder else config['train']['valid_image_folder']
 
         image_files_list = find_imgs(file_folder)
         
@@ -133,7 +133,7 @@ def setup_inference(config, weights, threshold = None, create_dataset=None):
         # 2. Load the trained weights
         segnet.load_weights(weights)
 
-        file_folder = args.folder if args.folder else config['train']['valid_image_folder']
+        file_folder = folder if folder else config['train']['valid_image_folder']
         image_files_list = find_imgs(file_folder)
 
         inference_time = []
@@ -160,7 +160,7 @@ def setup_inference(config, weights, threshold = None, create_dataset=None):
                            config['weights']['backend'])                           
         yolo.load_weights(weights)
         
-        file_folder = args.folder if args.folder else config['train']['valid_image_folder']
+        file_folder = folder if folder else config['train']['valid_image_folder']
         threshold = args.threshold if args.threshold else config['model']['obj_thresh']
         image_files_list = find_imgs(file_folder)
 
@@ -228,4 +228,4 @@ if __name__ == '__main__':
         
     with open(args.config) as config_buffer:
         config = json.loads(config_buffer.read())
-    setup_inference(config, args.weights, args.threshold, args.create_dataset)
+    setup_inference(config, args.weights, args.threshold, args.folder)
