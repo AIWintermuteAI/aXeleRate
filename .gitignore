@@ -6,8 +6,10 @@ build/
 dist/
 _configs/
 projects/
+logs/
 *.tflite
 *.h5
 *.kmodel
 *.txt
 *.pyc
+.vscode/

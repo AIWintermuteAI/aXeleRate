@@ -23,7 +23,7 @@
         "saved_folder":   		"pascal_20",
         "first_trainable_layer": "0",
         "ignore_zero_class":    false,
-        "augumentation":		true
+        "augmentation":		    true
     },
     "converter" : {
         "type":   				["tflite"]

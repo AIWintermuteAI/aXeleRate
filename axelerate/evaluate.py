@@ -1,3 +1,4 @@
+import os
 import argparse
 import json
 import cv2
@@ -7,21 +8,24 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 from tensorflow.keras import backend as K 
+
 from axelerate.networks.yolo.frontend import create_yolo
 from axelerate.networks.yolo.backend.utils.box import draw_boxes
 from axelerate.networks.yolo.backend.utils.annotation import parse_annotation
 from axelerate.networks.yolo.backend.utils.eval.fscore import count_true_positives, calc_score
 from axelerate.networks.segnet.frontend_segnet import create_segnet
-from axelerate.networks.segnet.predict import predict
 from axelerate.networks.classifier.frontend_classifier import get_labels, create_classifier
-
-import os
-import glob
-import tensorflow as tf
 
 K.clear_session()
 
 DEFAULT_THRESHOLD = 0.3
+
+def save_report(config, report, report_file):
+    with open(report_file, 'w') as outfile:
+        outfile.write("REPORT\n")
+        outfile.write(str(report))
+        outfile.write("\nCONFIG\n")
+        outfile.write(json.dumps(config, indent=4, sort_keys=False))
 
 def show_image(filename):
     image = mpimg.imread(filename)
@@ -35,12 +39,12 @@ def show_image(filename):
 def prepare_image(img_path, network):
     orig_image = cv2.imread(img_path)
     input_image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB) 
-    input_image = cv2.resize(input_image, (network._input_size[1],network._input_size[0]))
-    input_image = network._norm(input_image)
+    input_image = cv2.resize(input_image, (network.input_size[1], network.input_size[0]))
+    input_image = network.norm(input_image)
     input_image = np.expand_dims(input_image, 0)
     return orig_image, input_image
 
-def setup_evaluation(config, weights,threshold=0.3, path=None):
+def setup_evaluation(config, weights, threshold = None):
     try:
         matplotlib.use('TkAgg')
     except:
@@ -52,12 +56,28 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
         input_size = [config['model']['input_size'],config['model']['input_size']]
 
     """make directory to save inference results """
-    dirname = os.path.join(os.path.dirname(weights),'Evaluation_results')
-    if os.path.isdir(dirname):
-        print("Folder {} is already exists. Image files in directory might be overwritten".format(dirname))
-    else:
-        print("Folder {} is created.".format(dirname))
-        os.makedirs(dirname)
+    dirname = os.path.dirname(weights)
+
+    if config['model']['type']=='Classifier':
+        print('Classifier')  
+
+        if config['model']['labels']:
+            labels = config['model']['labels']
+        else:
+            labels = get_labels(config['train']['train_image_folder'])
+
+        # 1.Construct the model 
+        classifier = create_classifier(config['model']['architecture'],
+                                       labels,
+                                       input_size,
+                                       config['model']['fully-connected'],
+                                       config['model']['dropout'])
+
+        # 2. Load the pretrained weights
+        classifier.load_weights(weights)
+
+        report, cm = classifier.evaluate(config['train']['valid_image_folder'], 16)
+        save_report(config, report, os.path.join(dirname, 'report.txt'))
 
     if config['model']['type']=='SegNet':
         print('Segmentation')           
@@ -67,64 +87,22 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
                                    config['model']['n_classes'])   
         # 2. Load the pretrained weights (if any) 
         segnet.load_weights(weights)
-        for filename in os.listdir(config['train']['valid_image_folder']):
-            filepath = os.path.join(config['train']['valid_image_folder'], filename)
-            orig_image, input_image = prepare_image(filepath, segnet)
-            output_path = os.path.join(dirname, os.path.basename(filename))
-            predict(model=segnet._network, inp=input_image, image = orig_image, out_fname=output_path)
-            #show_image(output_path)
-            
-    if config['model']['type']=='Classifier':
-        print('Classifier')    
-        if config['model']['labels']:
-            labels = config['model']['labels']
-        else:
-            labels = get_labels(config['train']['train_image_folder'])
-        # 1.Construct the model 
-        classifier = create_classifier(config['model']['architecture'],
-                                       labels,
-                                       input_size,
-                                       config['model']['fully-connected'],
-                                       config['model']['dropout'])   
-        # 2. Load the pretrained weights (if any) 
-        classifier.load_weights(weights)
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        valid_image_folder = config['train']['valid_image_folder']
-        image_files_list = glob.glob(valid_image_folder + '/**/*.jpg', recursive=True)
-        inference_time = []
-        for filename in image_files_list:
-            output_path = os.path.join(dirname, os.path.basename(filename))
-            orig_image, input_image = prepare_image(filename, classifier)
-            prediction_time, img_class, prob = classifier.predict(input_image)
-            inference_time.append(prediction_time)
-            
-            # label shape and colorization
-            text = "{}:{:.2f}".format(img_class[0], prob[0])
-            background_color = (70, 120, 70) # grayish green background for text
-            text_color = (255, 255, 255)   # white text
-
-            size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
-            left = 10
-            top = 30 - size[1]
-            right = left + size[0]
-            bottom = top + size[1]
-
-            # set up the colored rectangle background for text
-            cv2.rectangle(orig_image, (left - 1, top - 5),(right + 1, bottom + 1), background_color, -1)
-            # set up text
-            cv2.putText(orig_image, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, text_color, 1)
-            cv2.imwrite(output_path, orig_image)
-            #show_image(output_path)
-            print("{}:{}".format(img_class[0], prob[0]))
-        if len(inference_time)>1:
-            print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
+        report = segnet.evaluate(config['train']['valid_image_folder'], config['train']['valid_annot_folder'], 2)
+        save_report(config, report, os.path.join(dirname, 'report.txt'))
+        print(report)
 
     if config['model']['type']=='Detector':
         # 2. create yolo instance & predict
         yolo = create_yolo(config['model']['architecture'],
                            config['model']['labels'],
                            input_size,
-                           config['model']['anchors'])
+                           config['model']['anchors'],
+                           config['model']['obj_thresh'],
+                           config['model']['iou_thresh'],
+                           config['model']['coord_scale'],
+                           config['model']['object_scale'],
+                           config['model']['no_object_scale'],                           
+                           config['weights']['backend'])    
         yolo.load_weights(weights)
 
         # 3. read image
@@ -133,10 +111,13 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
                                        config['model']['labels'],
                                        is_only_detect=config['train']['is_only_detect'])
 
+        threshold = threshold if threshold else config['model']['obj_thresh']
+
         n_true_positives = 0
         n_truth = 0
         n_pred = 0
         inference_time = []
+
         for i in range(len(annotations)):
             img_path = annotations.fname(i)
             img_fname = os.path.basename(img_path)
@@ -145,19 +126,23 @@ def setup_evaluation(config, weights,threshold=0.3, path=None):
 
             orig_image, input_image = prepare_image(img_path, yolo)
             height, width = orig_image.shape[:2]
-            prediction_time, boxes, probs = yolo.predict(input_image, height, width, float(threshold))
+            prediction_time, boxes, scores = yolo.predict(input_image, height, width, float(threshold))
+            classes = np.argmax(scores, axis=1) if len(scores) > 0 else []
             inference_time.append(prediction_time)
-            labels = np.argmax(probs, axis=1) if len(probs) > 0 else [] 
+
             # 4. save detection result
-            orig_image = draw_boxes(orig_image, boxes, probs, config['model']['labels'])
+            orig_image = draw_boxes(orig_image, boxes, scores, classes, config['model']['labels'])
             output_path = os.path.join(dirname, os.path.split(img_fname)[-1])
             cv2.imwrite(output_path, orig_image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
-            #show_image(output_path)
-            n_true_positives += count_true_positives(boxes, true_boxes, labels, true_labels)
+            n_true_positives += count_true_positives(boxes, true_boxes, classes, true_labels)
             n_truth += len(true_boxes)
             n_pred += len(boxes)
-        print(calc_score(n_true_positives, n_truth, n_pred))
+
+        report = calc_score(n_true_positives, n_truth, n_pred)
+        save_report(config, report, os.path.join(dirname, 'report.txt'))
+        print(report)
+
         if len(inference_time)>1:
             print("Average prediction time:{} ms".format(sum(inference_time[1:])/len(inference_time[1:])))
 
@@ -175,7 +160,6 @@ if __name__ == '__main__':
     argparser.add_argument(
         '-t',
         '--threshold',
-        default=0.3,
         help='detection threshold')
 
     argparser.add_argument(

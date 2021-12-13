@@ -41,6 +41,7 @@ def get_train_annotations(labels,
 
     # parse annotations of the validation set, if any, otherwise split the training set
     if os.path.exists(valid_ann_folder):
+        print(valid_ann_folder)
         valid_anns = parse_annotation(valid_ann_folder,
                                          valid_img_folder,
                                          labels,
@@ -48,18 +49,18 @@ def get_train_annotations(labels,
     else:
         train_valid_split = int(0.8*len(train_anns))
         train_anns.shuffle()
-        
+
         # Todo : Hard coding
         valid_anns = Annotations(train_anns._label_namings)
         valid_anns._components = train_anns._components[train_valid_split:]
         train_anns._components = train_anns._components[:train_valid_split]
-    
+
     return train_anns, valid_anns
 
 
 class PascalVocXmlParser(object):
     """Parse annotation for 1-annotation file """
-    
+
     def __init__(self):
         pass
 
@@ -68,19 +69,37 @@ class PascalVocXmlParser(object):
         # Args
             annotation_file : str
                 annotation file including directory path
-        
+
         # Returns
             filename : str
         """
         root = self._root_tag(annotation_file)
+
         return root.find("filename").text
+
+    def get_path(self, annotation_file):
+        """
+        # Args
+            annotation_file : str
+                annotation file including directory path
+
+        # Returns
+            pathfilename : str
+        """
+
+        root = self._root_tag(annotation_file)
+
+        path = root.find("path")
+
+        return path if path is None else path.text
+
 
     def get_width(self, annotation_file):
         """
         # Args
             annotation_file : str
                 annotation file including directory path
-        
+
         # Returns
             width : int
         """
@@ -94,7 +113,7 @@ class PascalVocXmlParser(object):
         # Args
             annotation_file : str
                 annotation file including directory path
-        
+
         # Returns
             height : int
         """
@@ -108,7 +127,7 @@ class PascalVocXmlParser(object):
         # Args
             annotation_file : str
                 annotation file including directory path
-        
+
         # Returns
             labels : list of strs
         """
@@ -119,13 +138,13 @@ class PascalVocXmlParser(object):
         for t in obj_tags:
             labels.append(t.find("name").text)
         return labels
-    
+
     def get_boxes(self, annotation_file):
         """
         # Args
             annotation_file : str
                 annotation file including directory path
-        
+
         # Returns
             bbs : 2d-array, shape of (N, 4)
                 (x1, y1, x2, y2)-ordered
@@ -159,25 +178,30 @@ def parse_annotation(ann_dir, img_dir, labels_naming=[], is_only_detect=False):
         ann_dir : str
         img_dir : str
         labels_naming : list of strings
-    
+
     # Returns
         all_imgs : list of dict
     """
     parser = PascalVocXmlParser()
-    
+
     if is_only_detect:
         annotations = Annotations(["object"])
     else:
         annotations = Annotations(labels_naming)
     for ann in sorted(os.listdir(ann_dir)):
         annotation_file = os.path.join(ann_dir, ann)
-        fname = parser.get_fname(annotation_file)
 
-        annotation = Annotation(os.path.join(img_dir, fname))
+        fname = parser.get_fname(annotation_file)
+        path = parser.get_path(annotation_file)
+
+        if not path or not os.path.exists(path):
+            path = os.path.join(img_dir, fname)
+
+        annotation = Annotation(path)
 
         labels = parser.get_labels(annotation_file)
         boxes = parser.get_boxes(annotation_file)
-        
+
         for label, box in zip(labels, boxes):
             x1, y1, x2, y2 = box
             if is_only_detect:
@@ -185,12 +209,12 @@ def parse_annotation(ann_dir, img_dir, labels_naming=[], is_only_detect=False):
             else:
                 if label in labels_naming:
                     annotation.add_object(x1, y1, x2, y2, name=label)
-                    
+
         if annotation.boxes is not None:
             annotations.add(annotation)
-                        
+
     return annotations
-            
+
 
 class Annotation(object):
     """
@@ -225,11 +249,11 @@ class Annotations(object):
 
     def shuffle(self):
         np.random.shuffle(self._components)
-    
+
     def fname(self, i):
         index = self._valid_index(i)
         return self._components[index].fname
-    
+
     def boxes(self, i):
         index = self._valid_index(i)
         return self._components[index].boxes

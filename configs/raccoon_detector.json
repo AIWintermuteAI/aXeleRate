@@ -1,13 +1,14 @@
 {
     "model" : {
         "type":                 "Detector",
-        "architecture":         "MobileNet7_5",
-        "input_size":           [224,224],
-        "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
+        "architecture":         "MobileNet5_0",
+        "input_size":           [240, 320],
+        "anchors":              [[[0.76120044, 0.57155991], [0.6923348, 0.88535553], [0.47163042, 0.34163313]]],
         "labels":               ["raccoon"],
-        "coord_scale" : 		1.0,
-        "class_scale" : 		1.0,
-        "object_scale" : 		5.0,
+        "obj_thresh" : 		    0.5,
+        "iou_thresh" : 		    0.5,
+        "coord_scale" : 		2.0,
+        "object_scale" : 		2.0,            
         "no_object_scale" : 	1.0
     },
     "weights" : {
@@ -22,12 +23,12 @@
         "valid_image_folder":   "/home/ubuntu/datasets/raccoon_detector/imgs_validation",
         "valid_annot_folder":   "/home/ubuntu/datasets/raccoon_detector/anns_validation",
         "valid_times":          2,
-        "valid_metric":         "mAP",
+        "valid_metric":         "recall",
         "batch_size":           4,
         "learning_rate":        1e-4,
         "saved_folder":   		"raccoon_detector",
         "first_trainable_layer": "",
-        "augumentation":				true,
+        "augmentation":		    true,
         "is_only_detect" : 		false
     },
     "converter" : {

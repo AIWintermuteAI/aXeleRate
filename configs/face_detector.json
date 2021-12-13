@@ -1,0 +1,37 @@
+{
+        "model":{
+            "type":                 "Detector",
+            "architecture":         "MobileNet2_5",
+            "input_size":           [240, 320],
+            "anchors":              [[[0.51424575, 0.54116074], [0.29523918, 0.45838044], [0.21371929, 0.21518053]]],
+            "labels":               ["face"],
+            "obj_thresh" : 		    0.5,
+            "iou_thresh" : 		    0.5,
+            "coord_scale" : 		2.0,
+            "object_scale" : 		2.0,            
+            "no_object_scale" : 	1.0
+        },
+    "weights" : {
+        "full":   				"",
+        "backend":              "imagenet"
+    },
+        "train" : {
+            "actual_epoch":         30,
+            "train_image_folder":   "/home/ubuntu/datasets/WideFace_large/imgs",
+            "train_annot_folder":   "/home/ubuntu/datasets/WideFace_large/anns",
+            "train_times":          1,
+            "valid_image_folder":   "/home/ubuntu/datasets/WideFace_large/imgs_validation",
+            "valid_annot_folder":   "/home/ubuntu/datasets/WideFace_large/anns_validation",
+            "valid_times":          1,
+            "valid_metric":         "val_recall",
+            "batch_size":           32,
+            "learning_rate":        1e-3,
+            "saved_folder":   		"face_detector",
+            "first_trainable_layer": "",
+            "augmentation":		    true,
+            "is_only_detect" : 		false
+        },
+        "converter" : {
+            "type":   				["k210"]
+        }
+}
