@@ -9,7 +9,7 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setup(name='axelerate',
-      version="0.7.0",
+      version="0.7.5",
       description='Keras-based framework for AI on the Edge',
       install_requires=requirements,
       long_description=long_description,
