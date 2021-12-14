@@ -113,6 +113,14 @@ def setup_evaluation(config, weights, threshold = None):
 
         threshold = threshold if threshold else config['model']['obj_thresh']
 
+        dirname = os.path.join(os.path.dirname(weights), 'Inference_results') #temporary
+
+        if os.path.isdir(dirname):
+            print("Folder {} is already exists. Image files in directory might be overwritten".format(dirname))
+        else:
+            print("Folder {} is created.".format(dirname))
+            os.makedirs(dirname)
+
         n_true_positives = 0
         n_truth = 0
         n_pred = 0

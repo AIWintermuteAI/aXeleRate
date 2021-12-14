@@ -1,8 +1,8 @@
 {
     "model" : {
         "type":                 "Detector",
-        "architecture":         "MobileNet7_5",
-        "input_size":           [240, 320],
+        "architecture":         "MobileNet1_0",
+        "input_size":           [224, 320],
         "anchors":              [[[0.76120044, 0.57155991], [0.6923348, 0.88535553], [0.47163042, 0.34163313]],
                                  [[0.33340788, 0.70065861], [0.18124964, 0.38986752], [0.08497349, 0.1527057 ]]],
         "labels":               ["person", "bird", "cat", "cow", "dog", "horse", "sheep", "aeroplane", "bicycle", "boat", "bus", "car", "motorbike", "train","bottle", "chair", "diningtable", "pottedplant", "sofa", "tvmonitor"],

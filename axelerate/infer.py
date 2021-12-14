@@ -56,7 +56,7 @@ def setup_inference(config, weights, threshold = None, folder = None):
         input_size = [config['model']['input_size'], config['model']['input_size']]
 
     """make directory to save inference results """
-    dirname = os.path.join(os.path.dirname(weights),'Inference_results')
+    dirname = os.path.join(os.path.dirname(weights), 'Inference_results')
     if os.path.isdir(dirname):
         print("Folder {} is already exists. Image files in directory might be overwritten".format(dirname))
     else:
@@ -152,7 +152,7 @@ def setup_inference(config, weights, threshold = None, folder = None):
         yolo.load_weights(weights)
         
         file_folder = folder if folder else config['train']['valid_image_folder']
-        threshold = args.threshold if args.threshold else config['model']['obj_thresh']
+        threshold = threshold if threshold else config['model']['obj_thresh']
         image_files_list = find_imgs(file_folder)
 
         inference_time = []
@@ -169,7 +169,7 @@ def setup_inference(config, weights, threshold = None, folder = None):
 
             # 4. save detection result
             orig_image = draw_boxes(orig_image, boxes, scores, classes, config['model']['labels'])
-            output_path = os.path.join(dirname, os.path.split(img_fname)[-1])
+            output_path = os.path.join(dirname, os.path.basename(filepath))
             cv2.imwrite(output_path, orig_image)
             print("{}-boxes are detected. {} saved.".format(len(boxes), output_path))
             show_image(output_path)
