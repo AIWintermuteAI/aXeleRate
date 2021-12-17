@@ -156,7 +156,7 @@ class Converter(object):
         model.summary()
 
         if target=='k210': 
-            if model_type == 'yolo' or 'segnet':
+            if model_type == 'yolo' or model_type == 'segnet':
                 print("Converting to tflite without Reshape for K210 YOLO")
                 if len(model.outputs) == 2:
                     output1 = model.get_layer(name="detection_layer_1").output
