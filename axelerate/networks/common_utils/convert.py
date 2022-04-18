@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras.backend as k
+
 import subprocess
 import os
 import cv2
@@ -8,14 +9,18 @@ import tarfile
 import glob
 import shutil
 import numpy as np
-import shlex
 
-k210_converter_path=os.path.join(os.path.dirname(__file__),"ncc","ncc")
-k210_converter_download_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),'ncc_linux_x86_64.tar.xz')
-nncase_download_url="https://github.com/kendryte/nncase/releases/download/v0.2.0-beta4/ncc_linux_x86_64.tar.xz"
+ncnn_converter_path = os.path.join(os.path.dirname(__file__), "ncnn", "onnx2ncnn")
+ncnn_converter_download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ncnn-xxxxxxxx-ubuntu-2004.zip')
+ncnn_download_url = "https://github.com/Tencent/ncnn/releases/download/20220216/ncnn-20220216-ubuntu-2004.zip"
+
+k210_converter_path = os.path.join(os.path.dirname(__file__),"ncc","ncc")
+k210_converter_download_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'ncc_linux_x86_64.tar.xz')
+nncase_download_url = "https://github.com/kendryte/nncase/releases/download/v0.2.0-beta4/ncc_linux_x86_64.tar.xz"
+
 cwd = os.path.dirname(os.path.realpath(__file__))
 
-def run_command(cmd, cwd=None):
+def run_command(cmd, cwd = None):
     with subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, executable='/bin/bash', universal_newlines=True, cwd=cwd) as p:
         while True:
             line = p.stdout.readline()
@@ -59,7 +64,24 @@ class Converter(object):
                 cmd = "pip install tf2onnx"
                 result = run_command(cmd, cwd)
                 print(result)              
-                
+
+        if 'ncnn' in converter_type:
+            if os.path.exists(ncnn_converter_path):
+                print('NCNN Converter ready')
+            else:
+                print('Downloading NCNN Converter')
+                _path = tf.keras.utils.get_file(ncnn_converter_download_path, ncnn_download_url, extract = True)     
+                print(_path)    
+
+                import zipfile
+                with zipfile.ZipFile(ncnn_converter_download_path, 'r') as zip_ref:
+                    zipInfo = zip_ref.getinfo("ncnn-20220216-ubuntu-2004/bin/onnx2ncnn")
+                    zipInfo.filename = "onnx2ncnn"
+                    zip_ref.extract(zipInfo, os.path.join(os.path.dirname(__file__), "ncnn"))
+
+                os.chmod(ncnn_converter_path, 0o775)
+
+
         self._converter_type = converter_type
         self._backend = backend
         self._dataset_path=dataset_path
@@ -68,14 +90,14 @@ class Converter(object):
         num_imgs = 300
         image_files_list = []
         from axelerate.networks.common_utils.feature import create_feature_extractor
-        backend = create_feature_extractor(self._backend, [self._img_size[0], self._img_size[1]])
+        backend = create_feature_extractor(self._backend, [self.input_dims[0], self.input_dims[1]])
         image_search = lambda ext : glob.glob(self._dataset_path + ext, recursive=True)
         for ext in ['/**/*.jpg', '/**/*.jpeg', '/**/*.png']: image_files_list.extend(image_search(ext))
 
         for filename in image_files_list[:num_imgs]:
             image = cv2.imread(filename)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            image = cv2.resize(image, (self._img_size[0], self._img_size[1]))
+            image = cv2.resize(image, (self.input_dims[0], self.input_dims[1]))
             data = np.array(backend.normalize(image), dtype=np.float32)
             data = np.expand_dims(data, 0)
             yield [data]
@@ -84,7 +106,7 @@ class Converter(object):
         num_imgs = 300
         image_files_list = []
         from axelerate.networks.common_utils.feature import create_feature_extractor
-        backend = create_feature_extractor(self._backend, [self._img_size[0], self._img_size[1]])
+        backend = create_feature_extractor(self._backend, [self.input_dims[0], self.input_dims[1]])
         image_search = lambda ext : glob.glob(self._dataset_path + ext, recursive=True)
         for ext in ['/**/*.jpg', '/**/*.jpeg', '/**/*.png']: image_files_list.extend(image_search(ext))
         temp_folder = os.path.join(os.path.dirname(__file__),'tmp')
@@ -92,7 +114,7 @@ class Converter(object):
         for filename in image_files_list[:num_imgs]:
             image = cv2.imread(filename)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            image = cv2.resize(image, (self._img_size[0], self._img_size[1]))
+            image = cv2.resize(image, (self.input_dims[0], self.input_dims[1]))
             data = np.array(backend.normalize(image), dtype=np.float32)
             data = np.expand_dims(data, 0)
             bin_filename = os.path.basename(filename).split('.')[0]+'.bin'
@@ -122,26 +144,30 @@ class Converter(object):
 
     def convert_onnx(self, model):
         import tf2onnx
-        spec = (tf.TensorSpec((None, *self._img_size, 3), tf.float32, name="input"),)
+        spec = (tf.TensorSpec((None, *self.input_dims), tf.float32, name="input"),)
         output_path = self.model_path.split(".")[0] + '.onnx'
-        model_proto, external_tensor_storage = tf2onnx.convert.from_keras(model, input_signature=spec, output_path = output_path)
+        model_proto, external_tensor_storage = tf2onnx.convert.from_keras(model,
+                                                input_signature = spec, output_path = output_path)
 
-    def convert_ncnn(self, model):
-        spec = (tf.TensorSpec((None, *self._img_size, 3), tf.float32, name="input"),)
-        output_path = self.model_path.split(".")[0] + '.onnx'
-        model_proto, external_tensor_storage = tf2onnx.convert.from_keras(model, input_signature=spec, output_path = output_path)
+    def onnx_to_ncnn(self):
 
-    def onnx_to_ncnn(self, input_shape, onnx="out/model.onnx", ncnn_param="out/conv0.param", ncnn_bin = "out/conv0.bin"):
-        import os
-        # onnx2ncnn tool compiled from ncnn/tools/onnx, and in the buld dir
-        cmd = f"onnx2ncnn {onnx} {ncnn_param} {ncnn_bin}"       #可以更换工具目录
+        onnx_model = self.model_path.split(".")[0] + '.onnx'
+        ncnn_param = self.model_path.split(".")[0] + '.param'
+        ncnn_bin = self.model_path.split(".")[0] + '.bin'
+
+        # onnx2ncnn tool compiled from ncnn/tools/onnx, and in the build dir
+        cmd = f"onnx2ncnn {onnx_model} {ncnn_param} {ncnn_bin}"
+
+        cmd = f'{ncnn_converter_path} {onnx_model} {ncnn_param} {ncnn_bin}'
+        print(cmd)
         os.system(cmd)
+
         with open(ncnn_param) as f:
             content = f.read().split("\n")
-            if len(input_shape) == 1:
-                content[2] += " 0={}".format(input_shape[0])
+            if len(self.input_dims) == 1:
+                content[2] += " 0={}".format(self.input_dims[0])
             else:
-                content[2] += " 0={} 1={} 2={}".format(input_shape[2], input_shape[1], input_shape[0])
+                content[2] += " 0={} 1={} 2={}".format(self.input_dims[2], self.input_dims[1], self.input_dims[0])
             content = "\n".join(content)
         with open(ncnn_param, "w") as f:
             f.write(content)
@@ -191,7 +217,7 @@ class Converter(object):
         k.set_learning_phase(0)
         model = tf.keras.models.load_model(model_path, compile=False)
         model_layers = model.layers
-        self._img_size = model.input_shape[1:3]
+        self.input_dims = model.input_shape[1:4]
         self.model_path = os.path.abspath(model_path)
 
         if 'k210' in self._converter_type:
@@ -206,9 +232,8 @@ class Converter(object):
             self.convert_onnx(model)
             
         if 'ncnn' in self._converter_type:
-            model.save(model_path.split(".")[0])
-            self.convert_onnx(model_path, model_layers)
-            self.onnx_to_ncnn(model_path)
+            self.convert_onnx(model)
+            self.onnx_to_ncnn()
 
         if 'tflite' in self._converter_type:
             self.convert_tflite(model, model_layers, self._converter_type)

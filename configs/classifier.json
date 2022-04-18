@@ -27,6 +27,6 @@
         "augmentation":		     true
     },
     "converter" : {
-        "type":   				["k210","tflite"]
+        "type":   				["ncnn"]
     }
 }
