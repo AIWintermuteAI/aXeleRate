@@ -50,17 +50,7 @@ class Converter(object):
                 print('Installing Edge TPU Converter')
                 cmd = "bash install_edge_tpu_compiler.sh"
                 result = run_command(cmd, cwd)
-                print(result)
-                
-        if 'openvino' in converter_type:
-            rc = os.path.isdir('/opt/intel/openvino')
-            if rc:
-                print('OpenVINO Converter ready')
-            else:
-                print('Installing OpenVINO Converter')
-                cmd = "bash install_openvino.sh"
-                result = run_command(cmd, cwd)
-                print(result)       
+                print(result)    
                 
         if 'onnx' in converter_type:
             try:
@@ -130,26 +120,31 @@ class Converter(object):
         shutil.rmtree(folder_name, ignore_errors=True)
         print(result)
 
-    def convert_ir(self, model_path, model_layers):
-        input_model = os.path.join(model_path.split(".")[0], "saved_model.pb")
-        output_dir = os.path.dirname(model_path)
-        output_layer = model_layers[-2].name+'/BiasAdd'
-        cmd = 'source /opt/intel/openvino/bin/setupvars.sh && python3 /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model "{}" --output {} --batch 1 --reverse_input_channels --data_type FP16 --mean_values [127.5,127.5,127.5] --scale_values [127.5] --output_dir "{}"'.format(input_model, output_layer, output_dir)
-        print(cmd)
-        result = run_command(cmd)
-        print(result)
-
-    def convert_oak(self, model_path):
-        output_name = model_path.split(".")[0]+".blob"
-        cmd = 'source /opt/intel/openvino/bin/setupvars.sh && /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/myriad_compile -m "{}" -o "{}" -ip U8 -VPU_MYRIAD_PLATFORM VPU_MYRIAD_2480 -VPU_NUMBER_OF_SHAVES 4 -VPU_NUMBER_OF_CMX_SLICES 4'.format(model_path.split(".")[0] + '.xml', output_name)
-        print(cmd)
-        result = run_command(cmd)
-        print(result)
-
     def convert_onnx(self, model):
+        import tf2onnx
         spec = (tf.TensorSpec((None, *self._img_size, 3), tf.float32, name="input"),)
         output_path = self.model_path.split(".")[0] + '.onnx'
         model_proto, external_tensor_storage = tf2onnx.convert.from_keras(model, input_signature=spec, output_path = output_path)
+
+    def convert_ncnn(self, model):
+        spec = (tf.TensorSpec((None, *self._img_size, 3), tf.float32, name="input"),)
+        output_path = self.model_path.split(".")[0] + '.onnx'
+        model_proto, external_tensor_storage = tf2onnx.convert.from_keras(model, input_signature=spec, output_path = output_path)
+
+    def onnx_to_ncnn(self, input_shape, onnx="out/model.onnx", ncnn_param="out/conv0.param", ncnn_bin = "out/conv0.bin"):
+        import os
+        # onnx2ncnn tool compiled from ncnn/tools/onnx, and in the buld dir
+        cmd = f"onnx2ncnn {onnx} {ncnn_param} {ncnn_bin}"       #可以更换工具目录
+        os.system(cmd)
+        with open(ncnn_param) as f:
+            content = f.read().split("\n")
+            if len(input_shape) == 1:
+                content[2] += " 0={}".format(input_shape[0])
+            else:
+                content[2] += " 0={} 1={} 2={}".format(input_shape[2], input_shape[1], input_shape[0])
+            content = "\n".join(content)
+        with open(ncnn_param, "w") as f:
+            f.write(content)
 
     def convert_tflite(self, model, model_layers, target=None):
         model_type = model.name
@@ -210,10 +205,10 @@ class Converter(object):
         if 'onnx' in self._converter_type:
             self.convert_onnx(model)
             
-        if 'openvino' in self._converter_type:
+        if 'ncnn' in self._converter_type:
             model.save(model_path.split(".")[0])
-            self.convert_ir(model_path, model_layers)
-            self.convert_oak(model_path)
+            self.convert_onnx(model_path, model_layers)
+            self.onnx_to_ncnn(model_path)
 
         if 'tflite' in self._converter_type:
             self.convert_tflite(model, model_layers, self._converter_type)
