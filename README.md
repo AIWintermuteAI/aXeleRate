@@ -54,6 +54,14 @@ pip install git+https://github.com/AIWintermuteAI/aXeleRate
 
 If installing in Anaconda environment, make sure you have necessary CUDA/CUDNN version installed in that environment to use GPU for training.
 
+###  :question: F.A.Q.
+
+Q: I trained a YOLO model, but it doesn't run on K210 with MaixPy firmware.
+
+A: While there can be a lot of reasons for that (memory constrains is one of them), master branch of aXeleRate trains YOLOv3 model, which shows better convergence, especially for datasets with smaller objects and non-square image sizes. There is a [PR for adding YOLOv3 support](https://github.com/sipeed/MaixPy/pull/451) to MaixPy (where you can also see my comparisons of the two), but it is not merged at the moment. There are two options you can choose to train the model, that can run on K210 MaixPy:
+- switch to legacy branch on aXeleRate with ```git switch legacy-yolov2``` (if you are running the training locally you will also need to re-install aXeleRate after that with ```pip install -e .```. The trained model should be compatible with current MaixPy.
+- use [this pre-compiled firmware](https://drive.google.com/file/d/1q1BcWA8GiTQ_3Q9vYkSysRvGD62K2zh4/view?usp=sharing) with experimental support for YOLOv3 (examples included) or compile your own from [this PR's branch](https://github.com/sipeed/MaixPy/pull/451).
+
 ###  :computer: Project Story
 
 aXeleRate started as a personal project of mine for training YOLOv2 based object detection networks and exporting them to .kmodel format to be run on K210 chip. I also needed to train image classification networks. And sometimes I needed to run inference with Tensorflow Lite on Raspberry Pi. As a result I had a whole bunch of disconnected scripts each had somewhat overlapping functionality. So, I decided to fix that and share the results with other people who might have similar workflows.
