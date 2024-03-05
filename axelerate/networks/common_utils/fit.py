@@ -7,7 +7,7 @@ import warnings
 
 from axelerate.networks.common_utils.callbacks import WarmUpCosineDecayScheduler
 from axelerate.networks.yolo.backend.utils.custom import MergeMetrics
-from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from datetime import datetime
 
@@ -67,7 +67,7 @@ def train(model,
         print("    ", fixed_layers)
 
     # 2 create optimizer
-    optimizer = Adam(learning_rate=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
 
     if not metric:
         metric = metric_name
